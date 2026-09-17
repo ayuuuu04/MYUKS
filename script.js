@@ -7,11 +7,9 @@ const firebaseConfig = {
   appId: "1:1080625985085:web:824caf8e74ca8c0f0c1c54"
 };
 
-// API Key / Endpoint constants
 const API_KEY = (typeof firebaseConfig !== "undefined" && firebaseConfig.apiKey) ? firebaseConfig.apiKey : "";
 const API_BASE_URL = "";
 
-// Inisialisasi Firebase Cloud Firestore
 let firestoreDb = null;
 try {
   if (typeof firebase !== "undefined" && typeof firebaseConfig !== "undefined" && firebaseConfig.apiKey) {
@@ -136,7 +134,7 @@ function getApiHeaders() {
 
 const DB_SERVICE = {
   async get(key) {
-    // 1. Ambil dari Cache Lokal Terlebih Dahulu (Langsung Instan 0ms)
+    
     let localData = null;
     try {
       const cached = localStorage.getItem(KEYS[key] || key);
@@ -145,7 +143,6 @@ const DB_SERVICE = {
       localData = null;
     }
 
-    // 2. Firebase Firestore (dengan timeout aman agar tidak blocking)
     if (firestoreDb) {
       try {
         const doc = await withTimeout(firestoreDb.collection("myuks_data").doc(key).get(), 2000);
@@ -161,7 +158,6 @@ const DB_SERVICE = {
       }
     }
 
-    // 3. REST API (Opsional)
     if (API_KEY && API_BASE_URL) {
       try {
         const url = `${API_BASE_URL.replace(/\/$/, "")}/${key}`;
@@ -183,14 +179,12 @@ const DB_SERVICE = {
   },
 
   async set(key, val) {
-    // Selalu simpan ke cache lokal terlebih dahulu
     try {
       localStorage.setItem(KEYS[key] || key, JSON.stringify(val));
     } catch (e) {
       console.error("[LocalStorage Error]:", e);
     }
 
-    // 1. Firebase Firestore (background async)
     if (firestoreDb) {
       withTimeout(
         firestoreDb.collection("myuks_data").doc(key).set({
@@ -203,7 +197,6 @@ const DB_SERVICE = {
       });
     }
 
-    // 2. REST API (background async)
     if (API_KEY && API_BASE_URL) {
       try {
         const url = `${API_BASE_URL.replace(/\/$/, "")}/${key}`;
@@ -222,7 +215,6 @@ const DB_SERVICE = {
 async function loadAll() {
   const keysList = Object.keys(KEYS);
 
-  // 1. Muat data lokal seketika (0ms)
   for (const k of keysList) {
     try {
       const cached = localStorage.getItem(KEYS[k]);
@@ -773,7 +765,7 @@ async function saveMember(id) {
   await saveKey("members");
   closeModal();
   renderApp();
-  showToast(id ? "Data anggota berhasil diperbarui! ✨" : "Anggota baru berhasil ditambahkan! 🌸");
+  showToast(id ? "Data anggota berhasil diperbarui! " : "Anggota baru berhasil ditambahkan! ");
 }
 
 async function deleteMember(id) {
