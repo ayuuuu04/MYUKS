@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MY UKS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Login Screen -->
+<div id="loginScreen" class="login-wrapper" style="display:none;">
+  <div class="login-card">
+    <div class="login-brand">
+      <div class="login-logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 3v18M4 8h16M6 8c0 6 3 10 6 13 3-3 6-7 6-13"/></svg>
+      </div>
+      <h1>MY UKS</h1>
+      <span>Markas Digital PMR &bull; Masuk Petugas</span>
+    </div>
+
+    <div id="loginError" class="login-error"></div>
+
+    <form id="loginForm" onsubmit="handleLogin(event)">
+      <div class="field">
+        <label>Username / Nama Anggota</label>
+        <input type="text" id="loginUsername" placeholder="cth: Afnan Fauzan / Admin" required autocomplete="username" />
+      </div>
+
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="loginPassword" placeholder="Masukkan Password Anda" required autocomplete="current-password" />
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width:100%; margin-top:10px; padding:11px; font-size:14px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+        Masuk ke MY UKS
+      </button>
+    </form>
+
+    <div class="login-hint-box">
+      🔒 <strong>Ketentuan Login:</strong>
+      <div style="margin-top:4px; color:var(--muted);">
+        Gunakan <strong>Username</strong> dan <strong>Password</strong> akun Anda yang telah terdaftar.
+      </div>
+      <div class="login-demo-pills">
+        <span class="login-demo-pill" onclick="quickFillLogin('Admin', '12345')">Akses Awal: Admin (Pass: 12345)</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Main App Shell -->
+<div class="app-shell" id="appShell" style="display:none;">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="mobile-nav" id="mobileNav"></div>
+    <div class="topbar">
+      <div>
+        <h2 id="pageTitle">Beranda</h2>
+        <div class="topbar-sub" id="pageSub"></div>
+      </div>
+      <div class="topbar-actions" id="pageActions"></div>
+    </div>
+    <div class="content" id="content"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modalTitle">Judul</h3>
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-foot" id="modalFoot"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+<script src="script.js"></script>
+</body>
+</html>
