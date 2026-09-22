@@ -1,4 +1,3 @@
-
 (function initFloatingBackground() {
   const emojis = ['💊', '🩺', '🩵', '💉', '🩹', '⭐', '✨', '🏥', '📋', '🧊'];
   const container = document.getElementById('floaties');
@@ -16,6 +15,9 @@
   }
 })();
 
+// =====================
+//   CONSTANTS & JABATAN OPTIONS
+// =====================
 const JABATAN_OPTIONS = [
   'Ketua',
   'Koordinator',
@@ -31,6 +33,9 @@ const JABATAN_OPTIONS = [
 const HARI = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
 const SESI = ['07:00-10:00', '10:00-13:00', '13:00-15:00'];
 
+// =====================
+//   DATA STORE (localStorage + Firebase Firestore Sync)
+// =====================
 const DB = {
   get(k) {
     try {
