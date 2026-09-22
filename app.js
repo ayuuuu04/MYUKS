@@ -1,3 +1,4 @@
+
 (function initFloatingBackground() {
   const emojis = ['💊', '🩺', '🩵', '💉', '🩹', '⭐', '✨', '🏥', '📋', '🧊'];
   const container = document.getElementById('floaties');
@@ -15,9 +16,6 @@
   }
 })();
 
-// =====================
-//   CONSTANTS & JABATAN OPTIONS
-// =====================
 const JABATAN_OPTIONS = [
   'Ketua',
   'Koordinator',
@@ -33,9 +31,6 @@ const JABATAN_OPTIONS = [
 const HARI = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
 const SESI = ['07:00-10:00', '10:00-13:00', '13:00-15:00'];
 
-// =====================
-//   DATA STORE (localStorage + Firebase Firestore Sync)
-// =====================
 const DB = {
   get(k) {
     try {
@@ -61,13 +56,37 @@ const DB = {
 //   DEFAULT DATA
 // =====================
 DB.def('anggota', [
-  { id: 1, nama: 'Admin PMR', nis: '12345', jabatan: 'Ketua', kelas: 'UKS', angkatan: '10', password: '' },
-  { id: 2, nama: 'Afnan Fauzan Faturochim', nis: '1001', jabatan: 'Ketua', kelas: 'XI TE B', angkatan: '10', password: '' },
-  { id: 3, nama: 'Faizal Rahman', nis: '1002', jabatan: 'Koordinator', kelas: 'XI-B', angkatan: '10', password: '' },
-  { id: 4, nama: 'Galuh Ayu Palupi', nis: '1003', jabatan: 'Sekretaris', kelas: 'XI PPLG B', angkatan: '10', password: '' },
-  { id: 5, nama: 'Nisa Amalia', nis: '1101', jabatan: 'Anggota', kelas: 'XI-A', angkatan: '11', password: '' },
-  { id: 6, nama: 'Rizki Aditya', nis: '1102', jabatan: 'Komandan Lapangan', kelas: 'X-C', angkatan: '11', password: '' }
+  { id: 1, nama: 'Admin PMR', nis: '12345', jabatan: 'Ketua', kelas: 'UKS', angkatan: '10', jk: 'L', password: '' },
+  { id: 2, nama: 'Afnan Fauzan Faturochim', nis: '1001', jabatan: 'Ketua', kelas: 'XI TE B', angkatan: '10', jk: 'L', password: '' },
+  { id: 3, nama: 'Faizal Rahman', nis: '1002', jabatan: 'Koordinator', kelas: 'XI-B', angkatan: '10', jk: 'L', password: '' },
+  { id: 4, nama: 'Galuh Ayu Palupi', nis: '1003', jabatan: 'Sekretaris', kelas: 'XI PPLG B', angkatan: '10', jk: 'P', password: '' },
+  { id: 5, nama: 'Nisa Amalia', nis: '1101', jabatan: 'Anggota', kelas: 'XI-A', angkatan: '11', jk: 'P', password: '' },
+  { id: 6, nama: 'Rizki Aditya', nis: '1102', jabatan: 'Komandan Lapangan', kelas: 'X-C', angkatan: '11', jk: 'L', password: '' }
 ]);
+
+// Auto-migration to ensure all anggota have 'jk' (Jenis Kelamin: L = Cowo, P = Cewe)
+(function ensureAnggotaJk() {
+  try {
+    const list = DB.get('anggota');
+    if (Array.isArray(list)) {
+      let changed = false;
+      list.forEach(a => {
+        if (!a.jk) {
+          const n = (a.nama || '').toLowerCase();
+          if (n.includes('galuh') || n.includes('nisa') || n.includes('ayu') || n.includes('siti') || n.includes('putri') || n.includes('rahma') || n.includes('amalia') || n.includes('cantika') || n.includes('safira')) {
+            a.jk = 'P';
+          } else {
+            a.jk = 'L';
+          }
+          changed = true;
+        }
+      });
+      if (changed) DB.set('anggota', list);
+    }
+  } catch(e) {
+    console.warn('Migration JK error:', e);
+  }
+})();
 
 DB.def('pasien', [
   { id: 1, tanggal: '2026-09-15', nama: 'Budi Santoso', kelas: 'X-A', keluhan: 'Pusing dan mual', tindakan: 'Paracetamol, istirahat', status: 'Sembuh' },
@@ -738,6 +757,8 @@ pages.anggota = function(m) {
 
     const a10Total = list.filter(a => a.angkatan === '10').length;
     const a11Total = list.filter(a => a.angkatan === '11').length;
+    const cowoTotal = list.filter(a => a.jk !== 'P').length;
+    const ceweTotal = list.filter(a => a.jk === 'P').length;
 
     const countAllEl = document.getElementById('ang-count-all');
     const count10El = document.getElementById('ang-count-10');
@@ -745,6 +766,14 @@ pages.anggota = function(m) {
     if (countAllEl) countAllEl.textContent = list.length;
     if (count10El) count10El.textContent = a10Total;
     if (count11El) count11El.textContent = a11Total;
+
+    const statsEl = document.getElementById('ang-gender-stats');
+    if (statsEl) {
+      statsEl.innerHTML = `
+        <span class="badge badge-cowo"><i class="ti ti-gender-male"></i> 👦 ${cowoTotal} Cowo</span>
+        <span class="badge badge-cewe"><i class="ti ti-gender-female"></i> 👧 ${ceweTotal} Cewe</span>
+      `;
+    }
 
     const tbody = document.getElementById('ang-tbl');
     if (!tbody) return;
@@ -756,6 +785,11 @@ pages.anggota = function(m) {
             ? `<span class="badge-kali-jaga">${dutyCount} kali jaga</span>`
             : `<span class="badge-belum-jaga">Belum pernah</span>`;
 
+          const isCewe = a.jk === 'P';
+          const jkBadge = isCewe
+            ? `<span class="badge-cewe"><i class="ti ti-gender-female"></i> 👧 Cewe</span>`
+            : `<span class="badge-cowo"><i class="ti ti-gender-male"></i> 👦 Cowo</span>`;
+
           return `
           <tr>
             <td><strong>${a.nama}</strong></td>
@@ -766,6 +800,7 @@ pages.anggota = function(m) {
                 Angkatan ${a.angkatan}
               </span>
             </td>
+            <td>${jkBadge}</td>
             <td><span class="badge-jabatan">${a.jabatan || 'Anggota'}</span></td>
             <td>${dutyBadge}</td>
             <td>
@@ -776,18 +811,21 @@ pages.anggota = function(m) {
             </td>
           </tr>`;
         }).join('')
-      : `<tr><td colspan="7"><div class="empty"><i class="ti ti-users"></i>Tidak ada anggota pada kategori ini</div></td></tr>`;
+      : `<tr><td colspan="8"><div class="empty"><i class="ti ti-users"></i>Tidak ada anggota pada kategori ini</div></td></tr>`;
   }
 
   m.innerHTML = `
   <div class="page-hero">
     <div class="page-title-wrap">
       <h1 class="page-title">Data Anggota</h1>
-      <div class="page-subtitle">Kelola data anggota PMR & petugas UKS</div>
+      <div class="page-subtitle">Kelola data personil PMR, angkatan (A10/A11), dan jenis kelamin (Cowo/Cewe)</div>
     </div>
-    <button class="btn-header-add" onclick="openModalAnggota()">
-      <i class="ti ti-plus"></i> Tambah Anggota
-    </button>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <div id="ang-gender-stats" style="display:flex;gap:6px"></div>
+      <button class="btn-header-add" onclick="openModalAnggota()">
+        <i class="ti ti-plus"></i> Tambah Anggota
+      </button>
+    </div>
   </div>
 
   <div class="card">
@@ -816,6 +854,7 @@ pages.anggota = function(m) {
             <th>NIS</th>
             <th>KELAS</th>
             <th>ANGKATAN</th>
+            <th>GENDER</th>
             <th>JABATAN</th>
             <th>KALI JAGA</th>
             <th>AKSI</th>
@@ -851,7 +890,7 @@ window.openModalAnggota = function(editId) {
     <div class="modal-header">
       <div>
         <div class="modal-title"><i class="ti ti-user-plus" style="color:var(--primary)"></i> ${editItem ? 'Ubah Data Anggota' : 'Tambah Anggota Baru'}</div>
-        <div class="modal-sub">Lengkapi identitas, jabatan, dan angkatan anggota PMR</div>
+        <div class="modal-sub">Lengkapi identitas, gender, jabatan, dan angkatan anggota PMR</div>
       </div>
       <button class="modal-close-btn" onclick="document.getElementById('modal-ang').remove()">✕</button>
     </div>
@@ -871,6 +910,13 @@ window.openModalAnggota = function(editId) {
       <div class="form-group">
         <label>Kelas</label>
         <input type="text" id="modal-ang-kelas" placeholder="cth: XI TE B" value="${editItem?.kelas || ''}">
+      </div>
+      <div class="form-group">
+        <label>Jenis Kelamin (Gender)</label>
+        <select id="modal-ang-jk">
+          <option value="L" ${(editItem?.jk || 'L') === 'L' ? 'selected' : ''}>👦 Laki-laki (Cowo)</option>
+          <option value="P" ${editItem?.jk === 'P' ? 'selected' : ''}>👧 Perempuan (Cewe)</option>
+        </select>
       </div>
       <div class="form-group">
         <label>Jabatan</label>
@@ -931,6 +977,7 @@ window.saveModalAnggota = function(editId) {
   const nama = document.getElementById('modal-ang-nama').value.trim();
   const nis = document.getElementById('modal-ang-nis').value.trim();
   const kelas = document.getElementById('modal-ang-kelas').value.trim();
+  const jk = document.getElementById('modal-ang-jk').value;
   const jabatan = document.getElementById('modal-ang-jab').value;
   const angkatan = document.getElementById('modal-ang-angkatan').value;
 
@@ -952,6 +999,7 @@ window.saveModalAnggota = function(editId) {
       item.nama = nama;
       item.nis = nis;
       item.kelas = kelas || '-';
+      item.jk = jk;
       item.jabatan = jabatan;
       item.angkatan = angkatan;
       if (isCustom && pwd) item.password = pwd;
@@ -963,6 +1011,7 @@ window.saveModalAnggota = function(editId) {
       nama,
       nis,
       kelas: kelas || '-',
+      jk,
       jabatan,
       angkatan,
       password: pwd
@@ -1471,14 +1520,35 @@ pages.jadwal = function(m) {
       const anggotaList = DB.get('anggota') || [];
 
       container.innerHTML = list.slice().sort((a, b) => b.tanggal.localeCompare(a.tanggal)).map(u => {
-        const totalPetugas = u.titikJaga.reduce((s, t) => s + (t.anggota ? t.anggota.length : 0), 0);
+        let totalPetugas = 0;
+        let totA10 = 0;
+        let totA11 = 0;
+        let totCowo = 0;
+        let totCewe = 0;
+
+        (u.titikJaga || []).forEach(t => {
+          (t.anggota || []).forEach(nama => {
+            totalPetugas++;
+            const ang = anggotaList.find(a => a.nama === nama);
+            if (ang?.angkatan === '11') totA11++;
+            else totA10++;
+            if (ang?.jk === 'P') totCewe++;
+            else totCowo++;
+          });
+        });
 
         return `
         <div class="jadwal-card">
           <div class="jadwal-card-header">
             <div>
               <div class="jadwal-title">🚩 ${u.nama}</div>
-              <div class="jadwal-meta">${fmt(u.tanggal)} • ${u.titikJaga.length} titik jaga • ${totalPetugas} petugas bertugas</div>
+              <div class="jadwal-meta">${fmt(u.tanggal)} • ${u.titikJaga.length} Pos Jaga • ${totalPetugas} Petugas Bertugas</div>
+              <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+                <span class="badge badge-a10">⭐ A10: ${totA10}</span>
+                <span class="badge badge-a11">🌟 A11: ${totA11}</span>
+                <span class="badge badge-cowo">👦 ${totCowo} Cowo</span>
+                <span class="badge badge-cewe">👧 ${totCewe} Cewe</span>
+              </div>
             </div>
 
             <!-- Action buttons (Salin Teks, Kirim WA, Ubah, Hapus) -->
@@ -1502,24 +1572,60 @@ pages.jadwal = function(m) {
             <table class="jadwal-table">
               <thead>
                 <tr>
-                  <th style="width:35%">POS / TITIK JAGA</th>
+                  <th style="width:36%">POS / TITIK JAGA (MAKS 7 ORANG)</th>
                   <th>PETUGAS YANG DITUGASKAN</th>
                 </tr>
               </thead>
               <tbody>
                 ${u.titikJaga.map(t => {
-                  const chips = (t.anggota || []).map(nama => {
+                  const arr = t.anggota || [];
+                  const count = arr.length;
+                  const posA10 = arr.filter(n => (anggotaList.find(a => a.nama === n)?.angkatan === '10')).length;
+                  const posA11 = arr.filter(n => (anggotaList.find(a => a.nama === n)?.angkatan === '11')).length;
+                  const posCowo = arr.filter(n => (anggotaList.find(a => a.nama === n)?.jk !== 'P')).length;
+                  const posCewe = arr.filter(n => (anggotaList.find(a => a.nama === n)?.jk === 'P')).length;
+
+                  const capClass = count >= 7 ? 'full' : count > 0 ? 'available' : 'empty';
+                  const capLabel = count >= 7 ? `🔒 ${count}/7 (Penuh)` : `${count}/7 Petugas`;
+
+                  const chips = arr.map(nama => {
                     const ang = anggotaList.find(a => a.nama === nama);
-                    const kls = ang ? ang.kelas : '';
-                    return `<span class="petugas-chip"><i class="ti ti-user"></i> ${nama} ${kls ? `(${kls})` : ''}</span>`;
+                    const isCewe = ang?.jk === 'P';
+                    const isA10 = ang?.angkatan === '10';
+                    const icon = isCewe ? '👧' : '👦';
+                    const cls = isCewe ? 'cewe' : 'cowo';
+                    const angTag = isA10
+                      ? `<span class="chip-tag a10">A10</span>`
+                      : `<span class="chip-tag a11">A11</span>`;
+                    const kls = ang?.kelas ? `(${ang.kelas})` : '';
+
+                    return `
+                    <span class="petugas-chip ${cls}">
+                      <span>${icon}</span>
+                      <span>${nama}</span>
+                      ${angTag}
+                      ${kls ? `<span style="font-size:11px;opacity:0.8">${kls}</span>` : ''}
+                    </span>`;
                   }).join('');
 
                   return `
                   <tr>
-                    <td><div class="pos-title-label">📍 ${t.pos}</div></td>
+                    <td>
+                      <div class="pos-title-label">
+                        📍 <span>${t.pos}</span>
+                        <span class="pos-capacity-badge ${capClass}">${capLabel}</span>
+                      </div>
+                      ${count > 0 ? `
+                      <div class="pos-comp-bar">
+                        <span class="pos-comp-pill">⭐ A10: ${posA10}</span>
+                        <span class="pos-comp-pill">🌟 A11: ${posA11}</span>
+                        <span class="pos-comp-pill">👦 ${posCowo} Cowo</span>
+                        <span class="pos-comp-pill">👧 ${posCewe} Cewe</span>
+                      </div>` : ''}
+                    </td>
                     <td>
                       <div class="petugas-chips-wrap">
-                        ${chips || '<span style="color:var(--text3);font-size:12px">Belum ada petugas ditugaskan</span>'}
+                        ${chips || '<span style="color:var(--text3);font-size:12px;font-style:italic">Belum ada petugas ditugaskan</span>'}
                       </div>
                     </td>
                   </tr>`;
@@ -1562,7 +1668,7 @@ pages.jadwal = function(m) {
   <div class="page-hero">
     <div class="page-title-wrap">
       <h1 class="page-title">Jadwal Jaga</h1>
-      <div class="page-subtitle">Penempatan petugas jaga upacara bendera & piket UKS</div>
+      <div class="page-subtitle">Penempatan petugas jaga upacara bendera (maks 7 per pos) & piket UKS</div>
     </div>
     <div style="display:flex;gap:8px">
       <button class="btn-header-add" onclick="openModalUpacara()">
@@ -1617,22 +1723,44 @@ function generateJadwalWaText(u) {
   text += `🚩 *Kegiatan:* ${u.nama}\n`;
   text += `📅 *Tanggal:* ${fmt(u.tanggal)}\n`;
   if (u.keterangan) text += `📝 *Keterangan:* ${u.keterangan}\n`;
-  text += `\n📍 *PEMBAGIAN TITIK & POS JAGA:*\n`;
+  text += `\n📍 *PEMBAGIAN TITIK & POS JAGA (Maks 7 Orang/Pos):*\n`;
 
-  u.titikJaga.forEach((t, i) => {
-    text += `\n*${i + 1}. Pos: ${t.pos}*\n`;
-    if (t.anggota && t.anggota.length > 0) {
-      t.anggota.forEach(nama => {
+  let totalPetugas = 0;
+  let totA10 = 0;
+  let totA11 = 0;
+  let totCowo = 0;
+  let totCewe = 0;
+
+  (u.titikJaga || []).forEach((t, i) => {
+    const arr = t.anggota || [];
+    const count = arr.length;
+    text += `\n*${i + 1}. Pos: ${t.pos}* (${count}/7 Orang)\n`;
+    if (arr.length > 0) {
+      arr.forEach(nama => {
+        totalPetugas++;
         const ang = anggotaList.find(a => a.nama === nama);
-        const kls = ang ? ` (${ang.kelas})` : '';
-        text += `   • ${nama}${kls}\n`;
+        const isCewe = ang?.jk === 'P';
+        const isA10 = ang?.angkatan === '10';
+        const icon = isCewe ? '👧' : '👦';
+        const jkLabel = isCewe ? 'Cewe' : 'Cowo';
+        const angLabel = isA10 ? 'A10' : 'A11';
+        const kls = ang?.kelas ? ` - ${ang.kelas}` : '';
+
+        if (isA10) totA10++; else totA11++;
+        if (isCewe) totCewe++; else totCowo++;
+
+        text += `   • ${icon} ${nama} [${angLabel} • ${jkLabel}${kls}]\n`;
       });
     } else {
-      text += `   • (Belum ada petugas)\n`;
+      text += `   • _(Belum ada petugas ditugaskan)_\n`;
     }
   });
 
-  text += `\n━━━━━━━━━━━━━━━━━━━━━\n`;
+  text += `\n📊 *REKAPITULASI PETUGAS:*\n`;
+  text += `• Total: ${totalPetugas} Petugas Bertugas\n`;
+  text += `• Angkatan: ⭐ A10 (${totA10}) | 🌟 A11 (${totA11})\n`;
+  text += `• Gender: 👦 ${totCowo} Cowo | 👧 ${totCewe} Cewe\n`;
+  text += `━━━━━━━━━━━━━━━━━━━━━\n`;
   text += `_Harap hadir tepat waktu dan menggunakan seragam PMR lengkap. Semangat bertugas!_ 💪✨`;
   return text;
 }
@@ -1674,27 +1802,31 @@ window.kirimWaJadwal = function(id) {
 };
 
 // =====================
-//   MODAL JADWAL JAGA UPACARA
+//   MODAL JADWAL JAGA UPACARA (INTERACTIVE BUILDER - MAX 7 PETUGAS)
 // =====================
+window._upacaraPosData = [];
+
 window.openModalUpacara = function(editId) {
   const list = DB.get('upacara') || [];
-  const anggota = DB.get('anggota') || [];
-  const titikTemplate = DB.get('titik_jaga_template') || [];
   const editItem = editId ? list.find(x => x.id === editId) : null;
 
-  const initialRows = editItem?.titikJaga && editItem.titikJaga.length
-    ? editItem.titikJaga
-    : [{ pos: 'Lapangan Utama (Depan Tiang)', anggota: [] }];
+  window._upacaraPosData = editItem?.titikJaga && editItem.titikJaga.length
+    ? JSON.parse(JSON.stringify(editItem.titikJaga)).map(t => ({
+        pos: t.pos || '',
+        anggota: Array.isArray(t.anggota) ? t.anggota : [],
+        filter: 'all'
+      }))
+    : [{ pos: 'Lapangan Utama (Depan Tiang)', anggota: [], filter: 'all' }];
 
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
   overlay.id = 'modal-upacara';
   overlay.innerHTML = `
-  <div class="modal" style="max-width:640px">
+  <div class="modal" style="max-width:680px">
     <div class="modal-header">
       <div>
         <div class="modal-title"><i class="ti ti-flag" style="color:var(--primary)"></i> ${editItem ? 'Ubah Jadwal Jaga Upacara' : 'Tambah Jadwal Jaga Upacara'}</div>
-        <div class="modal-sub">Tentukan agenda upacara dan bagi titik pos serta personil yang bertugas</div>
+        <div class="modal-sub">Atur agenda upacara, bagi titik pos & pilih petugas (maksimal 7 orang per pos)</div>
       </div>
       <button class="modal-close-btn" onclick="document.getElementById('modal-upacara').remove()">✕</button>
     </div>
@@ -1705,40 +1837,21 @@ window.openModalUpacara = function(editId) {
     </div>
     <div class="form-group" style="margin-bottom:14px"><label>Keterangan</label><input type="text" id="m-up-ket" placeholder="cth: Penempatan petugas jaga upacara bendera" value="${editItem?.keterangan || ''}"></div>
 
-    <div style="font-weight:800;font-size:13px;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:6px">
-      <i class="ti ti-map-pin" style="color:var(--primary)"></i> Pembagian Pos & Petugas
+    <div style="font-weight:800;font-size:13px;color:var(--text);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between">
+      <span style="display:flex;align-items:center;gap:6px">
+        <i class="ti ti-map-pin" style="color:var(--primary)"></i> Pembagian Pos & Petugas
+      </span>
+      <span style="font-size:11px;color:var(--text3);font-weight:700">Maksimal 7 petugas per pos</span>
     </div>
 
-    <div id="m-titik-builder">
-      ${initialRows.map((t, idx) => `
-      <div class="m-titik-row" style="background:#f8fafc;border:1.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px">
-        <div class="form-row" style="margin-bottom:8px">
-          <div class="form-group">
-            <label>Pos / Titik Jaga</label>
-            <input type="text" class="m-titik-pos" placeholder="cth: Lapangan Utama" value="${t.pos}" list="pos-template-options">
-          </div>
-          <div style="display:flex;align-items:flex-end">
-            <button class="btn btn-danger btn-sm" onclick="this.closest('.m-titik-row').remove()" title="Hapus pos"><i class="ti ti-trash"></i></button>
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Petugas yang Ditugaskan (Pilih Anggota)</label>
-          <select class="m-titik-anggota" multiple style="height:76px">
-            ${anggota.map(a => `
-              <option value="${a.nama}" ${(t.anggota || []).includes(a.nama) ? 'selected' : ''}>
-                ${a.nama} (A${a.angkatan} - ${a.kelas})
-              </option>`).join('')}
-          </select>
-        </div>
-      </div>`).join('')}
-    </div>
+    <div id="m-titik-builder"></div>
 
     <datalist id="pos-template-options">
-      ${titikTemplate.map(t => `<option>${t}</option>`).join('')}
+      ${(DB.get('titik_jaga_template') || []).map(t => `<option value="${t}"></option>`).join('')}
     </datalist>
 
-    <button class="btn btn-ghost btn-sm" onclick="addModalTitikRow()" style="margin-bottom:16px">
-      <i class="ti ti-plus"></i> Tambah Pos Jaga
+    <button class="btn btn-ghost btn-sm" onclick="addModalTitikRow()" style="margin-bottom:16px;width:100%;border-style:dashed">
+      <i class="ti ti-plus"></i> Tambah Pos Jaga Baru
     </button>
 
     <div class="btn-row" style="justify-content:flex-end">
@@ -1749,45 +1862,192 @@ window.openModalUpacara = function(editId) {
     </div>
   </div>`;
   document.body.appendChild(overlay);
+
+  renderModalTitikRows();
+};
+
+window.renderModalTitikRows = function() {
+  const container = document.getElementById('m-titik-builder');
+  if (!container) return;
+
+  const anggotaList = DB.get('anggota') || [];
+
+  container.innerHTML = window._upacaraPosData.map((t, idx) => {
+    const arr = t.anggota || [];
+    const count = arr.length;
+
+    const posA10 = arr.filter(n => (anggotaList.find(a => a.nama === n)?.angkatan === '10')).length;
+    const posA11 = arr.filter(n => (anggotaList.find(a => a.nama === n)?.angkatan === '11')).length;
+    const posCowo = arr.filter(n => (anggotaList.find(a => a.nama === n)?.jk !== 'P')).length;
+    const posCewe = arr.filter(n => (anggotaList.find(a => a.nama === n)?.jk === 'P')).length;
+
+    const capClass = count > 7 ? 'overflow' : count === 7 ? 'full' : count > 0 ? 'available' : 'empty';
+    const capLabel = count > 7 ? `⚠️ ${count}/7 Petugas (Kelebihan!)` : count === 7 ? `🔒 7/7 Petugas (Pos Penuh)` : `${count}/7 Petugas`;
+
+    // Filtered available members for picker
+    const curFilter = t.filter || 'all';
+    let availableList = anggotaList;
+    if (curFilter === '10') availableList = availableList.filter(a => a.angkatan === '10');
+    else if (curFilter === '11') availableList = availableList.filter(a => a.angkatan === '11');
+    else if (curFilter === 'cowo') availableList = availableList.filter(a => a.jk !== 'P');
+    else if (curFilter === 'cewe') availableList = availableList.filter(a => a.jk === 'P');
+
+    // Selected Chips
+    const selectedChipsHtml = arr.map(nama => {
+      const ang = anggotaList.find(a => a.nama === nama);
+      const isCewe = ang?.jk === 'P';
+      const isA10 = ang?.angkatan === '10';
+      const icon = isCewe ? '👧' : '👦';
+      const cls = isCewe ? 'cewe' : 'cowo';
+      const angLabel = isA10 ? 'A10' : 'A11';
+
+      return `
+      <span class="pos-active-chip ${cls}">
+        <span>${icon}</span>
+        <span>${nama}</span>
+        <span class="chip-tag ${isA10 ? 'a10' : 'a11'}">${angLabel}</span>
+        <button class="btn-del-chip" type="button" onclick="removeMemberFromPos(${idx}, '${escapeHtml(nama)}')" title="Hapus dari pos ini">✕</button>
+      </span>`;
+    }).join('');
+
+    // Member selection pills
+    const pickerPillsHtml = availableList.map(a => {
+      const isSelected = arr.includes(a.nama);
+      const isCewe = a.jk === 'P';
+      const isA10 = a.angkatan === '10';
+      const icon = isCewe ? '👧' : '👦';
+      const cls = isCewe ? 'cewe' : 'cowo';
+      const angLabel = isA10 ? 'A10' : 'A11';
+
+      if (isSelected) {
+        return `
+        <span class="picker-member-pill selected" title="Sudah dipilih">
+          ${icon} ${a.nama} (${angLabel}) ✓
+        </span>`;
+      } else {
+        return `
+        <span class="picker-member-pill ${cls}" onclick="addMemberToPos(${idx}, '${escapeHtml(a.nama)}')" title="Klik untuk menugaskan">
+          + ${icon} ${a.nama} (${angLabel} • ${a.kelas || '-'})
+        </span>`;
+      }
+    }).join('');
+
+    return `
+    <div class="m-titik-box">
+      <div class="form-row" style="margin-bottom:8px;align-items:center">
+        <div class="form-group" style="flex:2">
+          <label>Nama Pos / Titik Jaga</label>
+          <input type="text" class="m-titik-pos" placeholder="cth: Lapangan Utama (Depan Tiang)" value="${escapeHtml(t.pos)}" list="pos-template-options" oninput="updatePosName(${idx}, this.value)">
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+          <label>&nbsp;</label>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span class="pos-capacity-badge ${capClass}">${capLabel}</span>
+            <button class="btn btn-danger btn-sm" onclick="deleteModalTitikRow(${idx})" title="Hapus pos ini"><i class="ti ti-trash"></i></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Active Assigned Chips -->
+      <div style="font-size:11px;font-weight:800;color:var(--text2);margin-bottom:4px;display:flex;justify-content:space-between">
+        <span>Petugas Ditugaskan (${count}/7):</span>
+        ${count > 0 ? `<span style="color:var(--text3)">⭐ A10: ${posA10} | 🌟 A11: ${posA11} | 👦 ${posCowo} Cowo | 👧 ${posCewe} Cewe</span>` : ''}
+      </div>
+      <div class="pos-active-chips-wrap">
+        ${selectedChipsHtml || '<span style="color:var(--text3);font-size:11.5px;font-style:italic">Belum ada petugas. Klik nama anggota di bawah untuk menambahkan.</span>'}
+      </div>
+
+      <!-- Member Picker with Filter Tabs -->
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:4px">
+          <span style="font-size:11px;font-weight:800;color:var(--text2)">+ Tambah Petugas (Klik Nama):</span>
+          <div style="display:flex;gap:3px">
+            <button type="button" class="picker-filter-btn ${curFilter === 'all' ? 'active' : ''}" onclick="filterPosPicker(${idx}, 'all')">Semua</button>
+            <button type="button" class="picker-filter-btn ${curFilter === '10' ? 'active' : ''}" onclick="filterPosPicker(${idx}, '10')">A10</button>
+            <button type="button" class="picker-filter-btn ${curFilter === '11' ? 'active' : ''}" onclick="filterPosPicker(${idx}, '11')">A11</button>
+            <button type="button" class="picker-filter-btn ${curFilter === 'cowo' ? 'active' : ''}" onclick="filterPosPicker(${idx}, 'cowo')">👦 Cowo</button>
+            <button type="button" class="picker-filter-btn ${curFilter === 'cewe' ? 'active' : ''}" onclick="filterPosPicker(${idx}, 'cewe')">👧 Cewe</button>
+          </div>
+        </div>
+        <div class="pos-quick-picker">
+          ${pickerPillsHtml}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+};
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+}
+
+window.updatePosName = function(idx, val) {
+  if (window._upacaraPosData[idx]) {
+    window._upacaraPosData[idx].pos = val;
+  }
+};
+
+window.addMemberToPos = function(idx, memberName) {
+  if (!window._upacaraPosData[idx]) return;
+  if (!window._upacaraPosData[idx].anggota) window._upacaraPosData[idx].anggota = [];
+  
+  if (window._upacaraPosData[idx].anggota.length >= 7) {
+    return toast('⚠️ Pos ini sudah mencapai batas maksimal 7 petugas!');
+  }
+  if (!window._upacaraPosData[idx].anggota.includes(memberName)) {
+    window._upacaraPosData[idx].anggota.push(memberName);
+    renderModalTitikRows();
+  }
+};
+
+window.removeMemberFromPos = function(idx, memberName) {
+  if (!window._upacaraPosData[idx]) return;
+  window._upacaraPosData[idx].anggota = (window._upacaraPosData[idx].anggota || []).filter(n => n !== memberName);
+  renderModalTitikRows();
 };
 
 window.addModalTitikRow = function() {
-  const anggota = DB.get('anggota') || [];
-  const builder = document.getElementById('m-titik-builder');
-  const div = document.createElement('div');
-  div.className = 'm-titik-row';
-  div.style.cssText = 'background:#f8fafc;border:1.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px';
-  div.innerHTML = `
-    <div class="form-row" style="margin-bottom:8px">
-      <div class="form-group">
-        <label>Pos / Titik Jaga</label>
-        <input type="text" class="m-titik-pos" placeholder="cth: Gerbang & Parkiran" list="pos-template-options">
-      </div>
-      <div style="display:flex;align-items:flex-end">
-        <button class="btn btn-danger btn-sm" onclick="this.closest('.m-titik-row').remove()"><i class="ti ti-trash"></i></button>
-      </div>
-    </div>
-    <div class="form-group">
-      <label>Petugas yang Ditugaskan</label>
-      <select class="m-titik-anggota" multiple style="height:76px">
-        ${anggota.map(a => `<option value="${a.nama}">${a.nama} (A${a.angkatan} - ${a.kelas})</option>`).join('')}
-      </select>
-    </div>`;
-  builder.appendChild(div);
+  window._upacaraPosData.push({ pos: '', anggota: [], filter: 'all' });
+  renderModalTitikRows();
+};
+
+window.deleteModalTitikRow = function(idx) {
+  if (window._upacaraPosData.length <= 1) {
+    window._upacaraPosData = [{ pos: '', anggota: [], filter: 'all' }];
+  } else {
+    window._upacaraPosData.splice(idx, 1);
+  }
+  renderModalTitikRows();
+};
+
+window.filterPosPicker = function(idx, filterType) {
+  if (window._upacaraPosData[idx]) {
+    window._upacaraPosData[idx].filter = filterType;
+    renderModalTitikRows();
+  }
 };
 
 window.saveModalUpacara = function(editId) {
   const nama = document.getElementById('m-up-nama').value.trim();
   if (!nama) return toast('Nama kegiatan upacara wajib diisi!');
 
-  const rows = document.querySelectorAll('.m-titik-row');
-  const titikJaga = [];
-  rows.forEach(row => {
-    const pos = row.querySelector('.m-titik-pos').value.trim();
-    const sel = row.querySelector('.m-titik-anggota');
-    const angg = Array.from(sel.selectedOptions).map(o => o.value);
-    if (pos) titikJaga.push({ pos, anggota: angg });
-  });
+  // Check if any pos exceeds 7 members
+  const overLimit = window._upacaraPosData.find(p => (p.anggota || []).length > 7);
+  if (overLimit) {
+    return toast(`⚠️ Pos "${overLimit.pos || 'Tanpa Nama'}" melebihi batas maksimal 7 petugas!`);
+  }
+
+  const titikJaga = window._upacaraPosData
+    .filter(p => p.pos && p.pos.trim())
+    .map(p => ({
+      pos: p.pos.trim(),
+      anggota: p.anggota || []
+    }));
+
+  if (!titikJaga.length) {
+    return toast('Tambahkan minimal 1 pos jaga beserta namanya!');
+  }
 
   const list = DB.get('upacara') || [];
   const tgl = document.getElementById('m-up-tgl').value;
@@ -1843,7 +2103,7 @@ window.openModalPiket = function() {
     <div class="form-group" style="margin-bottom:12px">
       <label>Anggota Bertugas</label>
       <select id="m-piket-ang">
-        ${anggota.map(a => `<option value="${a.nama}">${a.nama} (A${a.angkatan} - ${a.kelas})</option>`).join('')}
+        ${anggota.map(a => `<option value="${a.nama}">${a.jk === 'P' ? '👧' : '👦'} ${a.nama} (A${a.angkatan} - ${a.kelas})</option>`).join('')}
       </select>
     </div>
 
@@ -1894,6 +2154,8 @@ pages.laporan = function(m) {
 
   const a10 = anggota.filter(a => a.angkatan === '10').length;
   const a11 = anggota.filter(a => a.angkatan === '11').length;
+  const cowo = anggota.filter(a => a.jk !== 'P').length;
+  const cewe = anggota.filter(a => a.jk === 'P').length;
   const totalHadir = absensi.filter(a => a.status === 'Hadir').length;
   const totalAlpha = absensi.filter(a => a.status === 'Alpha').length;
   const dirujuk = pasien.filter(p => p.status === 'Dirujuk').length;
@@ -1936,7 +2198,7 @@ pages.laporan = function(m) {
     <div class="stat">
       <div class="stat-label">👥 Personil Anggota</div>
       <div class="stat-val">${anggota.length}</div>
-      <div class="stat-sub">A10: ${a10} orang | A11: ${a11} orang</div>
+      <div class="stat-sub">A10: ${a10} | A11: ${a11} • 👦 ${cowo} | 👧 ${cewe}</div>
       <span class="stat-icon">⭐</span>
     </div>
   </div>
