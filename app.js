@@ -551,13 +551,13 @@ function updateHeaderUser(user) {
 
     container.innerHTML = `
       <div class="user-header-pill">
-        <i class="ti ti-user-circle" style="font-size:16px"></i>
-        <span>${user.nama}</span>
+        <i class="ti ti-user-circle" style="font-size:16px;flex-shrink:0"></i>
+        <span class="user-header-name">${user.nama}</span>
         <span class="user-role-badge ${roleClass}">${roleLabel}</span>
-        <button class="btn btn-ghost btn-sm" onclick="openChangePasswordModal()" title="Ganti Password" style="padding:2px 7px;color:#fff;background:rgba(255,255,255,0.18);border:none;border-radius:6px">
+        <button class="btn btn-ghost btn-sm" onclick="openChangePasswordModal()" title="Ganti Password" style="padding:2px 6px;color:#fff;background:rgba(255,255,255,0.18);border:none;border-radius:6px;flex-shrink:0">
           <i class="ti ti-key"></i>
         </button>
-        <button class="btn btn-ghost btn-sm" onclick="logout()" title="Keluar" style="padding:2px 7px;color:#fee2e2;background:rgba(239,68,68,0.3);border:none;border-radius:6px">
+        <button class="btn btn-ghost btn-sm" onclick="logout()" title="Keluar" style="padding:2px 6px;color:#fee2e2;background:rgba(239,68,68,0.3);border:none;border-radius:6px;flex-shrink:0">
           <i class="ti ti-logout"></i>
         </button>
       </div>`;
