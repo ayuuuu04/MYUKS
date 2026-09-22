@@ -1,12 +1,9 @@
-/* ==========================================================================
-   SIJAGA UKS — APLIKASI PMR (TEMA BIRU ESTETIK & CERAH PREMIUM)
-   Stylesheet: style.css
-   ========================================================================== */
 
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  -webkit-tap-highlight-color: transparent;
 }
 
 :root {
@@ -63,13 +60,16 @@
   --shadow-lg: 0 16px 40px rgba(37, 99, 235, 0.16);
 }
 
-body {
+html, body {
   background: var(--bg);
   color: var(--text);
   font-family: 'Nunito', sans-serif;
   font-size: 14px;
   min-height: 100vh;
   line-height: 1.5;
+  overflow-x: hidden;
+  width: 100%;
+  position: relative;
 }
 
 /* ==========================================================================
@@ -109,7 +109,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 16px;
   position: relative;
   z-index: 2;
   background: radial-gradient(circle at top, #dbeafe 0%, #f4f8fd 60%, #e2e8f0 100%);
@@ -120,7 +120,7 @@ body {
   backdrop-filter: blur(12px);
   border: 2px solid var(--border);
   border-radius: 24px;
-  padding: 36px 32px;
+  padding: 32px 24px;
   width: 100%;
   max-width: 440px;
   box-shadow: var(--shadow-lg);
@@ -130,21 +130,21 @@ body {
 
 .login-header {
   text-align: center;
-  margin-bottom: 24px;
+  margin-bottom: 22px;
 }
 
 .login-icon-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 64px;
-  height: 64px;
+  width: 60px;
+  height: 60px;
   background: linear-gradient(135deg, #3b82f6, #1d4ed8);
   color: #fff;
-  border-radius: 20px;
-  font-size: 32px;
+  border-radius: 18px;
+  font-size: 30px;
   box-shadow: 0 8px 20px rgba(37, 99, 235, 0.35);
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .login-title {
@@ -157,7 +157,7 @@ body {
 .login-subtitle {
   font-size: 13px;
   color: var(--text2);
-  margin-top: 4px;
+  margin-top: 3px;
   font-weight: 600;
 }
 
@@ -187,11 +187,12 @@ body {
   display: flex;
   justify-content: space-between;
   background: #fff;
-  padding: 5px 9px;
+  padding: 6px 10px;
   border-radius: 6px;
   cursor: pointer;
   border: 1px solid var(--border);
   transition: all 0.15s;
+  font-size: 12px;
 }
 
 .login-hint-item:hover {
@@ -200,18 +201,19 @@ body {
 }
 
 /* ==========================================================================
-   DUAL-MODE RESPONSIVE LAYOUT (AESTHETIC BLUE THEME)
+   APP WRAPPER & DUAL-MODE LAYOUT
    ========================================================================== */
-
 #app {
   display: flex;
   min-height: 100vh;
+  max-width: 100vw;
+  overflow-x: hidden;
   position: relative;
   z-index: 1;
 }
 
 /* ==========================================================================
-   SIDEBAR (DESKTOP FULLSCREEN & LANDSCAPE) - AESTHETIC BLUE
+   SIDEBAR (DESKTOP FULLSCREEN & HP LANDSCAPE >= 900px)
    ========================================================================== */
 #sidebar {
   width: 260px;
@@ -394,7 +396,7 @@ body {
 }
 
 /* ==========================================================================
-   MOBILE TOPBAR & MAIN WRAPPER (MOBILE PORTRAIT) - AESTHETIC BLUE
+   MOBILE TOPBAR & NAV (< 900px) - PERFECT RESPONSIVE
    ========================================================================== */
 #main-wrapper {
   flex: 1;
@@ -402,86 +404,101 @@ body {
   display: flex;
   flex-direction: column;
   background: var(--bg);
+  max-width: 100vw;
+  overflow-x: hidden;
 }
 
 #mobile-header {
   background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 55%, #38bdf8 100%);
-  padding: 0 20px;
+  padding: 0 14px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 60px;
+  height: 56px;
   box-shadow: 0 4px 16px rgba(37, 99, 235, 0.2);
   position: sticky;
   top: 0;
   z-index: 30;
+  width: 100%;
 }
 
 .logo {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   font-weight: 900;
-  font-size: 17px;
+  font-size: 16px;
   color: #fff;
   font-family: 'Fredoka One', sans-serif;
   letter-spacing: 0.5px;
+  flex-shrink: 0;
 }
 
 .logo-badge {
   background: #fff;
   color: var(--primary-dark);
   border-radius: 20px;
-  padding: 2px 9px;
-  font-size: 12px;
+  padding: 2px 8px;
+  font-size: 11.5px;
   font-weight: 900;
 }
 
 .logo-heart {
-  font-size: 18px;
+  font-size: 17px;
 }
 
 .header-right {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  overflow: hidden;
 }
 
 .user-header-pill {
   background: rgba(255, 255, 255, 0.2);
   color: #fff;
   border-radius: 24px;
-  padding: 3px 10px;
-  font-size: 11.5px;
+  padding: 3px 8px;
+  font-size: 11px;
   font-weight: 800;
   backdrop-filter: blur(6px);
   border: 1px solid rgba(255, 255, 255, 0.3);
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
+  max-width: 220px;
+}
+
+.user-header-pill .user-header-name {
+  max-width: 80px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-block;
 }
 
 .user-role-badge {
   background: #fff;
   color: var(--primary-dark);
-  padding: 1px 6px;
-  border-radius: 10px;
-  font-size: 9.5px;
+  padding: 1px 5px;
+  border-radius: 8px;
+  font-size: 9px;
   font-weight: 900;
   text-transform: uppercase;
+  flex-shrink: 0;
 }
 
 .hbadge {
   background: rgba(255, 255, 255, 0.2);
   color: #fff;
   border-radius: 20px;
-  padding: 3px 10px;
-  font-size: 10.5px;
+  padding: 3px 8px;
+  font-size: 10px;
   font-weight: 700;
   border: 1px solid rgba(255, 255, 255, 0.25);
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
 }
 
 .hbadge .dot {
@@ -492,44 +509,55 @@ body {
 }
 
 #clock-display {
-  font-size: 11.5px;
+  font-size: 11px;
   color: #fff;
   font-weight: 800;
   background: rgba(255, 255, 255, 0.18);
-  padding: 3px 8px;
-  border-radius: 10px;
+  padding: 3px 7px;
+  border-radius: 8px;
   font-family: 'Nunito', sans-serif;
+  white-space: nowrap;
 }
 
+/* Horizontal Scrollable Nav on Mobile */
 #mobile-nav {
   background: #fff;
   border-bottom: 2px solid var(--border);
   display: flex;
   gap: 6px;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   flex-shrink: 0;
-  padding: 8px 16px;
+  padding: 8px 12px;
   position: sticky;
-  top: 60px;
+  top: 56px;
   z-index: 25;
   box-shadow: 0 2px 10px rgba(37, 99, 235, 0.05);
+  width: 100%;
+}
+
+#mobile-nav::-webkit-scrollbar {
+  display: none;
 }
 
 #mobile-nav .nav-btn {
   background: var(--bg);
   border: 1.5px solid var(--border);
   color: var(--text2);
-  padding: 7px 15px;
+  padding: 7px 14px;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 13px;
+  font-size: 12.5px;
   white-space: nowrap;
   border-radius: 10px;
   transition: all 0.2s;
   font-family: 'Nunito', sans-serif;
   font-weight: 700;
+  flex-shrink: 0;
 }
 
 #mobile-nav .nav-btn.active {
@@ -545,13 +573,14 @@ main {
   padding: 24px 32px;
   background: var(--bg);
   overflow-y: auto;
+  max-width: 100%;
 }
 
 /* ==========================================================================
    MEDIA QUERY CONDITIONAL RULES (RESPONSIVE DUAL-LAYOUT)
    ========================================================================== */
 
-/* 1. DESKTOP FULLSCREEN & LANDSCAPE (Width >= 900px) -> FOTO 2 */
+/* 1. DESKTOP FULLSCREEN & LANDSCAPE (Width >= 900px) */
 @media (min-width: 900px) {
   #app {
     flex-direction: row;
@@ -574,7 +603,7 @@ main {
   }
 }
 
-/* 2. MOBILE PORTRAIT / WINDOWED / SMALL SCREEN (Width < 900px) -> FOTO 1 */
+/* 2. MOBILE PORTRAIT / WINDOWED / SMALL SCREEN (Width < 900px) */
 @media (max-width: 899px) {
   #app {
     flex-direction: column;
@@ -589,14 +618,116 @@ main {
     display: flex !important;
   }
   main {
-    padding: 16px;
+    padding: 14px;
   }
-  .grid4, .grid3, .grid2 {
+  
+  /* Compact Header on Small Screens */
+  .header-right .hbadge,
+  .header-right #clock-display,
+  .header-right #fb-status-badge {
+    display: none;
+  }
+
+  /* Grid layouts become responsive 2-column or 1-column */
+  .grid4 {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .grid3, .grid2 {
     grid-template-columns: 1fr;
+    gap: 12px;
   }
+
+  .stat {
+    padding: 14px;
+    border-radius: 14px;
+  }
+  .stat-val {
+    font-size: 24px;
+  }
+  .stat-icon {
+    font-size: 24px;
+    bottom: 8px;
+    right: 10px;
+  }
+
   .page-hero {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .page-title {
+    font-size: 20px;
+  }
+  .page-subtitle {
+    font-size: 12px;
+  }
+  .btn-header-add {
+    width: 100%;
+    justify-content: center;
+    padding: 11px;
+    font-size: 13.5px;
+  }
+
+  .card {
+    padding: 16px;
+    border-radius: 16px;
+    margin-bottom: 14px;
+  }
+
+  /* 4 Actions in Jadwal Card arrange in neat 2x2 grid */
+  .jadwal-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .jadwal-actions .btn {
+    width: 100%;
+    justify-content: center;
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  /* Tabs row inside page becomes scrollable */
+  .tab-row {
+    max-width: 100%;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .tab-row::-webkit-scrollbar {
+    display: none;
+  }
+  .tab-btn {
+    padding: 7px 13px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  /* Modal on Mobile */
+  .modal {
+    width: 95% !important;
+    max-height: 90vh !important;
+    padding: 20px 16px !important;
+    border-radius: 18px !important;
+    margin: auto;
+  }
+  .form-row {
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .btn-row {
+    width: 100%;
+    justify-content: stretch;
+  }
+  .btn-row .btn {
+    flex: 1;
+    justify-content: center;
   }
 }
 
@@ -741,15 +872,18 @@ main {
    ========================================================================== */
 .tbl-wrap {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   border-radius: 14px;
   border: 2px solid var(--border);
   background: #fff;
+  width: 100%;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
   font-size: 14px;
+  min-width: 540px;
 }
 
 th {
@@ -757,7 +891,7 @@ th {
   color: var(--primary-dark);
   font-weight: 800;
   text-align: left;
-  padding: 12px 18px;
+  padding: 12px 16px;
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.6px;
@@ -765,7 +899,7 @@ th {
 }
 
 td {
-  padding: 14px 18px;
+  padding: 12px 16px;
   border-bottom: 1px solid var(--border);
   color: var(--text);
   vertical-align: middle;
@@ -1289,7 +1423,7 @@ textarea {
   background: #fff;
   border: 2px solid var(--primary-border);
   color: var(--text);
-  border-radius: var(--radius);
+  border-radius: 16px;
   padding: 14px 22px;
   font-size: 14px;
   display: none;
