@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MY UKS — Markas Digital PMR</title>
+  
+  <!-- Tabler Icons & Google Fonts -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet">
+  
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Firebase SDK Module -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+    import { getFirestore, collection, doc, getDocs, addDoc, deleteDoc, setDoc, onSnapshot, serverTimestamp }
+      from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+    const customConfig = JSON.parse(localStorage.getItem('pmr_fb_config') || 'null');
+    const firebaseConfig = customConfig || {
+      apiKey: "AIzaSyBZmAP4Udr15GSU_HVLnkkpw2sgLrwoefQ",
+      authDomain: "sijaga-uks.firebaseapp.com",
+      projectId: "sijaga-uks",
+      storageBucket: "sijaga-uks.firebasestorage.app",
+      messagingSenderId: "1011150387166",
+      appId: "1:1011150387166:web:b36c1a27d858fc279fcf4f"
+    };
+
+    let db = null;
+    let firebaseReady = false;
+
+    try {
+      const app = initializeApp(firebaseConfig);
+      db = getFirestore(app);
+      firebaseReady = true;
+      console.log('✅ Firebase terhubung!');
+    } catch (e) {
+      console.warn('⚠️ Firebase belum tersambung, menggunakan database lokal:', e.message);
+    }
+
+    // Expose ke window scope untuk app.js
+    window._fb = {
+      ready: () => firebaseReady && db !== null,
+      db: () => db,
+      collection, doc, getDocs, addDoc, deleteDoc, setDoc, onSnapshot, serverTimestamp
+    };
+
+    window.dispatchEvent(new Event('firebase-ready'));
+  </script>
+</head>
+<body>
+
+  <!-- Floating background particles -->
+  <div class="floaties" id="floaties"></div>
+
+  <!-- Login Screen Container -->
+  <div id="login-screen"></div>
+
+  <!-- Main Application Container -->
+  <div id="app" style="display:none">
+
+    <!-- DESKTOP / LANDSCAPE SIDEBAR (Layout Foto 2) -->
+    <aside id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo-icon">
+          <i class="ti ti-shield-heart"></i>
+        </div>
+        <div class="sidebar-logo-text">
+          <div class="sidebar-logo-title">MY UKS</div>
+          <div class="sidebar-logo-sub">Markas Digital PMR</div>
+        </div>
+      </div>
+
+      <div class="sidebar-nav">
+        <button class="nav-btn active" data-page="dashboard" onclick="showPage('dashboard')">
+          <i class="ti ti-home"></i> Beranda
+        </button>
+        <button class="nav-btn" data-page="anggota" onclick="showPage('anggota')">
+          <i class="ti ti-users"></i> Anggota
+        </button>
+        <button class="nav-btn" data-page="pasien" onclick="showPage('pasien')">
+          <i class="ti ti-heart-pulse"></i> Data Pasien
+        </button>
+        <button class="nav-btn" data-page="stok" onclick="showPage('stok')">
+          <i class="ti ti-medicine-syrup"></i> Stok UKS
+        </button>
+        <button class="nav-btn" data-page="absensi" onclick="showPage('absensi')">
+          <i class="ti ti-clipboard-check"></i> Absensi
+        </button>
+        <button class="nav-btn" data-page="jadwal" onclick="showPage('jadwal')">
+          <i class="ti ti-calendar-event"></i> Jadwal Jaga
+        </button>
+        <button class="nav-btn" data-page="laporan" onclick="showPage('laporan')">
+          <i class="ti ti-report-analytics"></i> Laporan
+        </button>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-user-card">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div style="display:flex;align-items:center;gap:10px;overflow:hidden">
+              <div class="sidebar-avatar"><i class="ti ti-user"></i></div>
+              <div style="overflow:hidden">
+                <div class="sidebar-username" id="sb-user-name">Admin PMR</div>
+                <div class="sidebar-userrole" id="sb-user-role">Ketua • NIS: -</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:4px">
+              <button class="sidebar-icon-btn" onclick="openChangePasswordModal()" title="Ubah Password"><i class="ti ti-key"></i></button>
+              <button class="sidebar-icon-btn logout" onclick="logout()" title="Keluar"><i class="ti ti-logout"></i></button>
+            </div>
+          </div>
+          <div style="margin-top:10px;display:flex;align-items:center;justify-content:space-between">
+            <span id="sb-fb-badge" class="fb-status disconnected" onclick="openFbModal()" title="Status Sinkronisasi">
+              <span class="fb-dot amber"></span>Firebase Cloud
+            </span>
+            <span id="sb-clock" class="sidebar-clock"></span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MOBILE / PORTRAIT TOPBAR (Layout Foto 1) -->
+    <div id="main-wrapper">
+      <header id="mobile-header">
+        <div class="logo">
+          <span class="logo-badge">PMR</span>
+          <span class="logo-heart">🏥</span>
+          <span>MY UKS</span>
+        </div>
+
+        <div class="header-right">
+          <div id="header-user-info"></div>
+          <span class="hbadge"><span class="dot"></span> Online</span>
+          <span id="fb-status-badge" class="fb-status disconnected" onclick="openFbModal()" title="Konfigurasi Firebase">
+            <span class="fb-dot amber"></span>Firebase
+          </span>
+          <span id="clock-display"></span>
+        </div>
+      </header>
+
+      <nav id="mobile-nav">
+        <button class="nav-btn active" data-page="dashboard" onclick="showPage('dashboard')">
+          <i class="ti ti-home"></i> Beranda
+        </button>
+        <button class="nav-btn" data-page="anggota" onclick="showPage('anggota')">
+          <i class="ti ti-users"></i> Anggota
+        </button>
+        <button class="nav-btn" data-page="pasien" onclick="showPage('pasien')">
+          <i class="ti ti-heart-pulse"></i> Data Pasien
+        </button>
+        <button class="nav-btn" data-page="stok" onclick="showPage('stok')">
+          <i class="ti ti-medicine-syrup"></i> Stok UKS
+        </button>
+        <button class="nav-btn" data-page="absensi" onclick="showPage('absensi')">
+          <i class="ti ti-clipboard-check"></i> Absensi
+        </button>
+        <button class="nav-btn" data-page="jadwal" onclick="showPage('jadwal')">
+          <i class="ti ti-calendar-event"></i> Jadwal Jaga
+        </button>
+        <button class="nav-btn" data-page="laporan" onclick="showPage('laporan')">
+          <i class="ti ti-report-analytics"></i> Laporan
+        </button>
+      </nav>
+
+      <!-- Main Content Area -->
+      <main id="main-content"></main>
+    </div>
+
+  </div>
+
+  <!-- Toast Notification Popup -->
+  <div id="toast"><i class="ti ti-check"></i><span id="toast-msg"></span></div>
+
+  <!-- Main JavaScript Logic -->
+  <script src="app.js"></script>
+</body>
+</html>
