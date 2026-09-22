@@ -1,13 +1,3 @@
-/**
- * ==========================================================================
- * SIJAGA UKS — APLIKASI PMR
- * Script: app.js
- * ==========================================================================
- */
-
-// =====================
-//   FLOATING PARTICLES
-// =====================
 (function initFloatingBackground() {
   const emojis = ['💊', '🩺', '🩵', '💉', '🩹', '⭐', '✨', '🏥', '📋', '🧊'];
   const container = document.getElementById('floaties');
