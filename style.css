@@ -7,7 +7,7 @@
 }
 
 :root {
-  /* Vibrant Aesthetic Blue Palette */
+
   --bg: #f4f8fd;
   --bg2: #eaf2fb;
   --bg3: #dbeafe;
@@ -72,9 +72,7 @@ html, body {
   position: relative;
 }
 
-/* ==========================================================================
-   FLOATING PARTICLES
-   ========================================================================== */
+
 .floaties {
   position: fixed;
   top: 0;
@@ -101,9 +99,7 @@ html, body {
   100% { opacity: 0; transform: translateY(-110vh) rotate(360deg) scale(1.2); }
 }
 
-/* ==========================================================================
-   LOGIN SCREEN
-   ========================================================================== */
+
 #login-screen {
   min-height: 100vh;
   display: flex;
@@ -200,9 +196,8 @@ html, body {
   border-color: var(--primary-light);
 }
 
-/* ==========================================================================
-   APP WRAPPER & DUAL-MODE LAYOUT
-   ========================================================================== */
+
+
 #app {
   display: flex;
   min-height: 100vh;
@@ -212,9 +207,7 @@ html, body {
   z-index: 1;
 }
 
-/* ==========================================================================
-   SIDEBAR (DESKTOP FULLSCREEN & HP LANDSCAPE >= 900px)
-   ========================================================================== */
+
 #sidebar {
   width: 260px;
   min-width: 260px;
@@ -395,9 +388,7 @@ html, body {
   font-weight: 800;
 }
 
-/* ==========================================================================
-   MOBILE TOPBAR & NAV (< 900px) - PERFECT RESPONSIVE
-   ========================================================================== */
+
 #main-wrapper {
   flex: 1;
   min-width: 0;
@@ -519,7 +510,7 @@ html, body {
   white-space: nowrap;
 }
 
-/* Horizontal Scrollable Nav on Mobile */
+
 #mobile-nav {
   background: #fff;
   border-bottom: 2px solid var(--border);
@@ -576,11 +567,8 @@ main {
   max-width: 100%;
 }
 
-/* ==========================================================================
-   MEDIA QUERY CONDITIONAL RULES (RESPONSIVE DUAL-LAYOUT)
-   ========================================================================== */
 
-/* 1. DESKTOP FULLSCREEN & LANDSCAPE (Width >= 900px) */
+
 @media (min-width: 900px) {
   #app {
     flex-direction: row;
@@ -603,7 +591,7 @@ main {
   }
 }
 
-/* 2. MOBILE PORTRAIT / WINDOWED / SMALL SCREEN (Width < 900px) */
+
 @media (max-width: 899px) {
   #app {
     flex-direction: column;
@@ -621,14 +609,14 @@ main {
     padding: 14px;
   }
   
-  /* Compact Header on Small Screens */
+
   .header-right .hbadge,
   .header-right #clock-display,
   .header-right #fb-status-badge {
     display: none;
   }
 
-  /* Grid layouts become responsive 2-column or 1-column */
+
   .grid4 {
     grid-template-columns: 1fr 1fr;
     gap: 10px;
@@ -676,7 +664,7 @@ main {
     margin-bottom: 14px;
   }
 
-  /* 4 Actions in Jadwal Card arrange in neat 2x2 grid */
+
   .jadwal-actions {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -691,7 +679,7 @@ main {
     font-size: 12px;
   }
 
-  /* Tabs row inside page becomes scrollable */
+
   .tab-row {
     max-width: 100%;
     overflow-x: auto;
@@ -708,7 +696,7 @@ main {
     white-space: nowrap;
   }
 
-  /* Modal on Mobile */
+
   .modal {
     width: 95% !important;
     max-height: 90vh !important;
@@ -731,9 +719,7 @@ main {
   }
 }
 
-/* ==========================================================================
-   PAGE HERO HEADER & ACTION BUTTONS
-   ========================================================================== */
+
 .page-hero {
   display: flex;
   align-items: center;
@@ -793,9 +779,7 @@ main {
   transform: scale(0.97);
 }
 
-/* ==========================================================================
-   CARDS & CONTAINERS
-   ========================================================================== */
+
 .card {
   background: #fff;
   border: 2px solid var(--border);
@@ -833,7 +817,7 @@ main {
   color: var(--primary);
 }
 
-/* TABS CONTAINER */
+
 .tab-row {
   display: flex;
   gap: 4px;
@@ -867,9 +851,7 @@ main {
   box-shadow: 0 2px 10px rgba(37, 99, 235, 0.35);
 }
 
-/* ==========================================================================
-   TABLES & LISTS
-   ========================================================================== */
+
 .tbl-wrap {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
@@ -924,9 +906,7 @@ tbody tr {
   to { opacity: 1; transform: translateX(0); }
 }
 
-/* ==========================================================================
-   PILL BADGES
-   ========================================================================== */
+
 .badge {
   display: inline-flex;
   align-items: center;
@@ -1025,9 +1005,7 @@ tbody tr {
   gap: 4px;
 }
 
-/* ==========================================================================
-   BUTTONS
-   ========================================================================== */
+
 .btn {
   border: none;
   border-radius: 10px;
@@ -1125,9 +1103,7 @@ tbody tr {
   flex-wrap: wrap;
 }
 
-/* ==========================================================================
-   JADWAL JAGA CARDS
-   ========================================================================== */
+
 .jadwal-card {
   background: #fff;
   border: 2px solid var(--border);
@@ -1318,7 +1294,7 @@ tbody tr {
   font-size: 11px;
 }
 
-/* Modal Pos Builder Interactive Styles */
+
 .m-titik-box {
   background: #ffffff;
   border: 2px solid var(--border);
@@ -1454,9 +1430,7 @@ tbody tr {
   border-color: var(--primary);
 }
 
-/* ==========================================================================
-   FORMS & INPUTS
-   ========================================================================== */
+
 .form-row {
   display: flex;
   gap: 14px;
@@ -1516,9 +1490,7 @@ textarea {
   margin-bottom: 14px;
 }
 
-/* ==========================================================================
-   MODALS
-   ========================================================================== */
+
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -1599,9 +1571,7 @@ textarea {
   color: var(--red);
 }
 
-/* ==========================================================================
-   GRID & STATS
-   ========================================================================== */
+
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
 .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
 .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
@@ -1841,8 +1811,195 @@ textarea {
   margin-left: auto;
 }
 
+.ang-filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  background: var(--bg2);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+}
+
+.filter-group-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.filter-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text2);
+}
+
+.filter-item select, .filter-item input {
+  padding: 6px 12px;
+  font-size: 12.5px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1.5px solid var(--border);
+  font-weight: 700;
+  color: var(--text);
+  min-width: 140px;
+  height: 36px;
+}
+
+.filter-item select:focus, .filter-item input:focus {
+  border-color: var(--primary);
+}
+
+/* ==========================================================================
+   PASSWORD STATUS BADGES & PEEK (KHUSUS KETUA & KOORDINATOR)
+   ========================================================================== */
+.badge-pwd-default {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  border-radius: 14px;
+  padding: 3px 9px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.badge-pwd-custom {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+  border-radius: 14px;
+  padding: 3px 9px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.pwd-peek-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0 2px;
+  font-size: 12px;
+  opacity: 0.8;
+  transition: transform 0.15s, opacity 0.15s;
+}
+
+.pwd-peek-btn:hover {
+  opacity: 1;
+  transform: scale(1.2);
+}
+
+.badge-readonly {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 4px 10px;
+  font-size: 11.5px;
+  font-weight: 800;
+}
+
+
+.log-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.log-badge.login { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+.log-badge.tambah { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+.log-badge.ubah { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+.log-badge.hapus { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+.log-badge.ganti_password { background: #ede9fe; color: #5b21b6; border: 1px solid #ddd6fe; }
+.log-badge.absensi { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+
+.log-detail-box {
+  background: var(--bg);
+  border: 1px dashed var(--border2);
+  border-radius: 8px;
+  padding: 4px 8px;
+  font-size: 11.5px;
+  color: var(--text2);
+  margin-top: 4px;
+  display: inline-block;
+  font-family: monospace;
+}
+
+.notif-bell-btn {
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
+  border-radius: 20px;
+  padding: 3px 10px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 800;
+  transition: all 0.2s;
+}
+
+.notif-bell-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.sidebar-notif-btn {
+  background: #fff;
+  border: 1.5px solid var(--primary-border);
+  border-radius: 8px;
+  width: 28px;
+  height: 28px;
+  color: var(--primary-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.15s;
+  position: relative;
+}
+
+.sidebar-notif-btn:hover {
+  background: var(--primary);
+  color: #fff;
+}
+
+.notif-pulse-dot {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 8px;
+  height: 8px;
+  background: #ef4444;
+  border-radius: 50%;
+  border: 1.5px solid #fff;
+}
+
 @media print {
-  nav, header, aside, .floaties, .btn-header-add, .btn-wa, .btn-copy, .btn-action-edit, .btn-action-delete { display: none !important; }
+  nav, header, aside, .floaties, .btn-header-add, .btn-wa, .btn-copy, .btn-action-edit, .btn-action-delete, .ang-filter-bar, .notif-bell-btn, .sidebar-notif-btn { display: none !important; }
   main { padding: 0 !important; }
   body { background: #fff !important; color: #000 !important; }
 }
+
