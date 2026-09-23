@@ -15,9 +15,6 @@
   }
 })();
 
-// =====================
-//   CONSTANTS & JABATAN OPTIONS
-// =====================
 const JABATAN_OPTIONS = [
   'Ketua',
   'Koordinator',
@@ -30,12 +27,21 @@ const JABATAN_OPTIONS = [
   'Anggota'
 ];
 
-const HARI = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+const JABATAN_HIERARCHY = {
+  'Ketua': 1,
+  'Koordinator': 2,
+  'Sekretaris': 3,
+  'Bendahara': 4,
+  'Komandan Lapangan': 5,
+  'Perlengkapan': 6,
+  'Humas': 7,
+  'Kreatif': 8,
+  'Anggota': 9
+};
+
+const HARI = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
 const SESI = ['07:00-10:00', '10:00-13:00', '13:00-15:00'];
 
-// =====================
-//   DATA STORE (localStorage + Firebase Firestore Sync)
-// =====================
 const DB = {
   get(k) {
     try {
@@ -53,15 +59,11 @@ const DB = {
     }
   },
   def(k, v) {
-    if (!this.get(k)) this.set(k, v);
+    if (this.get(k) === null) this.set(k, v);
   }
 };
 
-// =====================
-//   DEFAULT DATA
-// =====================
 DB.def('anggota', [
-  { id: 1, nama: 'Admin PMR', nis: '12345', jabatan: 'Ketua', kelas: 'UKS', angkatan: '10', jk: 'L', password: '' },
   { id: 2, nama: 'Afnan Fauzan Faturochim', nis: '1001', jabatan: 'Ketua', kelas: 'XI TE B', angkatan: '10', jk: 'L', password: '' },
   { id: 3, nama: 'Faizal Rahman', nis: '1002', jabatan: 'Koordinator', kelas: 'XI-B', angkatan: '10', jk: 'L', password: '' },
   { id: 4, nama: 'Galuh Ayu Palupi', nis: '1003', jabatan: 'Sekretaris', kelas: 'XI PPLG B', angkatan: '10', jk: 'P', password: '' },
@@ -69,7 +71,6 @@ DB.def('anggota', [
   { id: 6, nama: 'Rizki Aditya', nis: '1102', jabatan: 'Komandan Lapangan', kelas: 'X-C', angkatan: '11', jk: 'L', password: '' }
 ]);
 
-// Auto-migration to ensure all anggota have 'jk' (Jenis Kelamin: L = Cowo, P = Cewe)
 (function ensureAnggotaJk() {
   try {
     const list = DB.get('anggota');
@@ -88,7 +89,7 @@ DB.def('anggota', [
       });
       if (changed) DB.set('anggota', list);
     }
-  } catch(e) {
+  } catch (e) {
     console.warn('Migration JK error:', e);
   }
 })();
@@ -109,14 +110,7 @@ DB.def('stok', [
 ]);
 
 DB.def('absensi', []);
-
-DB.def('jadwal', [
-  { id: 1, hari: 'Senin', sesi: '07:00-10:00', anggota: 'Afnan Fauzan Faturochim', lokasi: 'UKS' },
-  { id: 2, hari: 'Senin', sesi: '10:00-13:00', anggota: 'Faizal Rahman', lokasi: 'UKS' },
-  { id: 3, hari: 'Selasa', sesi: '07:00-10:00', anggota: 'Galuh Ayu Palupi', lokasi: 'UKS' },
-  { id: 4, hari: 'Rabu', sesi: '10:00-13:00', anggota: 'Nisa Amalia', lokasi: 'UKS' },
-  { id: 5, hari: 'Kamis', sesi: '07:00-10:00', anggota: 'Rizki Aditya', lokasi: 'UKS' }
-]);
+DB.def('logs', []);
 
 DB.def('upacara', [
   {
@@ -136,9 +130,6 @@ DB.def('titik_jaga_template', [
   'Lapangan Utama (Depan Tiang)', 'Gerbang & Parkiran', 'Tribun Tamu & Guru', 'Aula & Selasar', 'Pos UKS Cadangan'
 ]);
 
-// =====================
-//   FIREBASE REALTIME & SYNC
-// =====================
 async function syncFromFirebase() {
   if (!window._fb?.ready()) return;
   const { db, collection, getDocs } = window._fb;
@@ -180,7 +171,7 @@ function updateFbStatus(state) {
   const badges = [document.getElementById('fb-status-badge'), document.getElementById('sb-fb-badge')];
   const labels = { connected: 'Firebase', disconnected: 'Lokal', error: 'Error' };
   const dotClass = { connected: 'green', disconnected: 'amber', error: 'red' };
-  
+
   badges.forEach(badge => {
     if (!badge) return;
     badge.className = `fb-status ${state}`;
@@ -199,8 +190,7 @@ window.addEventListener('firebase-ready', () => {
   }
 });
 
-// Firebase Modal
-window.openFbModal = function() {
+window.openFbModal = function () {
   const saved = JSON.parse(localStorage.getItem('pmr_fb_config') || '{}');
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
@@ -215,12 +205,12 @@ window.openFbModal = function() {
       <button class="modal-close-btn" onclick="document.getElementById('fb-modal').remove()">✕</button>
     </div>
     <div class="form-row">
-      <div class="form-group"><label>API Key</label><input id="fb-apikey" placeholder="AIzaSy..." value="${saved.apiKey||''}"></div>
-      <div class="form-group"><label>Project ID</label><input id="fb-projectid" placeholder="sijaga-uks" value="${saved.projectId||''}"></div>
+      <div class="form-group"><label>API Key</label><input id="fb-apikey" placeholder="AIzaSy..." value="${saved.apiKey || ''}"></div>
+      <div class="form-group"><label>Project ID</label><input id="fb-projectid" placeholder="sijaga-uks" value="${saved.projectId || ''}"></div>
     </div>
     <div class="form-row">
-      <div class="form-group"><label>Auth Domain</label><input id="fb-authdomain" placeholder="sijaga-uks.firebaseapp.com" value="${saved.authDomain||''}"></div>
-      <div class="form-group"><label>App ID</label><input id="fb-appid" placeholder="1:xxx:web:xxx" value="${saved.appId||''}"></div>
+      <div class="form-group"><label>Auth Domain</label><input id="fb-authdomain" placeholder="sijaga-uks.firebaseapp.com" value="${saved.authDomain || ''}"></div>
+      <div class="form-group"><label>App ID</label><input id="fb-appid" placeholder="1:xxx:web:xxx" value="${saved.appId || ''}"></div>
     </div>
     <div class="btn-row" style="margin-top:14px;justify-content:flex-end">
       <button class="btn btn-ghost" onclick="document.getElementById('fb-modal').remove()">Batal</button>
@@ -230,7 +220,7 @@ window.openFbModal = function() {
   document.body.appendChild(overlay);
 };
 
-window.saveFbConfig = function() {
+window.saveFbConfig = function () {
   const cfg = {
     apiKey: document.getElementById('fb-apikey').value.trim(),
     projectId: document.getElementById('fb-projectid').value.trim(),
@@ -243,9 +233,7 @@ window.saveFbConfig = function() {
   toast('✅ Konfigurasi disimpan! Refresh halaman untuk mengaktifkan koneksi.');
 };
 
-// =====================
-//   AUTHENTICATION & SESSION
-// =====================
+
 let currentUser = null;
 
 function getSession() {
@@ -265,7 +253,47 @@ function setSession(user) {
   }
 }
 
-window.handleLogin = function(e) {
+function canEdit() {
+  const session = getSession();
+  if (!session) return false;
+  if (session.role === 'admin') return true;
+  const jab = (session.jabatan || '').trim().toLowerCase();
+  return jab !== '' && jab !== 'anggota';
+}
+
+function isLeader() {
+  const session = getSession();
+  if (!session) return false;
+  if (session.role === 'admin') return true;
+  const jab = (session.jabatan || '').trim().toLowerCase();
+  return jab === 'ketua' || jab === 'koordinator';
+}
+
+function logActivity(tipe, pesan, detail = '') {
+  const session = getSession() || { nama: 'Pengguna', jabatan: 'Umum', nis: '-' };
+  const logs = DB.get('logs') || [];
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+  const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+  const logItem = {
+    id: Date.now() + Math.random().toString(36).substring(2, 6),
+    timestamp: now.toISOString(),
+    waktu: `${dateStr} ${timeStr}`,
+    tipe: tipe, // 'LOGIN', 'TAMBAH', 'UBAH', 'HAPUS', 'GANTI_PASSWORD', 'ABSENSI'
+    pelaku: session.nama || 'Pengguna',
+    jabatan: session.role === 'admin' ? 'Admin' : (session.jabatan || 'Anggota'),
+    nis: session.nis || '-',
+    pesan,
+    detail
+  };
+
+  logs.unshift(logItem);
+  if (logs.length > 300) logs.length = 300; // Simpan 300 aktivitas terakhir
+  DB.set('logs', logs);
+}
+
+window.handleLogin = function (e) {
   if (e) e.preventDefault();
   const unameInput = document.getElementById('login-username');
   const passInput = document.getElementById('login-password');
@@ -274,34 +302,19 @@ window.handleLogin = function(e) {
   const password = passInput.value.trim();
 
   if (!username || !password) {
-    showLoginError('Harap isi Nama / Username dan Password!');
+    showLoginError('Harap isi Nama Lengkap / NIS dan Password!');
     return;
   }
 
-  // 1. Cek Admin
-  if (username.toLowerCase() === 'admin' && password === '123456') {
-    const adminUser = {
-      role: 'admin',
-      nama: 'Administrator',
-      username: 'admin',
-      angkatan: 'Admin'
-    };
-    setSession(adminUser);
-    renderAppLayout();
-    toast('👋 Selamat datang, Admin!');
-    return;
-  }
-
-  // 2. Cek Anggota
   const anggotaList = DB.get('anggota') || [];
-  const found = anggotaList.find(a => 
+  const found = anggotaList.find(a =>
     a.nama.trim().toLowerCase() === username.toLowerCase() ||
     (a.nis && a.nis.trim() === username)
   );
 
   if (found) {
     const expectedPassword = found.password && found.password.trim() !== '' ? found.password : found.nis;
-    
+
     if (password === expectedPassword) {
       const memberUser = {
         role: 'anggota',
@@ -313,16 +326,32 @@ window.handleLogin = function(e) {
         angkatan: found.angkatan
       };
       setSession(memberUser);
+      logActivity('LOGIN', `Berhasil login ke aplikasi MY UKS`, `Jabatan: ${found.jabatan} | NIS: ${found.nis}`);
       renderAppLayout();
-      toast(`👋 Selamat datang, ${found.nama}!`);
+      toast(`👋 Selamat datang, ${found.nama}! (${found.jabatan})`);
       return;
     } else {
-      showLoginError('Password salah! Password default anggota adalah NIS masing-masing.');
+      showLoginError('Password salah! Password bawaan adalah NIS Anda (atau password baru jika telah diubah).');
       return;
     }
   }
 
-  showLoginError('Nama / Akun tidak ditemukan! Silakan periksa kembali atau hubungi Admin.');
+  if (username.toLowerCase() === 'admin' && password === '123456') {
+    const adminUser = {
+      role: 'admin',
+      nama: 'Administrator',
+      username: 'admin',
+      jabatan: 'Ketua',
+      angkatan: 'Admin'
+    };
+    setSession(adminUser);
+    logActivity('LOGIN', `Administrator login ke sistem`, `Akses penuh sistem`);
+    renderAppLayout();
+    toast('👋 Selamat datang, Administrator!');
+    return;
+  }
+
+  showLoginError('Nama / NIS tidak ditemukan! Silakan periksa kembali atau hubungi Ketua / Koordinator.');
 };
 
 function showLoginError(msg) {
@@ -335,7 +364,7 @@ function showLoginError(msg) {
   }
 }
 
-window.fillQuickLogin = function(uname, pass) {
+window.fillQuickLogin = function (uname, pass) {
   const u = document.getElementById('login-username');
   const p = document.getElementById('login-password');
   if (u && p) {
@@ -345,18 +374,21 @@ window.fillQuickLogin = function(uname, pass) {
   }
 };
 
-window.logout = function() {
+window.logout = function () {
   if (!confirm('Apakah Anda yakin ingin keluar dari aplikasi?')) return;
+  const session = getSession();
+  if (session) {
+    logActivity('LOGOUT', `${session.nama} telah logout dari aplikasi`, `Jabatan: ${session.jabatan || 'Anggota'}`);
+  }
   setSession(null);
   renderAppLayout();
   toast('Anda telah logout');
 };
 
-// Ganti Password Modal
-window.openChangePasswordModal = function(targetMemberId) {
+window.openChangePasswordModal = function (targetMemberId) {
   const session = getSession();
   if (!session) return;
-  
+
   const anggotaList = DB.get('anggota') || [];
   const isSelf = !targetMemberId || (session.role === 'anggota' && targetMemberId === session.id);
   const targetMember = targetMemberId ? anggotaList.find(a => a.id === targetMemberId) : (session.role === 'anggota' ? anggotaList.find(a => a.id === session.id) : null);
@@ -369,7 +401,7 @@ window.openChangePasswordModal = function(targetMemberId) {
     <div class="modal-header">
       <div>
         <div class="modal-title"><i class="ti ti-key" style="color:var(--primary)"></i> Ubah Password ${targetMember ? `— ${targetMember.nama}` : ''}</div>
-        <div class="modal-sub">${targetMember ? `NIS: ${targetMember.nis} | Angkatan ${targetMember.angkatan}` : 'Atur password baru'}</div>
+        <div class="modal-sub">${targetMember ? `NIS: ${targetMember.nis} | Jabatan: ${targetMember.jabatan} | Angkatan ${targetMember.angkatan}` : 'Atur password baru'}</div>
       </div>
       <button class="modal-close-btn" onclick="document.getElementById('pwd-modal').remove()">✕</button>
     </div>
@@ -400,7 +432,7 @@ window.openChangePasswordModal = function(targetMemberId) {
   document.body.appendChild(overlay);
 };
 
-window.saveNewPassword = function(memberId, isSelf) {
+window.saveNewPassword = function (memberId, isSelf) {
   const session = getSession();
   const list = DB.get('anggota') || [];
   const targetId = memberId || (session.role === 'anggota' ? session.id : 0);
@@ -427,15 +459,92 @@ window.saveNewPassword = function(memberId, isSelf) {
     return toast('Konfirmasi password tidak cocok!');
   }
 
+  const prevPwdInfo = member.password ? 'Kustom' : `Default NIS (${member.nis})`;
   member.password = pwdNew;
   DB.set('anggota', list);
+
+  logActivity(
+    'GANTI_PASSWORD',
+    `${member.nama} mengubah kata sandi akun`,
+    `Kata Sandi Baru: "${pwdNew}" | Sebelumnya: ${prevPwdInfo} | NIS: ${member.nis}`
+  );
+
   document.getElementById('pwd-modal')?.remove();
   toast('✅ Password berhasil diperbarui!');
+  refreshCurrentPage();
 };
 
-// =====================
-//   UTILITIES & HELPERS
-// =====================
+window.togglePwdPeek = function (id, pwdVal) {
+  if (!isLeader()) return;
+  const el = document.getElementById('pwd-val-' + id);
+  if (!el) return;
+  if (el.textContent === '••••••') {
+    el.textContent = pwdVal;
+    el.style.fontWeight = '900';
+    el.style.color = 'var(--primary-dark)';
+  } else {
+    el.textContent = '••••••';
+    el.style.fontWeight = 'normal';
+    el.style.color = 'inherit';
+  }
+};
+
+window.openActivityLogModal = function () {
+  if (!isLeader()) return;
+  const logs = DB.get('logs') || [];
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.id = 'modal-act-logs';
+
+  overlay.innerHTML = `
+  <div class="modal" style="max-width:760px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title"><i class="ti ti-bell-ringing" style="color:var(--primary)"></i> Log Aktivitas & Notifikasi</div>
+        <div class="modal-sub">Rekam jejak login personil, perubahan data, dan kata sandi baru (Khusus Ketua & Koordinator)</div>
+      </div>
+      <button class="modal-close-btn" onclick="document.getElementById('modal-act-logs').remove()">✕</button>
+    </div>
+
+    <div style="max-height:60vh;overflow-y:auto;border:1px solid var(--border);border-radius:12px">
+      <table>
+        <thead>
+          <tr>
+            <th>WAKTU</th>
+            <th>TIPE</th>
+            <th>PELAKU & JABATAN</th>
+            <th>AKTIVITAS / DETAIL</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${logs.length ? logs.slice(0, 30).map(l => {
+    const badgeClass = l.tipe.toLowerCase();
+    return `
+            <tr>
+              <td style="font-size:11.5px;color:var(--text2);white-space:nowrap">${l.waktu}</td>
+              <td><span class="log-badge ${badgeClass}">${l.tipe}</span></td>
+              <td>
+                <strong>${l.pelaku}</strong>
+                <div style="font-size:11px;color:var(--text3)">${l.jabatan} • NIS: ${l.nis}</div>
+              </td>
+              <td>
+                <div style="font-size:13px;font-weight:700">${l.pesan}</div>
+                ${l.detail ? `<div class="log-detail-box">${escapeHtml(l.detail)}</div>` : ''}
+              </td>
+            </tr>`;
+  }).join('') : '<tr><td colspan="4"><div class="empty">Belum ada aktivitas tercatat</div></td></tr>'}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="btn-row" style="justify-content:space-between;margin-top:16px">
+      <button class="btn btn-ghost" onclick="showPage('laporan');document.getElementById('modal-act-logs').remove()"><i class="ti ti-report"></i> Buka Halaman Laporan Lengkap</button>
+      <button class="btn btn-primary" onclick="document.getElementById('modal-act-logs').remove()">Tutup</button>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+};
+
 let toastTimer;
 function toast(msg) {
   const el = document.getElementById('toast');
@@ -459,18 +568,11 @@ function fmt(d) {
 function getMemberDutyCount(memberName) {
   if (!memberName) return 0;
   const upacara = DB.get('upacara') || [];
-  const jadwal = DB.get('jadwal') || [];
-  
   let count = 0;
-  // Hitung di upacara
   upacara.forEach(u => {
     (u.titikJaga || []).forEach(t => {
       if ((t.anggota || []).includes(memberName)) count++;
     });
-  });
-  // Hitung di piket
-  jadwal.forEach(j => {
-    if (j.anggota === memberName) count++;
   });
   return count;
 }
@@ -484,9 +586,6 @@ setInterval(() => {
   if (sbClock) sbClock.textContent = timeStr;
 }, 1000);
 
-// =====================
-//   LAYOUT RENDERER
-// =====================
 function renderAppLayout() {
   const session = getSession();
   const loginScreen = document.getElementById('login-screen');
@@ -514,17 +613,17 @@ function renderLoginScreen() {
     <div class="login-header">
       <div class="login-icon-badge"><i class="ti ti-shield-heart"></i></div>
       <h1 class="login-title">MY UKS</h1>
-      <div class="login-subtitle">Aplikasi Manajemen Palang Merah Remaja (PMR)</div>
+      <div class="login-subtitle">Markas Digital Palang Merah Remaja (PMR)</div>
     </div>
 
     <form onsubmit="handleLogin(event)">
       <div class="form-group" style="margin-bottom:14px">
-        <label>Nama Lengkap / Username</label>
-        <input type="text" id="login-username" placeholder="cth: Afnan Fauzan atau admin" autocomplete="username" required>
+        <label>Nama Lengkap / NIS</label>
+        <input type="text" id="login-username" placeholder="Masukkan Nama Lengkap atau NIS" autocomplete="username" required>
       </div>
       <div class="form-group" style="margin-bottom:16px">
-        <label>Password</label>
-        <input type="password" id="login-password" placeholder="NIS Anda / password admin" autocomplete="current-password" required>
+        <label>Kata Sandi</label>
+        <input type="password" id="login-password" placeholder="NIS Anda / password yang telah diubah" autocomplete="current-password" required>
       </div>
 
       <div id="login-error" class="alert alert-red" style="display:none;margin-bottom:14px;padding:8px 12px;font-size:12px"></div>
@@ -535,20 +634,17 @@ function renderLoginScreen() {
     </form>
 
     <div class="login-hint-box">
-      <strong>🔑 Panduan Login:</strong>
-      <div style="margin-top:4px">
-        • <strong>Admin:</strong> Username: <code>admin</code>, Password: <code>123456</code><br>
-        • <strong>Anggota:</strong> Username: <em>Nama Lengkap</em>, Password: <em>NIS masing-masing</em>.
+      <strong>🔑 Panduan Masuk:</strong>
+      <div style="margin-top:4px;color:var(--text2)">
+        • Masuk menggunakan <strong>Nama Lengkap</strong> atau <strong>NIS</strong> Anda.<br>
+        • Password bawaan adalah <strong>NIS masing-masing</strong> (atau kata sandi baru jika telah diubah).<br>
+        • Khusus <strong>Ketua</strong> & <strong>Koordinator</strong> otomatis memiliki akses audit log & pengawasan aktivitas.
       </div>
       <div class="login-hint-list">
-        <div class="login-hint-item" onclick="fillQuickLogin('admin', '123456')">
-          <span>👑 <strong>Akun Admin</strong></span>
-          <span style="color:var(--primary);font-weight:700">Login Cepat ➔</span>
-        </div>
-        ${anggotaList.slice(0, 2).map(a => `
+        ${anggotaList.slice(0, 3).map(a => `
         <div class="login-hint-item" onclick="fillQuickLogin('${a.nama}', '${a.password && a.password.trim() ? a.password : a.nis}')">
-          <span>👤 ${a.nama} (A${a.angkatan})</span>
-          <span style="color:var(--primary);font-weight:700">NIS: ${a.nis} ➔</span>
+          <span>👤 ${a.nama} <strong>(${a.jabatan})</strong></span>
+          <span style="color:var(--primary);font-weight:700">Masuk Cepat ➔</span>
         </div>`).join('')}
       </div>
     </div>
@@ -556,18 +652,23 @@ function renderLoginScreen() {
 }
 
 function updateHeaderUser(user) {
-  // 1. Update Mobile Top Header
+  const leader = isLeader();
+
   const container = document.getElementById('header-user-info');
   if (container) {
     const isA10 = user.angkatan === '10';
     const roleClass = user.role === 'admin' ? 'badge-blue' : isA10 ? 'a10' : 'a11';
-    const roleLabel = user.role === 'admin' ? 'Admin UKS' : `Angkatan ${user.angkatan}`;
+    const roleLabel = user.role === 'admin' ? 'Admin UKS' : `${user.jabatan || 'Anggota'}`;
 
     container.innerHTML = `
       <div class="user-header-pill">
         <i class="ti ti-user-circle" style="font-size:16px;flex-shrink:0"></i>
         <span class="user-header-name">${user.nama}</span>
         <span class="user-role-badge ${roleClass}">${roleLabel}</span>
+        ${leader ? `
+        <button class="notif-bell-btn" onclick="openActivityLogModal()" title="Lihat Aktivitas & Notifikasi">
+          <i class="ti ti-bell"></i> Log
+        </button>` : ''}
         <button class="btn btn-ghost btn-sm" onclick="openChangePasswordModal()" title="Ganti Password" style="padding:2px 6px;color:#fff;background:rgba(255,255,255,0.18);border:none;border-radius:6px;flex-shrink:0">
           <i class="ti ti-key"></i>
         </button>
@@ -577,7 +678,6 @@ function updateHeaderUser(user) {
       </div>`;
   }
 
-  // 2. Update Desktop Sidebar User Card
   const sbName = document.getElementById('sb-user-name');
   const sbRole = document.getElementById('sb-user-role');
   if (sbName) sbName.textContent = user.nama;
@@ -588,11 +688,25 @@ function updateHeaderUser(user) {
       sbRole.textContent = `${user.jabatan || 'Anggota'} • NIS: ${user.nis || '-'}`;
     }
   }
+
+  const sbFooterCard = document.querySelector('.sidebar-user-card');
+  const existingSbNotif = document.getElementById('sb-notif-btn-el');
+  if (existingSbNotif) existingSbNotif.remove();
+
+  if (leader && sbFooterCard) {
+    const actionWrap = sbFooterCard.querySelector('div[style*="display:flex;gap:4px"]');
+    if (actionWrap) {
+      const notifBtn = document.createElement('button');
+      notifBtn.id = 'sb-notif-btn-el';
+      notifBtn.className = 'sidebar-icon-btn';
+      notifBtn.title = 'Aktivitas & Notifikasi Realtime';
+      notifBtn.innerHTML = `<i class="ti ti-bell"></i><span class="notif-pulse-dot"></span>`;
+      notifBtn.onclick = openActivityLogModal;
+      actionWrap.prepend(notifBtn);
+    }
+  }
 }
 
-// =====================
-//   ROUTER & NAVIGATION
-// =====================
 function setNav(id) {
   document.querySelectorAll('.nav-btn').forEach(b => {
     if (b.getAttribute('data-page') === id || b.id === 'nav-' + id) {
@@ -623,22 +737,20 @@ function showPage(p) {
 function refreshCurrentPage() {
   const activeNav = document.querySelector('.nav-btn.active');
   if (activeNav) {
-    const page = activeNav.id.replace('nav-', '');
+    const page = activeNav.getAttribute('data-page') || activeNav.id.replace('nav-', '');
     if (pages[page]) pages[page](document.getElementById('main-content'));
   }
 }
 
 const pages = {};
 
-// =====================
-//   PAGE 1: BERANDA / DASHBOARD
-// =====================
-pages.dashboard = function(m) {
+pages.dashboard = function (m) {
   const pasien = DB.get('pasien') || [];
   const stok = DB.get('stok') || [];
   const absensi = DB.get('absensi') || [];
   const anggota = DB.get('anggota') || [];
-  const jadwal = DB.get('jadwal') || [];
+  const upacara = DB.get('upacara') || [];
+  const logs = DB.get('logs') || [];
 
   const a10Count = anggota.filter(a => a.angkatan === '10').length;
   const a11Count = anggota.filter(a => a.angkatan === '11').length;
@@ -646,17 +758,25 @@ pages.dashboard = function(m) {
   const todayStr = today();
   const todayAbs = absensi.filter(a => a.tanggal === todayStr);
   const hadir = todayAbs.filter(a => a.status === 'Hadir').length;
+  const session = getSession();
+  const leader = isLeader();
 
   m.innerHTML = `
   <div class="page-hero">
     <div class="page-title-wrap">
       <h1 class="page-title">Beranda Utama</h1>
-      <div class="page-subtitle">Ringkasan aktivitas harian pelayanan & personil UKS</div>
+      <div class="page-subtitle">Ringkasan pelayanan medis, jadwal tugas, & personil PMR</div>
     </div>
     <span style="font-size:12.5px;color:var(--text2);font-weight:700;background:#e2edfb;padding:7px 16px;border-radius:20px;border:1px solid var(--border)">
       📅 ${new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
     </span>
   </div>
+
+  ${!canEdit() ? `
+  <div class="alert alert-green" style="background:#f0fdf4;border-color:#bbf7d0;color:#166534">
+    <i class="ti ti-info-circle" style="font-size:20px"></i>
+    <div><strong>Akun Anggota:</strong> Anda berada dalam mode lihat (*view-only*). Pengeditan dan penambahan data dikelola oleh Pengurus & Pemegang Jabatan.</div>
+  </div>` : ''}
 
   ${stokKritis.length ? `
   <div class="alert alert-amber">
@@ -680,13 +800,13 @@ pages.dashboard = function(m) {
     <div class="stat">
       <div class="stat-label">👥 Kehadiran Hari Ini</div>
       <div class="stat-val">${hadir}</div>
-      <div class="stat-sub">dari ${anggota.length} total anggota (A10: ${a10Count}, A11: ${a11Count})</div>
+      <div class="stat-sub">dari ${anggota.length} total personil (A10: ${a10Count}, A11: ${a11Count})</div>
       <span class="stat-icon">✅</span>
     </div>
     <div class="stat">
-      <div class="stat-label">📅 Jadwal Piket</div>
-      <div class="stat-val">${jadwal.length}</div>
-      <div class="stat-sub">Sesi aktif terjadwal</div>
+      <div class="stat-label">🚩 Jadwal Jaga Pos</div>
+      <div class="stat-val">${upacara.length}</div>
+      <div class="stat-sub">Kegiatan penugasan pos</div>
       <span class="stat-icon">🗓️</span>
     </div>
   </div>
@@ -716,39 +836,67 @@ pages.dashboard = function(m) {
       </div>
       <div class="quick-list">
         ${stok.slice(0, 5).map(s => {
-          const pct = Math.min(100, Math.round((s.jumlah / Math.max(s.min * 2, 1)) * 100));
-          const cls = s.jumlah <= s.min ? '' : 'green';
-          return `
+    const pct = Math.min(100, Math.round((s.jumlah / Math.max(s.min * 2, 1)) * 100));
+    const cls = s.jumlah <= s.min ? '' : 'green';
+    return `
           <div class="quick-item">
             <div style="flex:1">
               <div style="display:flex;justify-content:space-between">
-                <span style="font-weight:800;font-size:13.5px">${s.nama} <span class="badge ${s.kategori==='Obat'?'badge-blue':'badge-amber'}" style="font-size:10px">${s.kategori}</span></span>
+                <span style="font-weight:800;font-size:13.5px">${s.nama} <span class="badge ${s.kategori === 'Obat' ? 'badge-blue' : 'badge-amber'}" style="font-size:10px">${s.kategori}</span></span>
                 <span style="font-size:12.5px;color:var(--text2);font-weight:800">${s.jumlah} ${s.satuan}</span>
               </div>
               <div class="progress-bar"><div class="progress-fill ${cls}" style="width:${pct}%"></div></div>
             </div>
           </div>`;
-        }).join('')}
+  }).join('')}
       </div>
     </div>
-  </div>`;
+  </div>
+
+  ${leader ? `
+  <div class="card" style="margin-top:6px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div class="card-title" style="margin:0"><i class="ti ti-bell-ringing"></i>Aktivitas Sistem Terkini (Khusus ${session?.jabatan || 'Ketua/Koordinator'})</div>
+      <button class="btn btn-ghost btn-sm" onclick="openActivityLogModal()"><i class="ti ti-list"></i> Lihat Semua</button>
+    </div>
+    <div class="quick-list">
+      ${logs.slice(0, 4).map(l => `
+      <div class="quick-item" style="padding:10px 14px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span class="log-badge ${l.tipe.toLowerCase()}">${l.tipe}</span>
+          <div>
+            <div style="font-weight:800;font-size:13px">${l.pesan}</div>
+            <div style="font-size:11.5px;color:var(--text3)">${l.pelaku} (${l.jabatan}) • ${l.waktu}</div>
+          </div>
+        </div>
+        ${l.detail ? `<span class="log-detail-box" style="margin:0">${escapeHtml(l.detail)}</span>` : ''}
+      </div>`).join('') || '<div class="empty">Belum ada aktivitas tercatat</div>'}
+    </div>
+  </div>` : ''}`;
 };
 
-// =====================
-//   PAGE 2: DATA ANGGOTA (A10 & A11) - MATCHING SCREENSHOT 1
-// =====================
 let currentAnggotaTab = 'all';
+let currentAnggotaSort = 'jabatan';
+let currentAnggotaJabatan = 'all';
+let currentAnggotaGender = 'all';
 
-pages.anggota = function(m) {
+pages.anggota = function (m) {
   function render() {
     const list = DB.get('anggota') || [];
     const flt = (document.getElementById('srch-ang')?.value || '').toLowerCase();
-    
+
     let filtered = list;
     if (currentAnggotaTab === '10') {
       filtered = filtered.filter(a => a.angkatan === '10');
     } else if (currentAnggotaTab === '11') {
       filtered = filtered.filter(a => a.angkatan === '11');
+    }
+
+    if (currentAnggotaJabatan !== 'all') {
+      filtered = filtered.filter(a => a.jabatan === currentAnggotaJabatan);
+    }
+    if (currentAnggotaGender !== 'all') {
+      filtered = filtered.filter(a => a.jk === currentAnggotaGender);
     }
 
     if (flt) {
@@ -759,6 +907,31 @@ pages.anggota = function(m) {
         (a.jabatan && a.jabatan.toLowerCase().includes(flt))
       );
     }
+
+    filtered.sort((a, b) => {
+      if (currentAnggotaSort === 'jabatan') {
+        const orderA = JABATAN_HIERARCHY[a.jabatan] || 99;
+        const orderB = JABATAN_HIERARCHY[b.jabatan] || 99;
+        if (orderA !== orderB) return orderA - orderB;
+        return a.nama.localeCompare(b.nama);
+      } else if (currentAnggotaSort === 'nama_asc') {
+        return a.nama.localeCompare(b.nama);
+      } else if (currentAnggotaSort === 'nama_desc') {
+        return b.nama.localeCompare(a.nama);
+      } else if (currentAnggotaSort === 'angkatan_asc') {
+        if (a.angkatan !== b.angkatan) return a.angkatan.localeCompare(b.angkatan);
+        return a.nama.localeCompare(b.nama);
+      } else if (currentAnggotaSort === 'angkatan_desc') {
+        if (a.angkatan !== b.angkatan) return b.angkatan.localeCompare(a.angkatan);
+        return a.nama.localeCompare(b.nama);
+      } else if (currentAnggotaSort === 'jaga_desc') {
+        const countA = getMemberDutyCount(a.nama);
+        const countB = getMemberDutyCount(b.nama);
+        if (countB !== countA) return countB - countA;
+        return a.nama.localeCompare(b.nama);
+      }
+      return 0;
+    });
 
     const a10Total = list.filter(a => a.angkatan === '10').length;
     const a11Total = list.filter(a => a.angkatan === '11').length;
@@ -783,19 +956,44 @@ pages.anggota = function(m) {
     const tbody = document.getElementById('ang-tbl');
     if (!tbody) return;
 
+    const leader = isLeader();
+    const editable = canEdit();
+
     tbody.innerHTML = filtered.length
       ? filtered.map(a => {
-          const dutyCount = getMemberDutyCount(a.nama);
-          const dutyBadge = dutyCount > 0
-            ? `<span class="badge-kali-jaga">${dutyCount} kali jaga</span>`
-            : `<span class="badge-belum-jaga">Belum pernah</span>`;
+        const dutyCount = getMemberDutyCount(a.nama);
+        const dutyBadge = dutyCount > 0
+          ? `<span class="badge-kali-jaga">${dutyCount} kali jaga</span>`
+          : `<span class="badge-belum-jaga">Belum pernah</span>`;
 
-          const isCewe = a.jk === 'P';
-          const jkBadge = isCewe
-            ? `<span class="badge-cewe"><i class="ti ti-gender-female"></i> 👧 Cewe</span>`
-            : `<span class="badge-cowo"><i class="ti ti-gender-male"></i> 👦 Cowo</span>`;
+        const isCewe = a.jk === 'P';
+        const jkBadge = isCewe
+          ? `<span class="badge-cewe"><i class="ti ti-gender-female"></i> 👧 Cewe</span>`
+          : `<span class="badge-cowo"><i class="ti ti-gender-male"></i> 👦 Cowo</span>`;
 
-          return `
+        const passwordHtml = leader ? `
+            <td>
+              ${a.password && a.password.trim() !== '' ? `
+                <span class="badge-pwd-custom" title="Kata sandi kustom telah diubah">
+                  <i class="ti ti-lock"></i> <span id="pwd-val-${a.id}">••••••</span>
+                  <button class="pwd-peek-btn" onclick="togglePwdPeek(${a.id}, '${escapeHtml(a.password)}')" title="Intip Sandi">👁️</button>
+                </span>` : `
+                <span class="badge-pwd-default" title="Kata sandi default NIS">
+                  <i class="ti ti-key"></i> NIS (${a.nis})
+                </span>`
+          }
+            </td>` : '';
+
+        const actionHtml = editable ? `
+            <td>
+              <div style="display:flex;gap:6px">
+                <button class="btn btn-action-edit" onclick="openModalAnggota(${a.id})" title="Ubah data"><i class="ti ti-edit"></i> Ubah</button>
+                <button class="btn btn-action-delete" onclick="delAnggota(${a.id})" title="Hapus"><i class="ti ti-trash"></i> Hapus</button>
+              </div>
+            </td>` : `
+            <td><span class="badge-readonly"><i class="ti ti-eye"></i> Hanya Lihat</span></td>`;
+
+        return `
           <tr>
             <td><strong>${a.nama}</strong></td>
             <td><span class="badge-nis">${a.nis || '-'}</span></td>
@@ -808,37 +1006,78 @@ pages.anggota = function(m) {
             <td>${jkBadge}</td>
             <td><span class="badge-jabatan">${a.jabatan || 'Anggota'}</span></td>
             <td>${dutyBadge}</td>
-            <td>
-              <div style="display:flex;gap:6px">
-                <button class="btn btn-action-edit" onclick="openModalAnggota(${a.id})" title="Ubah data"><i class="ti ti-edit"></i> Ubah</button>
-                <button class="btn btn-action-delete" onclick="delAnggota(${a.id})" title="Hapus"><i class="ti ti-trash"></i> Hapus</button>
-              </div>
-            </td>
+            ${passwordHtml}
+            ${actionHtml}
           </tr>`;
-        }).join('')
-      : `<tr><td colspan="8"><div class="empty"><i class="ti ti-users"></i>Tidak ada anggota pada kategori ini</div></td></tr>`;
+      }).join('')
+      : `<tr><td colspan="${leader ? 9 : 8}"><div class="empty"><i class="ti ti-users"></i>Tidak ada anggota pada kriteria ini</div></td></tr>`;
   }
+
+  const leader = isLeader();
+  const editable = canEdit();
 
   m.innerHTML = `
   <div class="page-hero">
     <div class="page-title-wrap">
       <h1 class="page-title">Data Anggota</h1>
-      <div class="page-subtitle">Kelola data personil PMR, angkatan (A10/A11), dan jenis kelamin (Cowo/Cewe)</div>
+      <div class="page-subtitle">Kelola personil PMR, jabatan, angkatan (A10/A11), dan pemantauan akun</div>
     </div>
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
       <div id="ang-gender-stats" style="display:flex;gap:6px"></div>
+      ${editable ? `
       <button class="btn-header-add" onclick="openModalAnggota()">
         <i class="ti ti-plus"></i> Tambah Anggota
-      </button>
+      </button>` : ''}
     </div>
   </div>
 
   <div class="card">
+    <!-- Filter & Sort Bar (Feature 4) -->
+    <div class="ang-filter-bar">
+      <div class="filter-group-wrap">
+        <!-- Sort Select -->
+        <div class="filter-item">
+          <label><i class="ti ti-arrows-sort"></i> URUTKAN:</label>
+          <select id="sort-ang" onchange="changeAnggotaSort(this.value)">
+            <option value="jabatan" ${currentAnggotaSort === 'jabatan' ? 'selected' : ''}>👑 Urutan Jabatan (Ketua ➔ Anggota)</option>
+            <option value="nama_asc" ${currentAnggotaSort === 'nama_asc' ? 'selected' : ''}>🔤 Nama (A - Z)</option>
+            <option value="nama_desc" ${currentAnggotaSort === 'nama_desc' ? 'selected' : ''}>🔤 Nama (Z - A)</option>
+            <option value="angkatan_asc" ${currentAnggotaSort === 'angkatan_asc' ? 'selected' : ''}>⭐ Angkatan (A10 ➔ A11)</option>
+            <option value="angkatan_desc" ${currentAnggotaSort === 'angkatan_desc' ? 'selected' : ''}>🌟 Angkatan (A11 ➔ A10)</option>
+            <option value="jaga_desc" ${currentAnggotaSort === 'jaga_desc' ? 'selected' : ''}>🚩 Frekuensi Jaga Terbanyak</option>
+          </select>
+        </div>
+
+        <!-- Filter Jabatan -->
+        <div class="filter-item">
+          <label><i class="ti ti-id-badge-2"></i> JABATAN:</label>
+          <select id="flt-ang-jab" onchange="changeAnggotaJabatan(this.value)">
+            <option value="all">Semua Jabatan</option>
+            ${JABATAN_OPTIONS.map(j => `<option value="${j}" ${currentAnggotaJabatan === j ? 'selected' : ''}>${j}</option>`).join('')}
+          </select>
+        </div>
+
+        <!-- Filter Gender -->
+        <div class="filter-item">
+          <label><i class="ti ti-gender-bigender"></i> GENDER:</label>
+          <select id="flt-ang-gender" onchange="changeAnggotaGender(this.value)">
+            <option value="all" ${currentAnggotaGender === 'all' ? 'selected' : ''}>Semua Gender</option>
+            <option value="L" ${currentAnggotaGender === 'L' ? 'selected' : ''}>👦 Cowo (Laki-laki)</option>
+            <option value="P" ${currentAnggotaGender === 'P' ? 'selected' : ''}>👧 Cewe (Perempuan)</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="min-width:200px">
+        <input type="text" id="srch-ang" placeholder="🔍 Cari nama / NIS / kelas..." oninput="renderAnggotaTbl()">
+      </div>
+    </div>
+
+    <!-- Tabs Angkatan -->
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px">
-      <!-- Tabs (Matching Screenshot 1) -->
       <div class="tab-row" style="margin:0">
         <button class="tab-btn ${currentAnggotaTab === 'all' ? 'active' : ''}" id="tab-ang-all" onclick="switchAnggotaTab('all')">
-          Semua (<span id="ang-count-all">0</span>)
+          Semua Anggota (<span id="ang-count-all">0</span>)
         </button>
         <button class="tab-btn ${currentAnggotaTab === '10' ? 'active' : ''}" id="tab-ang-10" onclick="switchAnggotaTab('10')">
           Angkatan 10 (<span id="ang-count-10">0</span>)
@@ -847,8 +1086,7 @@ pages.anggota = function(m) {
           Angkatan 11 (<span id="ang-count-11">0</span>)
         </button>
       </div>
-
-      <input type="text" id="srch-ang" placeholder="🔍 Cari nama / NIS / kelas..." style="max-width:240px" oninput="renderAnggotaTbl()">
+      <button class="btn btn-ghost btn-sm" onclick="resetAnggotaFilters()"><i class="ti ti-refresh"></i> Reset Filter</button>
     </div>
 
     <div class="tbl-wrap">
@@ -862,6 +1100,7 @@ pages.anggota = function(m) {
             <th>GENDER</th>
             <th>JABATAN</th>
             <th>KALI JAGA</th>
+            ${leader ? '<th>KATA SANDI (KETUA/KOOR)</th>' : ''}
             <th>AKSI</th>
           </tr>
         </thead>
@@ -874,7 +1113,7 @@ pages.anggota = function(m) {
   render();
 };
 
-window.switchAnggotaTab = function(tab) {
+window.switchAnggotaTab = function (tab) {
   currentAnggotaTab = tab;
   document.querySelectorAll('.tab-row .tab-btn').forEach(b => b.classList.remove('active'));
   const btn = document.getElementById('tab-ang-' + tab);
@@ -882,8 +1121,42 @@ window.switchAnggotaTab = function(tab) {
   if (window.renderAnggotaTbl) renderAnggotaTbl();
 };
 
-// Modal Tambah / Edit Anggota
-window.openModalAnggota = function(editId) {
+window.changeAnggotaSort = function (val) {
+  currentAnggotaSort = val;
+  if (window.renderAnggotaTbl) renderAnggotaTbl();
+};
+
+window.changeAnggotaJabatan = function (val) {
+  currentAnggotaJabatan = val;
+  if (window.renderAnggotaTbl) renderAnggotaTbl();
+};
+
+window.changeAnggotaGender = function (val) {
+  currentAnggotaGender = val;
+  if (window.renderAnggotaTbl) renderAnggotaTbl();
+};
+
+window.resetAnggotaFilters = function () {
+  currentAnggotaTab = 'all';
+  currentAnggotaSort = 'jabatan';
+  currentAnggotaJabatan = 'all';
+  currentAnggotaGender = 'all';
+  const srch = document.getElementById('srch-ang');
+  if (srch) srch.value = '';
+  const sortSel = document.getElementById('sort-ang');
+  if (sortSel) sortSel.value = 'jabatan';
+  const jabSel = document.getElementById('flt-ang-jab');
+  if (jabSel) jabSel.value = 'all';
+  const genSel = document.getElementById('flt-ang-gender');
+  if (genSel) genSel.value = 'all';
+  switchAnggotaTab('all');
+};
+
+window.openModalAnggota = function (editId) {
+  if (!canEdit()) {
+    return toast('⚠️ Akses ditolak: Hanya pengurus/pemegang jabatan yang dapat mengedit anggota!');
+  }
+
   const list = DB.get('anggota') || [];
   const editItem = editId ? list.find(a => a.id === editId) : null;
 
@@ -941,9 +1214,9 @@ window.openModalAnggota = function(editId) {
     <!-- Opsi Password Kustom -->
     <div class="form-toggle-box">
       <div>
-        <div style="font-weight:800;font-size:13px;color:var(--text)">🔐 Password Akun Login</div>
+        <div style="font-weight:800;font-size:13px;color:var(--text)">🔐 Kata Sandi Akun Login</div>
         <div style="font-size:11.5px;color:var(--text3);margin-top:2px">
-          Pilih "Tidak" agar password otomatis menggunakan NIS, atau "Ya" untuk mengatur password baru.
+          Pilih "Pakai NIS" agar sandi bawaan menggunakan NIS, atau "Kustom" untuk menentukan password baru.
         </div>
       </div>
       <div style="display:flex;gap:10px">
@@ -973,12 +1246,16 @@ window.openModalAnggota = function(editId) {
   document.body.appendChild(overlay);
 };
 
-window.toggleModalPwd = function(show) {
+window.toggleModalPwd = function (show) {
   const f = document.getElementById('modal-pwd-field');
   if (f) f.style.display = show ? 'block' : 'none';
 };
 
-window.saveModalAnggota = function(editId) {
+window.saveModalAnggota = function (editId) {
+  if (!canEdit()) {
+    return toast('⚠️ Akses ditolak: Hanya pengurus/pemegang jabatan yang dapat menyimpan data!');
+  }
+
   const nama = document.getElementById('modal-ang-nama').value.trim();
   const nis = document.getElementById('modal-ang-nis').value.trim();
   const kelas = document.getElementById('modal-ang-kelas').value.trim();
@@ -1009,6 +1286,7 @@ window.saveModalAnggota = function(editId) {
       item.angkatan = angkatan;
       if (isCustom && pwd) item.password = pwd;
       else if (!isCustom) item.password = '';
+      logActivity('UBAH', `Mengubah data anggota: ${nama} (${jabatan})`, `NIS: ${nis}, Kelas: ${kelas}, Angkatan: ${angkatan}`);
     }
   } else {
     list.push({
@@ -1021,6 +1299,7 @@ window.saveModalAnggota = function(editId) {
       angkatan,
       password: pwd
     });
+    logActivity('TAMBAH', `Menambahkan anggota baru: ${nama} (${jabatan})`, `NIS: ${nis}, Angkatan: ${angkatan}`);
   }
 
   DB.set('anggota', list);
@@ -1029,21 +1308,25 @@ window.saveModalAnggota = function(editId) {
   toast(`✅ Anggota berhasil ${editId ? 'diperbarui' : 'ditambahkan'}!`);
 };
 
-window.delAnggota = function(id) {
-  if (!confirm('Hapus anggota ini dari sistem?')) return;
-  DB.set('anggota', (DB.get('anggota') || []).filter(a => a.id !== id));
+window.delAnggota = function (id) {
+  if (!canEdit()) {
+    return toast('⚠️ Akses ditolak: Hanya pengurus/pemegang jabatan yang dapat menghapus data!');
+  }
+  const list = DB.get('anggota') || [];
+  const item = list.find(a => a.id === id);
+  if (!confirm(`Hapus personil ${item?.nama || 'anggota'} dari sistem MY UKS?`)) return;
+
+  DB.set('anggota', list.filter(a => a.id !== id));
+  logActivity('HAPUS', `Menghapus anggota: ${item?.nama || 'Anggota'}`, `NIS: ${item?.nis || '-'}`);
   if (window.renderAnggotaTbl) renderAnggotaTbl();
   toast('Anggota dihapus 🗑️');
 };
 
-// =====================
-//   PAGE 3: DATA PASIEN - MATCHING SCREENSHOT 2
-// =====================
-pages.pasien = function(m) {
+pages.pasien = function (m) {
   function render() {
     const list = DB.get('pasien') || [];
     const tglFilter = document.getElementById('flt-tgl-pasien')?.value || '';
-    
+
     let filtered = list;
     if (tglFilter) {
       filtered = filtered.filter(p => p.tanggal === tglFilter);
@@ -1052,33 +1335,45 @@ pages.pasien = function(m) {
     const tbody = document.getElementById('pasien-tbl');
     if (!tbody) return;
 
+    const editable = canEdit();
+
     tbody.innerHTML = filtered.length
-      ? filtered.slice().reverse().map(p => `
-        <tr>
-          <td>${fmt(p.tanggal)}</td>
-          <td><strong>${p.nama}</strong></td>
-          <td>${p.kelas}</td>
-          <td>${p.keluhan}</td>
-          <td>${p.tindakan}</td>
-          <td>
-            <div style="display:flex;gap:6px">
-              <button class="btn btn-action-edit" onclick="openModalPasien(${p.id})"><i class="ti ti-edit"></i> Ubah</button>
-              <button class="btn btn-action-delete" onclick="delPasien(${p.id})"><i class="ti ti-trash"></i> Hapus</button>
-            </div>
-          </td>
-        </tr>`).join('')
-      : `<tr><td colspan="6"><div class="empty"><i class="ti ti-notes-off"></i>Belum ada data kunjungan pasien</div></td></tr>`;
+      ? filtered.slice().reverse().map(p => {
+        const actionHtml = editable ? `
+            <td>
+              <div style="display:flex;gap:6px">
+                <button class="btn btn-action-edit" onclick="openModalPasien(${p.id})"><i class="ti ti-edit"></i> Ubah</button>
+                <button class="btn btn-action-delete" onclick="delPasien(${p.id})"><i class="ti ti-trash"></i> Hapus</button>
+              </div>
+            </td>` : `
+            <td><span class="badge-readonly"><i class="ti ti-eye"></i> Hanya Lihat</span></td>`;
+
+        return `
+          <tr>
+            <td>${fmt(p.tanggal)}</td>
+            <td><strong>${p.nama}</strong></td>
+            <td>${p.kelas}</td>
+            <td>${p.keluhan}</td>
+            <td>${p.tindakan}</td>
+            <td><span class="badge ${p.status === 'Sembuh' ? 'badge-green' : p.status === 'Dirujuk' ? 'badge-amber' : 'badge-red'}">${p.status}</span></td>
+            ${actionHtml}
+          </tr>`;
+      }).join('')
+      : `<tr><td colspan="7"><div class="empty"><i class="ti ti-notes-off"></i>Belum ada data kunjungan pasien</div></td></tr>`;
   }
+
+  const editable = canEdit();
 
   m.innerHTML = `
   <div class="page-hero">
     <div class="page-title-wrap">
       <h1 class="page-title">Data Pasien</h1>
-      <div class="page-subtitle">Catatan kunjungan dan tindakan medis di UKS</div>
+      <div class="page-subtitle">Catatan kunjungan dan tindakan medis di ruang UKS</div>
     </div>
+    ${editable ? `
     <button class="btn-header-add" onclick="openModalPasien()">
       <i class="ti ti-plus"></i> Catat Pasien Baru
-    </button>
+    </button>` : ''}
   </div>
 
   <div class="card">
@@ -1101,6 +1396,7 @@ pages.pasien = function(m) {
             <th>KELAS</th>
             <th>KELUHAN</th>
             <th>OBAT / TINDAKAN</th>
+            <th>STATUS</th>
             <th>AKSI</th>
           </tr>
         </thead>
@@ -1113,7 +1409,9 @@ pages.pasien = function(m) {
   render();
 };
 
-window.openModalPasien = function(editId) {
+window.openModalPasien = function (editId) {
+  if (!canEdit()) return toast('⚠️ Akses ditolak: Hanya pengurus/pemegang jabatan yang dapat mencatat pasien!');
+
   const list = DB.get('pasien') || [];
   const editItem = editId ? list.find(p => p.id === editId) : null;
 
@@ -1160,7 +1458,9 @@ window.openModalPasien = function(editId) {
   document.body.appendChild(overlay);
 };
 
-window.saveModalPasien = function(editId) {
+window.saveModalPasien = function (editId) {
+  if (!canEdit()) return toast('⚠️ Akses ditolak: Hanya pengurus yang dapat menyimpan rekam medis!');
+
   const nama = document.getElementById('m-p-nama').value.trim();
   if (!nama) return toast('Nama pasien wajib diisi!');
 
@@ -1180,6 +1480,7 @@ window.saveModalPasien = function(editId) {
       item.keluhan = keluhan;
       item.tindakan = tindakan;
       item.status = status;
+      logActivity('UBAH', `Mengubah rekam medis pasien: ${nama} (${kelas})`, `Status: ${status} | Tindakan: ${tindakan}`);
     }
   } else {
     list.push({
@@ -1191,6 +1492,7 @@ window.saveModalPasien = function(editId) {
       tindakan,
       status
     });
+    logActivity('TAMBAH', `Mencatat pasien baru: ${nama} (${kelas})`, `Keluhan: ${keluhan} | Tindakan: ${tindakan}`);
   }
 
   DB.set('pasien', list);
@@ -1199,17 +1501,20 @@ window.saveModalPasien = function(editId) {
   toast(`✅ Data pasien berhasil ${editId ? 'diperbarui' : 'disimpan'}!`);
 };
 
-window.delPasien = function(id) {
-  if (!confirm('Hapus rekam medis pasien ini?')) return;
-  DB.set('pasien', (DB.get('pasien') || []).filter(p => p.id !== id));
+window.delPasien = function (id) {
+  if (!canEdit()) return toast('⚠️ Akses ditolak: Hanya pengurus yang dapat menghapus data pasien!');
+
+  const list = DB.get('pasien') || [];
+  const item = list.find(p => p.id === id);
+  if (!confirm(`Hapus catatan pasien ${item?.nama || ''}?`)) return;
+
+  DB.set('pasien', list.filter(p => p.id !== id));
+  logActivity('HAPUS', `Menghapus rekam medis pasien: ${item?.nama || 'Pasien'}`, `Tanggal: ${fmt(item?.tanggal)}`);
   if (window.renderPasienTbl) renderPasienTbl();
   toast('Data pasien dihapus 🗑️');
 };
 
-// =====================
-//   PAGE 4: STOK UKS
-// =====================
-pages.stok = function(m) {
+pages.stok = function (m) {
   function render() {
     const list = DB.get('stok') || [];
     const flt = (document.getElementById('srch-stok')?.value || '').toLowerCase();
@@ -1220,10 +1525,21 @@ pages.stok = function(m) {
     const tbody = document.getElementById('stok-tbl');
     if (!tbody) return;
 
+    const editable = canEdit();
+
     tbody.innerHTML = filtered.length
       ? filtered.map(s => {
-          const kritis = s.jumlah <= s.min;
-          return `
+        const kritis = s.jumlah <= s.min;
+        const actionHtml = editable ? `
+            <td>
+              <div style="display:flex;gap:6px">
+                <button class="btn btn-action-edit" onclick="openModalStok(${s.id})"><i class="ti ti-edit"></i> Ubah</button>
+                <button class="btn btn-action-delete" onclick="delStok(${s.id})"><i class="ti ti-trash"></i> Hapus</button>
+              </div>
+            </td>` : `
+            <td><span class="badge-readonly"><i class="ti ti-eye"></i> Hanya Lihat</span></td>`;
+
+        return `
           <tr>
             <td><strong>${s.nama}</strong></td>
             <td><span class="badge ${s.kategori === 'Obat' ? 'badge-blue' : 'badge-amber'}">${s.kategori === 'Obat' ? '💊' : '🩺'} ${s.kategori}</span></td>
@@ -1233,18 +1549,14 @@ pages.stok = function(m) {
             </td>
             <td>${s.satuan}</td>
             <td style="color:var(--text2)">${fmt(s.kadaluarsa)}</td>
-            <td>
-              <div style="display:flex;gap:6px">
-                <button class="btn btn-action-edit" onclick="openModalStok(${s.id})"><i class="ti ti-edit"></i> Ubah</button>
-                <button class="btn btn-action-delete" onclick="delStok(${s.id})"><i class="ti ti-trash"></i> Hapus</button>
-              </div>
-            </td>
+            ${actionHtml}
           </tr>`;
-        }).join('')
+      }).join('')
       : `<tr><td colspan="6"><div class="empty"><i class="ti ti-package-off"></i>Belum ada data stok</div></td></tr>`;
   }
 
   const kritis = (DB.get('stok') || []).filter(s => s.jumlah <= s.min);
+  const editable = canEdit();
 
   m.innerHTML = `
   <div class="page-hero">
@@ -1252,9 +1564,10 @@ pages.stok = function(m) {
       <h1 class="page-title">Stok UKS</h1>
       <div class="page-subtitle">Persediaan obat-obatan dan peralatan medis UKS</div>
     </div>
+    ${editable ? `
     <button class="btn-header-add" onclick="openModalStok()">
       <i class="ti ti-plus"></i> Tambah Stok
-    </button>
+    </button>` : ''}
   </div>
 
   ${kritis.length ? `
@@ -1289,7 +1602,9 @@ pages.stok = function(m) {
   render();
 };
 
-window.openModalStok = function(editId) {
+window.openModalStok = function (editId) {
+  if (!canEdit()) return toast('⚠️ Akses ditolak: Hanya pengurus yang dapat menambah/mengedit stok!');
+
   const list = DB.get('stok') || [];
   const editItem = editId ? list.find(s => s.id === editId) : null;
 
@@ -1301,7 +1616,7 @@ window.openModalStok = function(editId) {
     <div class="modal-header">
       <div>
         <div class="modal-title"><i class="ti ti-medicine-syrup" style="color:var(--primary)"></i> ${editItem ? 'Ubah Item Stok' : 'Tambah Item Baru'}</div>
-        <div class="modal-sub">Kelola obat atau peralatan medis UKS</div>
+        <div class="modal-sub">Kelola persediaan obat atau peralatan medis UKS</div>
       </div>
       <button class="modal-close-btn" onclick="document.getElementById('modal-stok').remove()">✕</button>
     </div>
@@ -1333,7 +1648,9 @@ window.openModalStok = function(editId) {
   document.body.appendChild(overlay);
 };
 
-window.saveModalStok = function(editId) {
+window.saveModalStok = function (editId) {
+  if (!canEdit()) return toast('⚠️ Akses ditolak: Hanya pengurus yang dapat menyimpan data stok!');
+
   const nama = document.getElementById('m-s-nama').value.trim();
   if (!nama) return toast('Nama item wajib diisi!');
 
@@ -1353,6 +1670,7 @@ window.saveModalStok = function(editId) {
       item.satuan = sat;
       item.min = min;
       item.kadaluarsa = exp;
+      logActivity('UBAH', `Mengubah stok: ${nama}`, `Jumlah: ${jml} ${sat} | Kategori: ${kat}`);
     }
   } else {
     list.push({
@@ -1364,6 +1682,7 @@ window.saveModalStok = function(editId) {
       min,
       kadaluarsa: exp
     });
+    logActivity('TAMBAH', `Menambah item stok baru: ${nama}`, `Jumlah: ${jml} ${sat} | Kategori: ${kat}`);
   }
 
   DB.set('stok', list);
@@ -1372,19 +1691,22 @@ window.saveModalStok = function(editId) {
   toast(`✅ Item stok berhasil ${editId ? 'diperbarui' : 'disimpan'}!`);
 };
 
-window.delStok = function(id) {
-  if (!confirm('Hapus item persediaan ini?')) return;
-  DB.set('stok', (DB.get('stok') || []).filter(s => s.id !== id));
+window.delStok = function (id) {
+  if (!canEdit()) return toast('⚠️ Akses ditolak: Hanya pengurus yang dapat menghapus stok!');
+
+  const list = DB.get('stok') || [];
+  const item = list.find(s => s.id === id);
+  if (!confirm(`Hapus item persediaan ${item?.nama || ''}?`)) return;
+
+  DB.set('stok', list.filter(s => s.id !== id));
+  logActivity('HAPUS', `Menghapus item stok: ${item?.nama || 'Item'}`, `Kategori: ${item?.kategori}`);
   if (window.renderStokTbl) renderStokTbl();
   toast('Item stok dihapus 🗑️');
 };
 
-// =====================
-//   PAGE 5: ABSENSI
-// =====================
 let currentAbsensiFilter = 'all';
 
-pages.absensi = function(m) {
+pages.absensi = function (m) {
   function render() {
     const absensi = DB.get('absensi') || [];
     const anggota = DB.get('anggota') || [];
@@ -1398,8 +1720,21 @@ pages.absensi = function(m) {
       filteredAnggota = filteredAnggota.filter(a => a.angkatan === '11');
     }
 
+    const editable = canEdit();
+
     const rows = filteredAnggota.map(an => {
       const rec = todayAbs.find(a => a.anggotaId === an.id);
+
+      const actionsCell = editable ? `
+        <td>
+          <div style="display:flex;gap:4px;flex-wrap:wrap">
+            ${['Hadir', 'Izin', 'Sakit', 'Alpha'].map(s =>
+        `<button class="btn btn-ghost btn-sm" style="${rec?.status === s ? 'border-color:var(--primary);color:var(--primary);background:var(--primary-dim);font-weight:900' : ''}" onclick="setAbsen(${an.id},'${s}')">${s}</button>`
+      ).join('')}
+          </div>
+        </td>` : `
+        <td><span class="badge-readonly"><i class="ti ti-eye"></i> Hanya Pengurus</span></td>`;
+
       return `<tr>
         <td><strong>${an.nama}</strong></td>
         <td><span class="badge-nis">${an.nis || '-'}</span></td>
@@ -1413,13 +1748,7 @@ pages.absensi = function(m) {
         <td>${rec
           ? `<span class="badge ${rec.status === 'Hadir' ? 'badge-green' : rec.status === 'Izin' ? 'badge-amber' : 'badge-red'}">${rec.status}</span>`
           : '<span style="color:var(--text3);font-size:12px;font-weight:700">Belum diisi</span>'}</td>
-        <td>
-          <div style="display:flex;gap:4px;flex-wrap:wrap">
-            ${['Hadir', 'Izin', 'Sakit', 'Alpha'].map(s =>
-              `<button class="btn btn-ghost btn-sm" style="${rec?.status === s ? 'border-color:var(--primary);color:var(--primary);background:var(--primary-dim);font-weight:900' : ''}" onclick="setAbsen(${an.id},'${s}')">${s}</button>`
-            ).join('')}
-          </div>
-        </td>
+        ${actionsCell}
       </tr>`;
     }).join('');
 
@@ -1480,7 +1809,7 @@ pages.absensi = function(m) {
   render();
 };
 
-window.filterAbsensi = function(tab) {
+window.filterAbsensi = function (tab) {
   currentAbsensiFilter = tab;
   document.querySelectorAll('.tab-row .tab-btn').forEach(b => b.classList.remove('active'));
   const btn = document.getElementById('tab-abs-' + tab);
@@ -1488,9 +1817,14 @@ window.filterAbsensi = function(tab) {
   if (window.renderAbsTbl) renderAbsTbl();
 };
 
-window.setAbsen = function(anggotaId, status) {
+window.setAbsen = function (anggotaId, status) {
+  if (!canEdit()) return toast('⚠️ Akses ditolak: Hanya pengurus yang dapat mengubah presensi!');
+
   const tgl = document.getElementById('abs-tgl').value;
   const absensi = DB.get('absensi') || [];
+  const anggota = DB.get('anggota') || [];
+  const an = anggota.find(a => a.id === anggotaId);
+
   const idx = absensi.findIndex(a => a.anggotaId === anggotaId && a.tanggal === tgl);
   if (idx >= 0) {
     absensi[idx].status = status;
@@ -1498,236 +1832,178 @@ window.setAbsen = function(anggotaId, status) {
     absensi.push({ id: Date.now(), tanggal: tgl, anggotaId, status });
   }
   DB.set('absensi', absensi);
+
+  if (an) {
+    logActivity('ABSENSI', `Presensi ${an.nama} ditandai sebagai "${status}"`, `Tanggal: ${tgl}`);
+  }
+
   if (window.renderAbsTbl) renderAbsTbl();
 };
 
-// =====================
-//   PAGE 6: JADWAL JAGA (MATCHING SCREENSHOT 3 + WA SHARE)
-// =====================
-let currentJadwalTab = 'upacara'; // 'upacara', 'piket'
-
-pages.jadwal = function(m) {
+pages.jadwal = function (m) {
   function render() {
     const list = DB.get('upacara') || [];
     const container = document.getElementById('upacara-list-view');
-    const piketContainer = document.getElementById('piket-list-view');
 
-    if (currentJadwalTab === 'upacara') {
-      if (container) container.style.display = 'block';
-      if (piketContainer) piketContainer.style.display = 'none';
+    if (!container) return;
+    if (!list.length) {
+      container.innerHTML = '<div class="empty"><i class="ti ti-calendar-off"></i>Belum ada jadwal jaga upacara / kegiatan</div>';
+      return;
+    }
 
-      if (!container) return;
-      if (!list.length) {
-        container.innerHTML = '<div class="empty"><i class="ti ti-calendar-off"></i>Belum ada jadwal jaga upacara</div>';
-        return;
-      }
+    const anggotaList = DB.get('anggota') || [];
+    const editable = canEdit();
 
-      const anggotaList = DB.get('anggota') || [];
+    container.innerHTML = list.slice().sort((a, b) => b.tanggal.localeCompare(a.tanggal)).map(u => {
+      let totalPetugas = 0;
+      let totA10 = 0;
+      let totA11 = 0;
+      let totCowo = 0;
+      let totCewe = 0;
 
-      container.innerHTML = list.slice().sort((a, b) => b.tanggal.localeCompare(a.tanggal)).map(u => {
-        let totalPetugas = 0;
-        let totA10 = 0;
-        let totA11 = 0;
-        let totCowo = 0;
-        let totCewe = 0;
-
-        (u.titikJaga || []).forEach(t => {
-          (t.anggota || []).forEach(nama => {
-            totalPetugas++;
-            const ang = anggotaList.find(a => a.nama === nama);
-            if (ang?.angkatan === '11') totA11++;
-            else totA10++;
-            if (ang?.jk === 'P') totCewe++;
-            else totCowo++;
-          });
+      (u.titikJaga || []).forEach(t => {
+        (t.anggota || []).forEach(nama => {
+          totalPetugas++;
+          const ang = anggotaList.find(a => a.nama === nama);
+          if (ang?.angkatan === '11') totA11++;
+          else totA10++;
+          if (ang?.jk === 'P') totCewe++;
+          else totCowo++;
         });
+      });
+
+      const editActionsHtml = editable ? `
+        <button class="btn btn-action-edit" onclick="openModalUpacara(${u.id})">
+          <i class="ti ti-edit"></i> Ubah
+        </button>
+        <button class="btn btn-action-delete" onclick="delUpacara(${u.id})">
+          <i class="ti ti-trash"></i> Hapus
+        </button>` : '';
+
+      return `
+      <div class="jadwal-card">
+        <div class="jadwal-card-header">
+          <div>
+            <div class="jadwal-title">🚩 ${u.nama}</div>
+            <div class="jadwal-meta">${fmt(u.tanggal)} • ${u.titikJaga.length} Pos Jaga • ${totalPetugas} Petugas Bertugas</div>
+            <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+              <span class="badge badge-a10">⭐ A10: ${totA10}</span>
+              <span class="badge badge-a11">🌟 A11: ${totA11}</span>
+              <span class="badge badge-cowo">👦 ${totCowo} Cowo</span>
+              <span class="badge badge-cewe">👧 ${totCewe} Cewe</span>
+            </div>
+          </div>
+
+          <!-- Action buttons (Salin Teks, Kirim WA, Ubah, Hapus) -->
+          <div class="jadwal-actions">
+            <button class="btn btn-copy" onclick="salinTeksJadwal(${u.id})">
+              <i class="ti ti-copy"></i> Salin Teks
+            </button>
+            <button class="btn btn-wa" onclick="kirimWaJadwal(${u.id})">
+              <i class="ti ti-brand-whatsapp"></i> Kirim ke WA
+            </button>
+            ${editActionsHtml}
+          </div>
+        </div>
+
+        <div class="jadwal-table-wrap">
+          <table class="jadwal-table">
+            <thead>
+              <tr>
+                <th style="width:36%">POS / TITIK JAGA (MAKS 7 ORANG)</th>
+                <th>PETUGAS YANG DITUGASKAN</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${u.titikJaga.map(t => {
+        const arr = t.anggota || [];
+        const count = arr.length;
+        const posA10 = arr.filter(n => (anggotaList.find(a => a.nama === n)?.angkatan === '10')).length;
+        const posA11 = arr.filter(n => (anggotaList.find(a => a.nama === n)?.angkatan === '11')).length;
+        const posCowo = arr.filter(n => (anggotaList.find(a => a.nama === n)?.jk !== 'P')).length;
+        const posCewe = arr.filter(n => (anggotaList.find(a => a.nama === n)?.jk === 'P')).length;
+
+        const capClass = count >= 7 ? 'full' : count > 0 ? 'available' : 'empty';
+        const capLabel = count >= 7 ? `🔒 ${count}/7 (Penuh)` : `${count}/7 Petugas`;
+
+        const chips = arr.map(nama => {
+          const ang = anggotaList.find(a => a.nama === nama);
+          const isCewe = ang?.jk === 'P';
+          const isA10 = ang?.angkatan === '10';
+          const icon = isCewe ? '👧' : '👦';
+          const cls = isCewe ? 'cewe' : 'cowo';
+          const angTag = isA10
+            ? `<span class="chip-tag a10">A10</span>`
+            : `<span class="chip-tag a11">A11</span>`;
+          const kls = ang?.kelas ? `(${ang.kelas})` : '';
+
+          return `
+                  <span class="petugas-chip ${cls}">
+                    <span>${icon}</span>
+                    <span>${nama}</span>
+                    ${angTag}
+                    ${kls ? `<span style="font-size:11px;opacity:0.8">${kls}</span>` : ''}
+                  </span>`;
+        }).join('');
 
         return `
-        <div class="jadwal-card">
-          <div class="jadwal-card-header">
-            <div>
-              <div class="jadwal-title">🚩 ${u.nama}</div>
-              <div class="jadwal-meta">${fmt(u.tanggal)} • ${u.titikJaga.length} Pos Jaga • ${totalPetugas} Petugas Bertugas</div>
-              <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
-                <span class="badge badge-a10">⭐ A10: ${totA10}</span>
-                <span class="badge badge-a11">🌟 A11: ${totA11}</span>
-                <span class="badge badge-cowo">👦 ${totCowo} Cowo</span>
-                <span class="badge badge-cewe">👧 ${totCewe} Cewe</span>
-              </div>
-            </div>
-
-            <!-- Action buttons (Salin Teks, Kirim WA, Ubah, Hapus) -->
-            <div class="jadwal-actions">
-              <button class="btn btn-copy" onclick="salinTeksJadwal(${u.id})">
-                <i class="ti ti-copy"></i> Salin Teks
-              </button>
-              <button class="btn btn-wa" onclick="kirimWaJadwal(${u.id})">
-                <i class="ti ti-brand-whatsapp"></i> Kirim ke WA
-              </button>
-              <button class="btn btn-action-edit" onclick="openModalUpacara(${u.id})">
-                <i class="ti ti-edit"></i> Ubah
-              </button>
-              <button class="btn btn-action-delete" onclick="delUpacara(${u.id})">
-                <i class="ti ti-trash"></i> Hapus
-              </button>
-            </div>
-          </div>
-
-          <div class="jadwal-table-wrap">
-            <table class="jadwal-table">
-              <thead>
                 <tr>
-                  <th style="width:36%">POS / TITIK JAGA (MAKS 7 ORANG)</th>
-                  <th>PETUGAS YANG DITUGASKAN</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${u.titikJaga.map(t => {
-                  const arr = t.anggota || [];
-                  const count = arr.length;
-                  const posA10 = arr.filter(n => (anggotaList.find(a => a.nama === n)?.angkatan === '10')).length;
-                  const posA11 = arr.filter(n => (anggotaList.find(a => a.nama === n)?.angkatan === '11')).length;
-                  const posCowo = arr.filter(n => (anggotaList.find(a => a.nama === n)?.jk !== 'P')).length;
-                  const posCewe = arr.filter(n => (anggotaList.find(a => a.nama === n)?.jk === 'P')).length;
-
-                  const capClass = count >= 7 ? 'full' : count > 0 ? 'available' : 'empty';
-                  const capLabel = count >= 7 ? `🔒 ${count}/7 (Penuh)` : `${count}/7 Petugas`;
-
-                  const chips = arr.map(nama => {
-                    const ang = anggotaList.find(a => a.nama === nama);
-                    const isCewe = ang?.jk === 'P';
-                    const isA10 = ang?.angkatan === '10';
-                    const icon = isCewe ? '👧' : '👦';
-                    const cls = isCewe ? 'cewe' : 'cowo';
-                    const angTag = isA10
-                      ? `<span class="chip-tag a10">A10</span>`
-                      : `<span class="chip-tag a11">A11</span>`;
-                    const kls = ang?.kelas ? `(${ang.kelas})` : '';
-
-                    return `
-                    <span class="petugas-chip ${cls}">
-                      <span>${icon}</span>
-                      <span>${nama}</span>
-                      ${angTag}
-                      ${kls ? `<span style="font-size:11px;opacity:0.8">${kls}</span>` : ''}
-                    </span>`;
-                  }).join('');
-
-                  return `
-                  <tr>
-                    <td>
-                      <div class="pos-title-label">
-                        📍 <span>${t.pos}</span>
-                        <span class="pos-capacity-badge ${capClass}">${capLabel}</span>
-                      </div>
-                      ${count > 0 ? `
-                      <div class="pos-comp-bar">
-                        <span class="pos-comp-pill">⭐ A10: ${posA10}</span>
-                        <span class="pos-comp-pill">🌟 A11: ${posA11}</span>
-                        <span class="pos-comp-pill">👦 ${posCowo} Cowo</span>
-                        <span class="pos-comp-pill">👧 ${posCewe} Cewe</span>
-                      </div>` : ''}
-                    </td>
-                    <td>
-                      <div class="petugas-chips-wrap">
-                        ${chips || '<span style="color:var(--text3);font-size:12px;font-style:italic">Belum ada petugas ditugaskan</span>'}
-                      </div>
-                    </td>
-                  </tr>`;
-                }).join('')}
-              </tbody>
-            </table>
-          </div>
-        </div>`;
-      }).join('');
-
-    } else {
-      if (container) container.style.display = 'none';
-      if (piketContainer) piketContainer.style.display = 'block';
-      renderPiketGrid();
-    }
-  }
-
-  function renderPiketGrid() {
-    const jadwal = DB.get('jadwal') || [];
-    const heads = HARI.map(h => `<div class="sched-head">${h}</div>`).join('');
-    const rows = SESI.map(sesi => {
-      const cells = HARI.map(hari => {
-        const js = jadwal.filter(j => j.hari === hari && j.sesi === sesi);
-        return `<div class="sched-cell">${js.map(j =>
-          `<div class="sched-block" title="Klik untuk hapus" onclick="delJadwal(${j.id})">🗑 ${j.anggota}</div>`
-        ).join('')}</div>`;
-      }).join('');
-      return `<div class="sched-time">${sesi}</div>${cells}`;
+                  <td>
+                    <div class="pos-title-label">
+                      📍 <span>${t.pos}</span>
+                      <span class="pos-capacity-badge ${capClass}">${capLabel}</span>
+                    </div>
+                    ${count > 0 ? `
+                    <div class="pos-comp-bar">
+                      <span class="pos-comp-pill">⭐ A10: ${posA10}</span>
+                      <span class="pos-comp-pill">🌟 A11: ${posA11}</span>
+                      <span class="pos-comp-pill">👦 ${posCowo} Cowo</span>
+                      <span class="pos-comp-pill">👧 ${posCewe} Cewe</span>
+                    </div>` : ''}
+                  </td>
+                  <td>
+                    <div class="petugas-chips-wrap">
+                      ${chips || '<span style="color:var(--text3);font-size:12px;font-style:italic">Belum ada petugas ditugaskan</span>'}
+                    </div>
+                  </td>
+                </tr>`;
+      }).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>`;
     }).join('');
-    
-    const gridEl = document.getElementById('sched-grid');
-    if (gridEl) {
-      gridEl.innerHTML = `<div class="sched-head" style="background:var(--bg3)"></div>${heads}${rows}`;
-    }
   }
 
-  const listUpacara = DB.get('upacara') || [];
+  const editable = canEdit();
 
   m.innerHTML = `
   <div class="page-hero">
     <div class="page-title-wrap">
       <h1 class="page-title">Jadwal Jaga</h1>
-      <div class="page-subtitle">Penempatan petugas jaga upacara bendera (maks 7 per pos) & piket UKS</div>
+      <div class="page-subtitle">Penempatan petugas jaga pos upacara bendera & kegiatan (maksimal 7 personil per pos)</div>
     </div>
+    ${editable ? `
     <div style="display:flex;gap:8px">
       <button class="btn-header-add" onclick="openModalUpacara()">
         <i class="ti ti-plus"></i> Tambah Jadwal Jaga
       </button>
-    </div>
+    </div>` : ''}
   </div>
 
-  <!-- Tabs Nav (Matching Screenshot 3) -->
-  <div class="tab-row" style="margin-bottom:18px">
-    <button class="tab-btn ${currentJadwalTab === 'upacara' ? 'active' : ''}" id="tab-jadwal-upacara" onclick="switchJadwalTab('upacara')">
-      Daftar Jadwal (${listUpacara.length})
-    </button>
-    <button class="tab-btn ${currentJadwalTab === 'piket' ? 'active' : ''}" id="tab-jadwal-piket" onclick="switchJadwalTab('piket')">
-      Jadwal Piket Ruang UKS
-    </button>
-  </div>
-
-  <div id="upacara-list-view"></div>
-
-  <div id="piket-list-view" style="display:none">
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-        <div class="card-title" style="margin:0"><i class="ti ti-calendar-week"></i>Matriks Piket Jaga Harian UKS</div>
-        <button class="btn btn-primary btn-sm" onclick="openModalPiket()"><i class="ti ti-plus"></i>Tambah Sesi Piket</button>
-      </div>
-      <div style="overflow-x:auto">
-        <div id="sched-grid" class="sched-grid"></div>
-      </div>
-    </div>
-  </div>`;
+  <div id="upacara-list-view"></div>`;
 
   window.renderJadwalView = render;
   render();
 };
 
-window.switchJadwalTab = function(tab) {
-  currentJadwalTab = tab;
-  document.querySelectorAll('.tab-row .tab-btn').forEach(b => b.classList.remove('active'));
-  const btn = document.getElementById('tab-jadwal-' + tab);
-  if (btn) btn.classList.add('active');
-  if (window.renderJadwalView) renderJadwalView();
-};
-
-// =====================
-//   WHATSAPP TEXT & SHARE FEATURE
-// =====================
 function generateJadwalWaText(u) {
   const anggotaList = DB.get('anggota') || [];
-  let text = `🏥 *JADWAL JAGA UPACARA / UKS PMR*\n`;
+  let text = `*JADWAL JAGA UPACARA / UKS PMR*\n`;
   text += `━━━━━━━━━━━━━━━━━━━━━\n`;
   text += `🚩 *Kegiatan:* ${u.nama}\n`;
   text += `📅 *Tanggal:* ${fmt(u.tanggal)}\n`;
-  if (u.keterangan) text += `📝 *Keterangan:* ${u.keterangan}\n`;
+  if (u.keterangan) text += ` *Keterangan:* ${u.keterangan}\n`;
   text += `\n📍 *PEMBAGIAN TITIK & POS JAGA (Maks 7 Orang/Pos):*\n`;
 
   let totalPetugas = 0;
@@ -1763,14 +2039,14 @@ function generateJadwalWaText(u) {
 
   text += `\n📊 *REKAPITULASI PETUGAS:*\n`;
   text += `• Total: ${totalPetugas} Petugas Bertugas\n`;
-  text += `• Angkatan: ⭐ A10 (${totA10}) | 🌟 A11 (${totA11})\n`;
-  text += `• Gender: 👦 ${totCowo} Cowo | 👧 ${totCewe} Cewe\n`;
+  text += `• Angkatan: A10 (${totA10}) | A11 (${totA11})\n`;
+  text += `• Gender: ${totCowo} Cowo |  ${totCewe} Cewe\n`;
   text += `━━━━━━━━━━━━━━━━━━━━━\n`;
   text += `_Harap hadir tepat waktu dan menggunakan seragam PMR lengkap. Semangat bertugas!_ 💪✨`;
   return text;
 }
 
-window.salinTeksJadwal = function(id) {
+window.salinTeksJadwal = function (id) {
   const u = (DB.get('upacara') || []).find(x => x.id === id);
   if (!u) return toast('Data jadwal tidak ditemukan!');
 
@@ -1796,7 +2072,7 @@ function fallbackCopyText(text) {
   toast('📋 Teks jadwal berhasil disalin!');
 }
 
-window.kirimWaJadwal = function(id) {
+window.kirimWaJadwal = function (id) {
   const u = (DB.get('upacara') || []).find(x => x.id === id);
   if (!u) return toast('Data jadwal tidak ditemukan!');
 
@@ -1806,21 +2082,20 @@ window.kirimWaJadwal = function(id) {
   toast('📲 Membuka WhatsApp...');
 };
 
-// =====================
-//   MODAL JADWAL JAGA UPACARA (INTERACTIVE BUILDER - MAX 7 PETUGAS)
-// =====================
 window._upacaraPosData = [];
 
-window.openModalUpacara = function(editId) {
+window.openModalUpacara = function (editId) {
+  if (!canEdit()) return toast('⚠️ Akses ditolak: Hanya pengurus yang dapat mengatur jadwal jaga!');
+
   const list = DB.get('upacara') || [];
   const editItem = editId ? list.find(x => x.id === editId) : null;
 
   window._upacaraPosData = editItem?.titikJaga && editItem.titikJaga.length
     ? JSON.parse(JSON.stringify(editItem.titikJaga)).map(t => ({
-        pos: t.pos || '',
-        anggota: Array.isArray(t.anggota) ? t.anggota : [],
-        filter: 'all'
-      }))
+      pos: t.pos || '',
+      anggota: Array.isArray(t.anggota) ? t.anggota : [],
+      filter: 'all'
+    }))
     : [{ pos: 'Lapangan Utama (Depan Tiang)', anggota: [], filter: 'all' }];
 
   const overlay = document.createElement('div');
@@ -1871,7 +2146,7 @@ window.openModalUpacara = function(editId) {
   renderModalTitikRows();
 };
 
-window.renderModalTitikRows = function() {
+window.renderModalTitikRows = function () {
   const container = document.getElementById('m-titik-builder');
   if (!container) return;
 
@@ -1889,7 +2164,7 @@ window.renderModalTitikRows = function() {
     const capClass = count > 7 ? 'overflow' : count === 7 ? 'full' : count > 0 ? 'available' : 'empty';
     const capLabel = count > 7 ? `⚠️ ${count}/7 Petugas (Kelebihan!)` : count === 7 ? `🔒 7/7 Petugas (Pos Penuh)` : `${count}/7 Petugas`;
 
-    // Filtered available members for picker
+
     const curFilter = t.filter || 'all';
     let availableList = anggotaList;
     if (curFilter === '10') availableList = availableList.filter(a => a.angkatan === '10');
@@ -1897,7 +2172,7 @@ window.renderModalTitikRows = function() {
     else if (curFilter === 'cowo') availableList = availableList.filter(a => a.jk !== 'P');
     else if (curFilter === 'cewe') availableList = availableList.filter(a => a.jk === 'P');
 
-    // Selected Chips
+
     const selectedChipsHtml = arr.map(nama => {
       const ang = anggotaList.find(a => a.nama === nama);
       const isCewe = ang?.jk === 'P';
@@ -1915,7 +2190,7 @@ window.renderModalTitikRows = function() {
       </span>`;
     }).join('');
 
-    // Member selection pills
+
     const pickerPillsHtml = availableList.map(a => {
       const isSelected = arr.includes(a.nama);
       const isCewe = a.jk === 'P';
@@ -1987,16 +2262,16 @@ function escapeHtml(str) {
   return String(str).replace(/'/g, "\\'").replace(/"/g, '&quot;');
 }
 
-window.updatePosName = function(idx, val) {
+window.updatePosName = function (idx, val) {
   if (window._upacaraPosData[idx]) {
     window._upacaraPosData[idx].pos = val;
   }
 };
 
-window.addMemberToPos = function(idx, memberName) {
+window.addMemberToPos = function (idx, memberName) {
   if (!window._upacaraPosData[idx]) return;
   if (!window._upacaraPosData[idx].anggota) window._upacaraPosData[idx].anggota = [];
-  
+
   if (window._upacaraPosData[idx].anggota.length >= 7) {
     return toast('⚠️ Pos ini sudah mencapai batas maksimal 7 petugas!');
   }
@@ -2006,18 +2281,18 @@ window.addMemberToPos = function(idx, memberName) {
   }
 };
 
-window.removeMemberFromPos = function(idx, memberName) {
+window.removeMemberFromPos = function (idx, memberName) {
   if (!window._upacaraPosData[idx]) return;
   window._upacaraPosData[idx].anggota = (window._upacaraPosData[idx].anggota || []).filter(n => n !== memberName);
   renderModalTitikRows();
 };
 
-window.addModalTitikRow = function() {
+window.addModalTitikRow = function () {
   window._upacaraPosData.push({ pos: '', anggota: [], filter: 'all' });
   renderModalTitikRows();
 };
 
-window.deleteModalTitikRow = function(idx) {
+window.deleteModalTitikRow = function (idx) {
   if (window._upacaraPosData.length <= 1) {
     window._upacaraPosData = [{ pos: '', anggota: [], filter: 'all' }];
   } else {
@@ -2026,18 +2301,19 @@ window.deleteModalTitikRow = function(idx) {
   renderModalTitikRows();
 };
 
-window.filterPosPicker = function(idx, filterType) {
+window.filterPosPicker = function (idx, filterType) {
   if (window._upacaraPosData[idx]) {
     window._upacaraPosData[idx].filter = filterType;
     renderModalTitikRows();
   }
 };
 
-window.saveModalUpacara = function(editId) {
+window.saveModalUpacara = function (editId) {
+  if (!canEdit()) return toast('⚠️ Akses ditolak: Hanya pengurus yang dapat menyimpan jadwal jaga!');
+
   const nama = document.getElementById('m-up-nama').value.trim();
   if (!nama) return toast('Nama kegiatan upacara wajib diisi!');
 
-  // Check if any pos exceeds 7 members
   const overLimit = window._upacaraPosData.find(p => (p.anggota || []).length > 7);
   if (overLimit) {
     return toast(`⚠️ Pos "${overLimit.pos || 'Tanpa Nama'}" melebihi batas maksimal 7 petugas!`);
@@ -2065,6 +2341,7 @@ window.saveModalUpacara = function(editId) {
       item.nama = nama;
       item.keterangan = ket;
       item.titikJaga = titikJaga;
+      logActivity('UBAH', `Mengubah jadwal jaga pos: ${nama}`, `Tanggal: ${fmt(tgl)} | ${titikJaga.length} Pos Jaga`);
     }
   } else {
     list.push({
@@ -2074,6 +2351,7 @@ window.saveModalUpacara = function(editId) {
       keterangan: ket,
       titikJaga
     });
+    logActivity('TAMBAH', `Membuat jadwal jaga pos baru: ${nama}`, `Tanggal: ${fmt(tgl)} | ${titikJaga.length} Pos Jaga`);
   }
 
   DB.set('upacara', list);
@@ -2082,85 +2360,32 @@ window.saveModalUpacara = function(editId) {
   toast(`✅ Jadwal jaga berhasil ${editId ? 'diperbarui' : 'disimpan'}!`);
 };
 
-window.delUpacara = function(id) {
-  if (!confirm('Hapus jadwal upacara ini?')) return;
-  DB.set('upacara', (DB.get('upacara') || []).filter(u => u.id !== id));
+window.delUpacara = function (id) {
+  if (!canEdit()) return toast('⚠️ Akses ditolak: Hanya pengurus yang dapat menghapus jadwal jaga!');
+
+  const list = DB.get('upacara') || [];
+  const item = list.find(u => u.id === id);
+  if (!confirm(`Hapus jadwal jaga ${item?.nama || ''}?`)) return;
+
+  DB.set('upacara', list.filter(u => u.id !== id));
+  logActivity('HAPUS', `Menghapus jadwal jaga pos: ${item?.nama || 'Jadwal'}`, `Tanggal: ${fmt(item?.tanggal)}`);
   if (window.renderJadwalView) renderJadwalView();
   toast('Jadwal upacara dihapus 🗑️');
 };
 
-// Modal Piket
-window.openModalPiket = function() {
-  const anggota = DB.get('anggota') || [];
-  const overlay = document.createElement('div');
-  overlay.className = 'modal-overlay';
-  overlay.id = 'modal-piket';
-  overlay.innerHTML = `
-  <div class="modal">
-    <div class="modal-header">
-      <div>
-        <div class="modal-title"><i class="ti ti-calendar-plus" style="color:var(--primary)"></i> Tambah Piket Ruang UKS</div>
-        <div class="modal-sub">Pilih personil, hari, dan sesi waktu piket</div>
-      </div>
-      <button class="modal-close-btn" onclick="document.getElementById('modal-piket').remove()">✕</button>
-    </div>
 
-    <div class="form-group" style="margin-bottom:12px">
-      <label>Anggota Bertugas</label>
-      <select id="m-piket-ang">
-        ${anggota.map(a => `<option value="${a.nama}">${a.jk === 'P' ? '👧' : '👦'} ${a.nama} (A${a.angkatan} - ${a.kelas})</option>`).join('')}
-      </select>
-    </div>
+let currentLaporanTab = 'medis'; 
+let currentLogTypeFilter = 'all';
 
-    <div class="form-row">
-      <div class="form-group"><label>Hari</label><select id="m-piket-hari">${HARI.map(h => `<option>${h}</option>`).join('')}</select></div>
-      <div class="form-group"><label>Sesi Waktu</label><select id="m-piket-sesi">${SESI.map(s => `<option>${s}</option>`).join('')}</select></div>
-    </div>
-
-    <div class="btn-row" style="justify-content:flex-end;margin-top:16px">
-      <button class="btn btn-ghost" onclick="document.getElementById('modal-piket').remove()">Batal</button>
-      <button class="btn btn-primary" onclick="saveModalPiket()"><i class="ti ti-plus"></i>Tambah Piket</button>
-    </div>
-  </div>`;
-  document.body.appendChild(overlay);
-};
-
-window.saveModalPiket = function() {
-  const ang = document.getElementById('m-piket-ang').value;
-  if (!ang) return toast('Pilih anggota!');
-  const list = DB.get('jadwal') || [];
-  list.push({
-    id: Date.now(),
-    anggota: ang,
-    hari: document.getElementById('m-piket-hari').value,
-    sesi: document.getElementById('m-piket-sesi').value,
-    lokasi: 'Ruang UKS'
-  });
-  DB.set('jadwal', list);
-  document.getElementById('modal-piket')?.remove();
-  if (window.renderJadwalView) renderJadwalView();
-  toast('✅ Jadwal piket ditambahkan!');
-};
-
-window.delJadwal = function(id) {
-  DB.set('jadwal', (DB.get('jadwal') || []).filter(j => j.id !== id));
-  if (window.renderJadwalView) renderJadwalView();
-  toast('Jadwal dihapus 🗑️');
-};
-
-// =====================
-//   PAGE 7: LAPORAN
-// =====================
-pages.laporan = function(m) {
+pages.laporan = function (m) {
   const pasien = DB.get('pasien') || [];
   const stok = DB.get('stok') || [];
   const absensi = DB.get('absensi') || [];
   const anggota = DB.get('anggota') || [];
+  const logs = DB.get('logs') || [];
 
   const a10 = anggota.filter(a => a.angkatan === '10').length;
   const a11 = anggota.filter(a => a.angkatan === '11').length;
-  const cowo = anggota.filter(a => a.jk !== 'P').length;
-  const cewe = anggota.filter(a => a.jk === 'P').length;
   const totalHadir = absensi.filter(a => a.status === 'Hadir').length;
   const totalAlpha = absensi.filter(a => a.status === 'Alpha').length;
   const dirujuk = pasien.filter(p => p.status === 'Dirujuk').length;
@@ -2172,110 +2397,264 @@ pages.laporan = function(m) {
   });
   const topKeluhan = Object.entries(keluhanMap).sort((a, b) => b[1] - a[1]).slice(0, 5);
 
+  const leader = isLeader();
+
+  function renderView() {
+    const contentBox = document.getElementById('laporan-tab-content');
+    if (!contentBox) return;
+
+    if (currentLaporanTab === 'medis') {
+      contentBox.innerHTML = `
+      <div class="grid4" style="margin-bottom:20px">
+        <div class="stat">
+          <div class="stat-label">🏥 Total Pasien</div>
+          <div class="stat-val">${pasien.length}</div>
+          <div class="stat-sub">${dirujuk} pasien dirujuk ke RS/Puskesmas</div>
+          <span class="stat-icon">🩺</span>
+        </div>
+        <div class="stat">
+          <div class="stat-label">✅ Total Presensi Hadir</div>
+          <div class="stat-val">${totalHadir}</div>
+          <div class="stat-sub">${totalAlpha} catatan alpha</div>
+          <span class="stat-icon">👥</span>
+        </div>
+        <div class="stat">
+          <div class="stat-label">💊 Item Persediaan</div>
+          <div class="stat-val">${stok.length}</div>
+          <div class="stat-sub">${stok.filter(s => s.jumlah <= s.min).length} item berstatus kritis</div>
+          <span class="stat-icon">💉</span>
+        </div>
+        <div class="stat">
+          <div class="stat-label">👥 Personil Anggota</div>
+          <div class="stat-val">${anggota.length}</div>
+          <div class="stat-sub">A10: ${a10} orang | A11: ${a11} orang</div>
+          <span class="stat-icon">⭐</span>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title"><i class="ti ti-chart-bar"></i>Keluhan Penyakit Terbanyak</div>
+          ${topKeluhan.length
+          ? topKeluhan.map(([k, v]) => {
+            const pct = Math.round((v / Math.max(pasien.length, 1)) * 100);
+            return `<div style="margin-bottom:12px">
+                  <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+                    <span style="font-size:13.5px;text-transform:capitalize;font-weight:800">${k}</span>
+                    <span style="font-size:12px;color:var(--text2);font-weight:700">${v} kali (${pct}%)</span>
+                  </div>
+                  <div class="progress-bar" style="height:8px">
+                    <div class="progress-fill" style="width:${pct}%"></div>
+                  </div>
+                </div>`;
+          }).join('')
+          : '<div class="empty"><i class="ti ti-chart-off"></i>Belum ada data pasien</div>'}
+        </div>
+
+        <div class="card">
+          <div class="card-title"><i class="ti ti-package"></i>Kondisi Stok Obat & Alat</div>
+          ${stok.map(s => {
+            const pct = Math.min(100, Math.round((s.jumlah / Math.max(s.min * 2, 1)) * 100));
+            const cls = s.jumlah <= s.min ? '' : 'green';
+            return `<div style="margin-bottom:10px">
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                <span style="font-size:12.5px;font-weight:700">${s.nama}</span>
+                <span style="font-size:12px;color:var(--text2);font-weight:800">${s.jumlah} ${s.satuan}</span>
+              </div>
+              <div class="progress-bar"><div class="progress-fill ${cls}" style="width:${pct}%"></div></div>
+            </div>`;
+          }).join('') || '<div class="empty"><i class="ti ti-package-off"></i>Belum ada data stok</div>'}
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><i class="ti ti-clipboard-list"></i>Log Lengkap Pasien UKS</div>
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>TANGGAL</th>
+                <th>NAMA LENGKAP</th>
+                <th>KELAS</th>
+                <th>KELUHAN</th>
+                <th>TINDAKAN / TERAPI</th>
+                <th>STATUS</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${pasien.slice().reverse().map(p => `
+              <tr>
+                <td>${fmt(p.tanggal)}</td>
+                <td><strong>${p.nama}</strong></td>
+                <td>${p.kelas}</td>
+                <td>${p.keluhan}</td>
+                <td>${p.tindakan}</td>
+                <td><span class="badge ${p.status === 'Sembuh' ? 'badge-green' : p.status === 'Dirujuk' ? 'badge-amber' : 'badge-red'}">${p.status}</span></td>
+              </tr>`).join('') || '<tr><td colspan="6"><div class="empty">Belum ada catatan medis</div></td></tr>'}
+            </tbody>
+          </table>
+        </div>
+      </div>`;
+    } else if (currentLaporanTab === 'audit_logs') {
+      let filteredLogs = logs;
+      if (currentLogTypeFilter !== 'all') {
+        filteredLogs = filteredLogs.filter(l => l.tipe.toLowerCase() === currentLogTypeFilter.toLowerCase());
+      }
+
+      contentBox.innerHTML = `
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+          <div>
+            <div class="card-title" style="margin:0"><i class="ti ti-activity"></i>Log Aktivitas & Audit Personil (Khusus Ketua & Koordinator)</div>
+            <div style="font-size:12px;color:var(--text3);margin-top:2px">Catatan login, pengubahan data, dan aktivitas anggota real-time</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <label style="font-size:11px;color:var(--text2);font-weight:800">FILTER TIPE:</label>
+            <select onchange="changeLogFilter(this.value)" style="width:160px;padding:6px 10px;font-size:12px">
+              <option value="all" ${currentLogTypeFilter === 'all' ? 'selected' : ''}>Semua Aktivitas</option>
+              <option value="login" ${currentLogTypeFilter === 'login' ? 'selected' : ''}>🔐 Login</option>
+              <option value="tambah" ${currentLogTypeFilter === 'tambah' ? 'selected' : ''}>➕ Penambahan Data</option>
+              <option value="ubah" ${currentLogTypeFilter === 'ubah' ? 'selected' : ''}>✏️ Pengubahan Data</option>
+              <option value="hapus" ${currentLogTypeFilter === 'hapus' ? 'selected' : ''}>🗑️ Penghapusan Data</option>
+              <option value="ganti_password" ${currentLogTypeFilter === 'ganti_password' ? 'selected' : ''}>🔑 Pergantian Password</option>
+              <option value="absensi" ${currentLogTypeFilter === 'absensi' ? 'selected' : ''}>📋 Presensi / Absensi</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>WAKTU</th>
+                <th>TIPE</th>
+                <th>PELAKU & JABATAN</th>
+                <th>NIS</th>
+                <th>AKTIVITAS</th>
+                <th>DETAIL PERUBAHAN</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filteredLogs.length ? filteredLogs.map(l => `
+              <tr>
+                <td style="font-size:11.5px;color:var(--text2);white-space:nowrap">${l.waktu}</td>
+                <td><span class="log-badge ${l.tipe.toLowerCase()}">${l.tipe}</span></td>
+                <td>
+                  <strong>${l.pelaku}</strong>
+                  <div style="font-size:11px;color:var(--primary);font-weight:700">${l.jabatan}</div>
+                </td>
+                <td><span class="badge-nis">${l.nis}</span></td>
+                <td style="font-weight:700">${l.pesan}</td>
+                <td>
+                  ${l.detail ? `<div class="log-detail-box">${escapeHtml(l.detail)}</div>` : '-'}
+                </td>
+              </tr>`).join('') : '<tr><td colspan="6"><div class="empty">Tidak ada log pada filter ini</div></td></tr>'}
+            </tbody>
+          </table>
+        </div>
+      </div>`;
+    } else if (currentLaporanTab === 'passwords') {
+      contentBox.innerHTML = `
+      <div class="card">
+        <div class="card-title"><i class="ti ti-shield-lock"></i>Monitoring Kata Sandi Akun Anggota (Khusus Ketua & Koordinator)</div>
+        <div style="font-size:12.5px;color:var(--text2);margin-bottom:16px">
+          Sesuai ketentuan, password default anggota adalah <strong>NIS</strong>. Jika ada anggota yang telah mengubah kata sandinya, Ketua & Koordinator dapat memantau kata sandi baru tersebut di bawah ini:
+        </div>
+
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>NAMA LENGKAP</th>
+                <th>NIS</th>
+                <th>JABATAN</th>
+                <th>ANGKATAN</th>
+                <th>STATUS KATA SANDI</th>
+                <th>KATA SANDI AKTIF</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${anggota.map(a => {
+        const isCustom = a.password && a.password.trim() !== '';
+        const activePassword = isCustom ? a.password : a.nis;
+        return `
+                <tr>
+                  <td><strong>${a.nama}</strong></td>
+                  <td><span class="badge-nis">${a.nis}</span></td>
+                  <td><span class="badge-jabatan">${a.jabatan || 'Anggota'}</span></td>
+                  <td><span class="${a.angkatan === '10' ? 'badge-a10' : 'badge-a11'}">Angkatan ${a.angkatan}</span></td>
+                  <td>
+                    ${isCustom
+            ? `<span class="badge-pwd-custom"><i class="ti ti-lock-check"></i> Telah Diubah (Kustom)</span>`
+            : `<span class="badge-pwd-default"><i class="ti ti-key"></i> Bawaan (Sama dengan NIS)</span>`}
+                  </td>
+                  <td>
+                    <span style="font-weight:800;font-family:monospace;font-size:13px;color:var(--primary-dark)">
+                      <span id="pwd-report-${a.id}">••••••</span>
+                      <button class="pwd-peek-btn" onclick="toggleReportPwdPeek(${a.id}, '${escapeHtml(activePassword)}')" title="Tampilkan / Sembunyikan Sandi">👁️</button>
+                    </span>
+                  </td>
+                </tr>`;
+      }).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>`;
+    }
+  }
+
   m.innerHTML = `
   <div class="page-hero">
     <div class="page-title-wrap">
       <h1 class="page-title">Laporan & Rekapitulasi</h1>
-      <div class="page-subtitle">Ringkasan pelayanan medis, presensi, dan log lengkap UKS</div>
+      <div class="page-subtitle">Ringkasan pelayanan medis, presensi, dan audit sistem UKS</div>
     </div>
     <button class="btn btn-ghost" onclick="window.print()"><i class="ti ti-printer"></i>Cetak Laporan</button>
   </div>
 
-  <div class="grid4" style="margin-bottom:20px">
-    <div class="stat">
-      <div class="stat-label">🏥 Total Pasien</div>
-      <div class="stat-val">${pasien.length}</div>
-      <div class="stat-sub">${dirujuk} pasien dirujuk ke RS/Puskesmas</div>
-      <span class="stat-icon">🩺</span>
-    </div>
-    <div class="stat">
-      <div class="stat-label">✅ Total Presensi Hadir</div>
-      <div class="stat-val">${totalHadir}</div>
-      <div class="stat-sub">${totalAlpha} catatan alpha</div>
-      <span class="stat-icon">👥</span>
-    </div>
-    <div class="stat">
-      <div class="stat-label">💊 Item Persediaan</div>
-      <div class="stat-val">${stok.length}</div>
-      <div class="stat-sub">${stok.filter(s => s.jumlah <= s.min).length} item berstatus kritis</div>
-      <span class="stat-icon">💉</span>
-    </div>
-    <div class="stat">
-      <div class="stat-label">👥 Personil Anggota</div>
-      <div class="stat-val">${anggota.length}</div>
-      <div class="stat-sub">A10: ${a10} | A11: ${a11} • 👦 ${cowo} | 👧 ${cewe}</div>
-      <span class="stat-icon">⭐</span>
-    </div>
-  </div>
+  ${leader ? `
+  <div class="tab-row" style="margin-bottom:18px">
+    <button class="tab-btn ${currentLaporanTab === 'medis' ? 'active' : ''}" id="tab-lap-medis" onclick="switchLaporanTab('medis')">
+      📊 Rekap Medis & Pasien
+    </button>
+    <button class="tab-btn ${currentLaporanTab === 'audit_logs' ? 'active' : ''}" id="tab-lap-logs" onclick="switchLaporanTab('audit_logs')">
+      📋 Log Aktivitas & Audit (${logs.length})
+    </button>
+    <button class="tab-btn ${currentLaporanTab === 'passwords' ? 'active' : ''}" id="tab-lap-pwd" onclick="switchLaporanTab('passwords')">
+      🔑 Monitoring Kata Sandi Anggota
+    </button>
+  </div>` : ''}
 
-  <div class="grid2">
-    <div class="card">
-      <div class="card-title"><i class="ti ti-chart-bar"></i>Keluhan Penyakit Terbanyak</div>
-      ${topKeluhan.length
-        ? topKeluhan.map(([k, v]) => {
-            const pct = Math.round((v / Math.max(pasien.length, 1)) * 100);
-            return `<div style="margin-bottom:12px">
-              <div style="display:flex;justify-content:space-between;margin-bottom:5px">
-                <span style="font-size:13.5px;text-transform:capitalize;font-weight:800">${k}</span>
-                <span style="font-size:12px;color:var(--text2);font-weight:700">${v} kali (${pct}%)</span>
-              </div>
-              <div class="progress-bar" style="height:8px">
-                <div class="progress-fill" style="width:${pct}%"></div>
-              </div>
-            </div>`;
-          }).join('')
-        : '<div class="empty"><i class="ti ti-chart-off"></i>Belum ada data pasien</div>'}
-    </div>
+  <div id="laporan-tab-content"></div>`;
 
-    <div class="card">
-      <div class="card-title"><i class="ti ti-package"></i>Kondisi Stok Obat & Alat</div>
-      ${stok.map(s => {
-        const pct = Math.min(100, Math.round((s.jumlah / Math.max(s.min * 2, 1)) * 100));
-        const cls = s.jumlah <= s.min ? '' : 'green';
-        return `<div style="margin-bottom:10px">
-          <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-            <span style="font-size:12.5px;font-weight:700">${s.nama}</span>
-            <span style="font-size:12px;color:var(--text2);font-weight:800">${s.jumlah} ${s.satuan}</span>
-          </div>
-          <div class="progress-bar"><div class="progress-fill ${cls}" style="width:${pct}%"></div></div>
-        </div>`;
-      }).join('') || '<div class="empty"><i class="ti ti-package-off"></i>Belum ada data stok</div>'}
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-title"><i class="ti ti-clipboard-list"></i>Log Lengkap Pasien UKS</div>
-    <div class="tbl-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>TANGGAL</th>
-            <th>NAMA LENGKAP</th>
-            <th>KELAS</th>
-            <th>KELUHAN</th>
-            <th>TINDAKAN / TERAPI</th>
-            <th>STATUS</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${pasien.slice().reverse().map(p => `
-          <tr>
-            <td>${fmt(p.tanggal)}</td>
-            <td><strong>${p.nama}</strong></td>
-            <td>${p.kelas}</td>
-            <td>${p.keluhan}</td>
-            <td>${p.tindakan}</td>
-            <td><span class="badge ${p.status === 'Sembuh' ? 'badge-green' : p.status === 'Dirujuk' ? 'badge-amber' : 'badge-red'}">${p.status}</span></td>
-          </tr>`).join('') || '<tr><td colspan="6"><div class="empty">Belum ada catatan medis</div></td></tr>'}
-        </tbody>
-      </table>
-    </div>
-  </div>`;
+  window.renderLaporanView = renderView;
+  renderView();
 };
 
-// =====================
-//   INITIALIZE
-// =====================
+window.switchLaporanTab = function (tab) {
+  currentLaporanTab = tab;
+  document.querySelectorAll('.tab-row .tab-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById('tab-lap-' + (tab === 'audit_logs' ? 'logs' : tab === 'passwords' ? 'pwd' : 'medis'));
+  if (btn) btn.classList.add('active');
+  if (window.renderLaporanView) renderLaporanView();
+};
+
+window.changeLogFilter = function (type) {
+  currentLogTypeFilter = type;
+  if (window.renderLaporanView) renderLaporanView();
+};
+
+window.toggleReportPwdPeek = function (id, pwdVal) {
+  const el = document.getElementById('pwd-report-' + id);
+  if (!el) return;
+  if (el.textContent === '••••••') {
+    el.textContent = pwdVal;
+  } else {
+    el.textContent = '••••••';
+  }
+};
+
+
 document.addEventListener('DOMContentLoaded', () => {
   renderAppLayout();
 });
