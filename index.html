@@ -5,14 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>MY UKS — Markas Digital PMR</title>
   
-  <!-- Tabler Icons & Google Fonts -->
+
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet">
   
-  <!-- Custom Stylesheet -->
+
   <link rel="stylesheet" href="style.css">
 
-  <!-- Firebase SDK Module -->
+
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
     import { getFirestore, collection, doc, getDocs, addDoc, deleteDoc, setDoc, onSnapshot, serverTimestamp }
@@ -40,7 +40,7 @@
       console.warn('⚠️ Firebase belum tersambung, menggunakan database lokal:', e.message);
     }
 
-    // Expose ke window scope untuk app.js
+
     window._fb = {
       ready: () => firebaseReady && db !== null,
       db: () => db,
@@ -52,16 +52,12 @@
 </head>
 <body>
 
-  <!-- Floating background particles -->
   <div class="floaties" id="floaties"></div>
 
-  <!-- Login Screen Container -->
   <div id="login-screen"></div>
 
-  <!-- Main Application Container -->
   <div id="app" style="display:none">
 
-    <!-- DESKTOP / LANDSCAPE SIDEBAR (Layout Foto 2) -->
     <aside id="sidebar">
       <div class="sidebar-header">
         <div class="sidebar-logo-icon">
@@ -122,7 +118,6 @@
       </div>
     </aside>
 
-    <!-- MOBILE / PORTRAIT TOPBAR (Layout Foto 1) -->
     <div id="main-wrapper">
       <header id="mobile-header">
         <div class="logo">
@@ -165,16 +160,13 @@
         </button>
       </nav>
 
-      <!-- Main Content Area -->
       <main id="main-content"></main>
     </div>
 
   </div>
 
-  <!-- Toast Notification Popup -->
   <div id="toast"><i class="ti ti-check"></i><span id="toast-msg"></span></div>
 
-  <!-- Main JavaScript Logic -->
   <script src="app.js"></script>
 </body>
 </html>
