@@ -1,13 +1,3 @@
-/**
- * ==========================================================================
- * SIJAGA UKS — APLIKASI PMR
- * Script: app.js
- * ==========================================================================
- */
-
-// =====================
-//   FLOATING PARTICLES
-// =====================
 (function initFloatingBackground() {
   const emojis = ['💊', '🩺', '🩵', '💉', '🩹', '⭐', '✨', '🏥', '📋', '🧊'];
   const container = document.getElementById('floaties');
@@ -25,9 +15,6 @@
   }
 })();
 
-// =====================
-//   CONSTANTS & JABATAN OPTIONS
-// =====================
 const JABATAN_OPTIONS = [
   'Ketua',
   'Koordinator',
@@ -40,12 +27,21 @@ const JABATAN_OPTIONS = [
   'Anggota'
 ];
 
-const HARI = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+const JABATAN_HIERARCHY = {
+  'Ketua': 1,
+  'Koordinator': 2,
+  'Sekretaris': 3,
+  'Bendahara': 4,
+  'Komandan Lapangan': 5,
+  'Perlengkapan': 6,
+  'Humas': 7,
+  'Kreatif': 8,
+  'Anggota': 9
+};
+
+const HARI = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
 const SESI = ['07:00-10:00', '10:00-13:00', '13:00-15:00'];
 
-// =====================
-//   DATA STORE (localStorage + Firebase Firestore Sync)
-// =====================
 const DB = {
   get(k) {
     try {
@@ -63,21 +59,89 @@ const DB = {
     }
   },
   def(k, v) {
-    if (!this.get(k)) this.set(k, v);
+    if (this.get(k) === null) this.set(k, v);
   }
 };
 
-// =====================
-//   DEFAULT DATA
-// =====================
 DB.def('anggota', [
-  { id: 1, nama: 'Admin PMR', nis: '12345', jabatan: 'Ketua', kelas: 'UKS', angkatan: '10', password: '' },
-  { id: 2, nama: 'Afnan Fauzan Faturochim', nis: '1001', jabatan: 'Ketua', kelas: 'XI TE B', angkatan: '10', password: '' },
-  { id: 3, nama: 'Faizal Rahman', nis: '1002', jabatan: 'Koordinator', kelas: 'XI-B', angkatan: '10', password: '' },
-  { id: 4, nama: 'Galuh Ayu Palupi', nis: '1003', jabatan: 'Sekretaris', kelas: 'XI PPLG B', angkatan: '10', password: '' },
-  { id: 5, nama: 'Nisa Amalia', nis: '1101', jabatan: 'Anggota', kelas: 'XI-A', angkatan: '11', password: '' },
-  { id: 6, nama: 'Rizki Aditya', nis: '1102', jabatan: 'Komandan Lapangan', kelas: 'X-C', angkatan: '11', password: '' }
+  { id: 1, nama: 'Tsabit', nis: '1001', jabatan: 'Anggota', kelas: 'XI GEO', angkatan: '10', jk: 'L', password: '' },
+  { id: 2, nama: 'Afnan Fauzan Faturochim', nis: '1002', jabatan: 'Ketua', kelas: 'XI TE B', angkatan: '10', jk: 'L', password: '' },
+  { id: 3, nama: 'Faizal Rahman', nis: '1003', jabatan: 'Koordinator', kelas: 'XI-B', angkatan: '10', jk: 'L', password: '' },
+  { id: 4, nama: 'Galuh Ayu Palupi', nis: '1004', jabatan: 'Sekretaris', kelas: 'XI PPLG B', angkatan: '10', jk: 'P', password: '' },
+  { id: 5, nama: 'Nazhira', nis: '1005', jabatan: 'Anggota', kelas: 'XI GEO', angkatan: '10', jk: 'P', password: '' },
+  { id: 6, nama: 'Aisya', nis: '1006', jabatan: 'Anggota', kelas: 'XI TKP', angkatan: '10', jk: 'P', password: '' },
+  { id: 7, nama: 'Agus', nis: '1007', jabatan: 'Anggota', kelas: 'XI TKL A', angkatan: '10', jk: 'L', password: '' },
+  { id: 8, nama: 'Nandhita', nis: '1008', jabatan: 'Anggota', kelas: 'XI PPLG A', angkatan: '10', jk: 'P', password: '' },
+  { id: 9, nama: 'Keenar', nis: '1009', jabatan: 'Anggota', kelas: 'XI PPLG B', angkatan: '10', jk: 'L', password: '' },
+  { id: 10, nama: 'Bhisma', nis: '1010', jabatan: 'Anggota', kelas: 'X PPLG A', angkatan: '11', jk: 'L', password: '' },
+  { id: 11, nama: 'Raihan', nis: '1101', jabatan: 'Anggota', kelas: 'XI TE A', angkatan: '10', jk: 'L', password: '' },
+  { id: 12, nama: 'Latifah', nis: '1102', jabatan: 'Anggota', kelas: 'XI TE B', angkatan: '10', jk: 'P', password: '' },
+  { id: 13, nama: 'Ayyura', nis: '1103', jabatan: 'Anggota', kelas: 'X TE A', angkatan: '11', jk: 'P', password: '' },
+  { id: 14, nama: 'Fabian', nis: '1104', jabatan: 'Anggota', kelas: 'X TE B', angkatan: '11', jk: 'L', password: '' },
+  { id: 15, nama: 'Geo', nis: '1105', jabatan: 'Anggota', kelas: 'XI TJKT A', angkatan: '10', jk: 'L', password: '' },
+  { id: 16, nama: 'Azka', nis: '1106', jabatan: 'Anggota', kelas: 'XI TJKT B', angkatan: '10', jk: 'L', password: '' },
+  { id: 17, nama: 'Naswa', nis: '1107', jabatan: 'Anggota', kelas: 'X TJKT A', angkatan: '11', jk: 'P', password: '' },
+  { id: 18, nama: 'Baim', nis: '1108', jabatan: 'Anggota', kelas: 'X TO A', angkatan: '11', jk: 'L', password: '' },
+  { id: 19, nama: 'Farrel', nis: '1109', jabatan: 'Anggota', kelas: 'XI DPIB A', angkatan: '10', jk: 'L', password: '' },
+  { id: 20, nama: 'Alysha', nis: '1110', jabatan: 'Anggota', kelas: 'XI DPIB B', angkatan: '10', jk: 'P', password: '' },
+  { id: 21, nama: 'Aydina', nis: '1111', jabatan: 'Anggota', kelas: 'X DPIB A', angkatan: '11', jk: 'P', password: '' },
+  { id: 22, nama: 'Haidar', nis: '1112', jabatan: 'Anggota', kelas: 'X TM A', angkatan: '11', jk: 'L', password: '' },
+  { id: 23, nama: 'Nisa Amalia', nis: '1113', jabatan: 'Anggota', kelas: 'XI-A', angkatan: '11', jk: 'P', password: '' },
+  { id: 24, nama: 'Rizki Aditya', nis: '1114', jabatan: 'Komandan Lapangan', kelas: 'X-C', angkatan: '11', jk: 'L', password: '' }
 ]);
+
+(function ensureAnggotaJk() {
+  try {
+    const list = DB.get('anggota');
+    if (Array.isArray(list)) {
+      let changed = false;
+      const existingNames = new Set(list.map(a => (a.nama || '').toLowerCase()));
+      const defaults = [
+        { id: 101, nama: 'Tsabit', nis: '1001', jabatan: 'Anggota', kelas: 'XI GEO', angkatan: '10', jk: 'L', password: '' },
+        { id: 105, nama: 'Nazhira', nis: '1005', jabatan: 'Anggota', kelas: 'XI GEO', angkatan: '10', jk: 'P', password: '' },
+        { id: 106, nama: 'Aisya', nis: '1006', jabatan: 'Anggota', kelas: 'XI TKP', angkatan: '10', jk: 'P', password: '' },
+        { id: 107, nama: 'Agus', nis: '1007', jabatan: 'Anggota', kelas: 'XI TKL A', angkatan: '10', jk: 'L', password: '' },
+        { id: 108, nama: 'Nandhita', nis: '1008', jabatan: 'Anggota', kelas: 'XI PPLG A', angkatan: '10', jk: 'P', password: '' },
+        { id: 109, nama: 'Keenar', nis: '1009', jabatan: 'Anggota', kelas: 'XI PPLG B', angkatan: '10', jk: 'L', password: '' },
+        { id: 110, nama: 'Bhisma', nis: '1010', jabatan: 'Anggota', kelas: 'X PPLG A', angkatan: '11', jk: 'L', password: '' },
+        { id: 111, nama: 'Raihan', nis: '1101', jabatan: 'Anggota', kelas: 'XI TE A', angkatan: '10', jk: 'L', password: '' },
+        { id: 112, nama: 'Latifah', nis: '1102', jabatan: 'Anggota', kelas: 'XI TE B', angkatan: '10', jk: 'P', password: '' },
+        { id: 113, nama: 'Ayyura', nis: '1103', jabatan: 'Anggota', kelas: 'X TE A', angkatan: '11', jk: 'P', password: '' },
+        { id: 114, nama: 'Fabian', nis: '1104', jabatan: 'Anggota', kelas: 'X TE B', angkatan: '11', jk: 'L', password: '' },
+        { id: 115, nama: 'Geo', nis: '1105', jabatan: 'Anggota', kelas: 'XI TJKT A', angkatan: '10', jk: 'L', password: '' },
+        { id: 116, nama: 'Azka', nis: '1106', jabatan: 'Anggota', kelas: 'XI TJKT B', angkatan: '10', jk: 'L', password: '' },
+        { id: 117, nama: 'Naswa', nis: '1107', jabatan: 'Anggota', kelas: 'X TJKT A', angkatan: '11', jk: 'P', password: '' },
+        { id: 118, nama: 'Baim', nis: '1108', jabatan: 'Anggota', kelas: 'X TO A', angkatan: '11', jk: 'L', password: '' },
+        { id: 119, nama: 'Farrel', nis: '1109', jabatan: 'Anggota', kelas: 'XI DPIB A', angkatan: '10', jk: 'L', password: '' },
+        { id: 120, nama: 'Alysha', nis: '1110', jabatan: 'Anggota', kelas: 'XI DPIB B', angkatan: '10', jk: 'P', password: '' },
+        { id: 121, nama: 'Aydina', nis: '1111', jabatan: 'Anggota', kelas: 'X DPIB A', angkatan: '11', jk: 'P', password: '' },
+        { id: 122, nama: 'Haidar', nis: '1112', jabatan: 'Anggota', kelas: 'X TM A', angkatan: '11', jk: 'L', password: '' }
+      ];
+      if (list.length <= 5) {
+        defaults.forEach(d => {
+          if (!existingNames.has(d.nama.toLowerCase())) {
+            list.push(d);
+            changed = true;
+          }
+        });
+      }
+      list.forEach(a => {
+        if (!a.jk) {
+          const n = (a.nama || '').toLowerCase();
+          if (n.includes('galuh') || n.includes('nisa') || n.includes('ayu') || n.includes('siti') || n.includes('putri') || n.includes('rahma') || n.includes('amalia') || n.includes('cantika') || n.includes('safira') || n.includes('nazhira') || n.includes('aisya') || n.includes('nandhita') || n.includes('latifah') || n.includes('ayyura') || n.includes('naswa') || n.includes('alysha') || n.includes('aydina')) {
+            a.jk = 'P';
+          } else {
+            a.jk = 'L';
+          }
+          changed = true;
+        }
+      });
+      if (changed) DB.set('anggota', list);
+    }
+  } catch (e) {
+    console.warn('Migration JK error:', e);
+  }
+})();
 
 DB.def('pasien', [
   { id: 1, tanggal: '2026-09-15', nama: 'Budi Santoso', kelas: 'X-A', keluhan: 'Pusing dan mual', tindakan: 'Paracetamol, istirahat', status: 'Sembuh' },
@@ -95,23 +159,16 @@ DB.def('stok', [
 ]);
 
 DB.def('absensi', []);
-
-DB.def('jadwal', [
-  { id: 1, hari: 'Senin', sesi: '07:00-10:00', anggota: 'Afnan Fauzan Faturochim', lokasi: 'UKS' },
-  { id: 2, hari: 'Senin', sesi: '10:00-13:00', anggota: 'Faizal Rahman', lokasi: 'UKS' },
-  { id: 3, hari: 'Selasa', sesi: '07:00-10:00', anggota: 'Galuh Ayu Palupi', lokasi: 'UKS' },
-  { id: 4, hari: 'Rabu', sesi: '10:00-13:00', anggota: 'Nisa Amalia', lokasi: 'UKS' },
-  { id: 5, hari: 'Kamis', sesi: '07:00-10:00', anggota: 'Rizki Aditya', lokasi: 'UKS' }
-]);
+DB.def('logs', []);
 
 DB.def('upacara', [
   {
     id: 1,
-    tanggal: '2026-09-15',
+    tanggal: '2026-09-21',
     nama: 'Upacara Bendera Hari Senin',
     keterangan: 'Penempatan petugas jaga upacara bendera',
     titikJaga: [
-      { pos: 'Lapangan Utama (Depan Tiang)', anggota: ['Afnan Fauzan Faturochim', 'Faizal Rahman'] },
+      { pos: 'Lapangan Utama (Depan Tiang)', anggota: ['Tsabit', 'Nazhira'] },
       { pos: 'Gerbang & Parkiran', anggota: ['Galuh Ayu Palupi'] },
       { pos: 'Tribun Tamu & Guru', anggota: ['Nisa Amalia'] }
     ]
@@ -122,9 +179,51 @@ DB.def('titik_jaga_template', [
   'Lapangan Utama (Depan Tiang)', 'Gerbang & Parkiran', 'Tribun Tamu & Guru', 'Aula & Selasar', 'Pos UKS Cadangan'
 ]);
 
-// =====================
-//   FIREBASE REALTIME & SYNC
-// =====================
+DB.def('ttd', [
+  {
+    id: 1,
+    tanggal: '2026-09-21',
+    nama: 'Pembagian Tablet Tambah Darah (TTD)',
+    keterangan: 'Distribusi TTD ke seluruh perwakilan kelas binaan',
+    kelompok: [
+      {
+        nama: 'Kelompok 1',
+        kelas: 'X GEO, XI GEO, X TKP, XI TKP, XI TKL A',
+        anggota: ['Tsabit', 'Nazhira', 'Aisya', 'Agus']
+      },
+      {
+        nama: 'Kelompok 2',
+        kelas: 'X PPLG A&B, XI PPLG A&B',
+        anggota: ['Faizal Rahman', 'Nandhita', 'Keenar', 'Bhisma']
+      },
+      {
+        nama: 'Kelompok 3',
+        kelas: 'X TE A B &C, XI TE A B&C',
+        anggota: ['Raihan', 'Latifah', 'Ayyura', 'Fabian']
+      },
+      {
+        nama: 'Kelompok 4',
+        kelas: 'X TJKT AB&C, XI TJKT AB&C, X TO A, XI TO A',
+        anggota: ['Geo', 'Azka', 'Naswa', 'Baim']
+      },
+      {
+        nama: 'Kelompok 5',
+        kelas: 'X DPIB A&B, XI DPIB A&B, XI TM A, X TM A',
+        anggota: ['Farrel', 'Alysha', 'Aydina', 'Haidar']
+      }
+    ]
+  }
+]);
+
+DB.def('ttd_kelas_template', [
+  'X GEO, XI GEO, X TKP, XI TKP, XI TKL A',
+  'X PPLG A&B, XI PPLG A&B',
+  'X TE A B &C, XI TE A B&C',
+  'X TJKT AB&C, XI TJKT AB&C, X TO A, XI TO A',
+  'X DPIB A&B, XI DPIB A&B, XI TM A, X TM A'
+]);
+
+
 async function syncFromFirebase() {
   if (!window._fb?.ready()) return;
   const { db, collection, getDocs } = window._fb;
@@ -166,7 +265,7 @@ function updateFbStatus(state) {
   const badges = [document.getElementById('fb-status-badge'), document.getElementById('sb-fb-badge')];
   const labels = { connected: 'Firebase', disconnected: 'Lokal', error: 'Error' };
   const dotClass = { connected: 'green', disconnected: 'amber', error: 'red' };
-  
+
   badges.forEach(badge => {
     if (!badge) return;
     badge.className = `fb-status ${state}`;
@@ -185,8 +284,7 @@ window.addEventListener('firebase-ready', () => {
   }
 });
 
-// Firebase Modal
-window.openFbModal = function() {
+window.openFbModal = function () {
   const saved = JSON.parse(localStorage.getItem('pmr_fb_config') || '{}');
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
@@ -201,12 +299,12 @@ window.openFbModal = function() {
       <button class="modal-close-btn" onclick="document.getElementById('fb-modal').remove()">✕</button>
     </div>
     <div class="form-row">
-      <div class="form-group"><label>API Key</label><input id="fb-apikey" placeholder="AIzaSy..." value="${saved.apiKey||''}"></div>
-      <div class="form-group"><label>Project ID</label><input id="fb-projectid" placeholder="sijaga-uks" value="${saved.projectId||''}"></div>
+      <div class="form-group"><label>API Key</label><input id="fb-apikey" placeholder="AIzaSy..." value="${saved.apiKey || ''}"></div>
+      <div class="form-group"><label>Project ID</label><input id="fb-projectid" placeholder="sijaga-uks" value="${saved.projectId || ''}"></div>
     </div>
     <div class="form-row">
-      <div class="form-group"><label>Auth Domain</label><input id="fb-authdomain" placeholder="sijaga-uks.firebaseapp.com" value="${saved.authDomain||''}"></div>
-      <div class="form-group"><label>App ID</label><input id="fb-appid" placeholder="1:xxx:web:xxx" value="${saved.appId||''}"></div>
+      <div class="form-group"><label>Auth Domain</label><input id="fb-authdomain" placeholder="sijaga-uks.firebaseapp.com" value="${saved.authDomain || ''}"></div>
+      <div class="form-group"><label>App ID</label><input id="fb-appid" placeholder="1:xxx:web:xxx" value="${saved.appId || ''}"></div>
     </div>
     <div class="btn-row" style="margin-top:14px;justify-content:flex-end">
       <button class="btn btn-ghost" onclick="document.getElementById('fb-modal').remove()">Batal</button>
@@ -216,7 +314,7 @@ window.openFbModal = function() {
   document.body.appendChild(overlay);
 };
 
-window.saveFbConfig = function() {
+window.saveFbConfig = function () {
   const cfg = {
     apiKey: document.getElementById('fb-apikey').value.trim(),
     projectId: document.getElementById('fb-projectid').value.trim(),
@@ -229,9 +327,7 @@ window.saveFbConfig = function() {
   toast('✅ Konfigurasi disimpan! Refresh halaman untuk mengaktifkan koneksi.');
 };
 
-// =====================
-//   AUTHENTICATION & SESSION
-// =====================
+
 let currentUser = null;
 
 function getSession() {
@@ -251,7 +347,47 @@ function setSession(user) {
   }
 }
 
-window.handleLogin = function(e) {
+function canEdit() {
+  const session = getSession();
+  if (!session) return false;
+  if (session.role === 'admin') return true;
+  const jab = (session.jabatan || '').trim().toLowerCase();
+  return jab !== '' && jab !== 'anggota';
+}
+
+function isLeader() {
+  const session = getSession();
+  if (!session) return false;
+  if (session.role === 'admin') return true;
+  const jab = (session.jabatan || '').trim().toLowerCase();
+  return jab === 'ketua' || jab === 'koordinator';
+}
+
+function logActivity(tipe, pesan, detail = '') {
+  const session = getSession() || { nama: 'Pengguna', jabatan: 'Umum', nis: '-' };
+  const logs = DB.get('logs') || [];
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+  const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+  const logItem = {
+    id: Date.now() + Math.random().toString(36).substring(2, 6),
+    timestamp: now.toISOString(),
+    waktu: `${dateStr} ${timeStr}`,
+    tipe: tipe,
+    pelaku: session.nama || 'Pengguna',
+    jabatan: session.role === 'admin' ? 'Admin' : (session.jabatan || 'Anggota'),
+    nis: session.nis || '-',
+    pesan,
+    detail
+  };
+
+  logs.unshift(logItem);
+  if (logs.length > 300) logs.length = 300;
+  DB.set('logs', logs);
+}
+
+window.handleLogin = function (e) {
   if (e) e.preventDefault();
   const unameInput = document.getElementById('login-username');
   const passInput = document.getElementById('login-password');
@@ -260,34 +396,19 @@ window.handleLogin = function(e) {
   const password = passInput.value.trim();
 
   if (!username || !password) {
-    showLoginError('Harap isi Nama / Username dan Password!');
+    showLoginError('Harap isi Nama Lengkap / NIS dan Password!');
     return;
   }
 
-  // 1. Cek Admin
-  if (username.toLowerCase() === 'admin' && password === '123456') {
-    const adminUser = {
-      role: 'admin',
-      nama: 'Administrator',
-      username: 'admin',
-      angkatan: 'Admin'
-    };
-    setSession(adminUser);
-    renderAppLayout();
-    toast('👋 Selamat datang, Admin!');
-    return;
-  }
-
-  // 2. Cek Anggota
   const anggotaList = DB.get('anggota') || [];
-  const found = anggotaList.find(a => 
+  const found = anggotaList.find(a =>
     a.nama.trim().toLowerCase() === username.toLowerCase() ||
     (a.nis && a.nis.trim() === username)
   );
 
   if (found) {
     const expectedPassword = found.password && found.password.trim() !== '' ? found.password : found.nis;
-    
+
     if (password === expectedPassword) {
       const memberUser = {
         role: 'anggota',
@@ -299,16 +420,32 @@ window.handleLogin = function(e) {
         angkatan: found.angkatan
       };
       setSession(memberUser);
+      logActivity('LOGIN', `Berhasil login ke aplikasi MY UKS`, `Jabatan: ${found.jabatan} | NIS: ${found.nis}`);
       renderAppLayout();
-      toast(`👋 Selamat datang, ${found.nama}!`);
+      toast(`👋 Selamat datang, ${found.nama}! (${found.jabatan})`);
       return;
     } else {
-      showLoginError('Password salah! Password default anggota adalah NIS masing-masing.');
+      showLoginError('Password salah! Password bawaan adalah NIS Anda (atau password baru jika telah diubah).');
       return;
     }
   }
 
-  showLoginError('Nama / Akun tidak ditemukan! Silakan periksa kembali atau hubungi Admin.');
+  if (username.toLowerCase() === 'admin' && password === '123456') {
+    const adminUser = {
+      role: 'admin',
+      nama: 'Administrator',
+      username: 'admin',
+      jabatan: 'Ketua',
+      angkatan: 'Admin'
+    };
+    setSession(adminUser);
+    logActivity('LOGIN', `Administrator login ke sistem`, `Akses penuh sistem`);
+    renderAppLayout();
+    toast('👋 Selamat datang, Administrator!');
+    return;
+  }
+
+  showLoginError('Nama / NIS tidak ditemukan! Silakan periksa kembali atau hubungi Ketua / Koordinator.');
 };
 
 function showLoginError(msg) {
@@ -321,7 +458,7 @@ function showLoginError(msg) {
   }
 }
 
-window.fillQuickLogin = function(uname, pass) {
+window.fillQuickLogin = function (uname, pass) {
   const u = document.getElementById('login-username');
   const p = document.getElementById('login-password');
   if (u && p) {
@@ -331,18 +468,21 @@ window.fillQuickLogin = function(uname, pass) {
   }
 };
 
-window.logout = function() {
+window.logout = function () {
   if (!confirm('Apakah Anda yakin ingin keluar dari aplikasi?')) return;
+  const session = getSession();
+  if (session) {
+    logActivity('LOGOUT', `${session.nama} telah logout dari aplikasi`, `Jabatan: ${session.jabatan || 'Anggota'}`);
+  }
   setSession(null);
   renderAppLayout();
   toast('Anda telah logout');
 };
 
-// Ganti Password Modal
-window.openChangePasswordModal = function(targetMemberId) {
+window.openChangePasswordModal = function (targetMemberId) {
   const session = getSession();
   if (!session) return;
-  
+
   const anggotaList = DB.get('anggota') || [];
   const isSelf = !targetMemberId || (session.role === 'anggota' && targetMemberId === session.id);
   const targetMember = targetMemberId ? anggotaList.find(a => a.id === targetMemberId) : (session.role === 'anggota' ? anggotaList.find(a => a.id === session.id) : null);
@@ -355,7 +495,7 @@ window.openChangePasswordModal = function(targetMemberId) {
     <div class="modal-header">
       <div>
         <div class="modal-title"><i class="ti ti-key" style="color:var(--primary)"></i> Ubah Password ${targetMember ? `— ${targetMember.nama}` : ''}</div>
-        <div class="modal-sub">${targetMember ? `NIS: ${targetMember.nis} | Angkatan ${targetMember.angkatan}` : 'Atur password baru'}</div>
+        <div class="modal-sub">${targetMember ? `NIS: ${targetMember.nis} | Jabatan: ${targetMember.jabatan} | Angkatan ${targetMember.angkatan}` : 'Atur password baru'}</div>
       </div>
       <button class="modal-close-btn" onclick="document.getElementById('pwd-modal').remove()">✕</button>
     </div>
@@ -386,7 +526,7 @@ window.openChangePasswordModal = function(targetMemberId) {
   document.body.appendChild(overlay);
 };
 
-window.saveNewPassword = function(memberId, isSelf) {
+window.saveNewPassword = function (memberId, isSelf) {
   const session = getSession();
   const list = DB.get('anggota') || [];
   const targetId = memberId || (session.role === 'anggota' ? session.id : 0);
@@ -413,15 +553,92 @@ window.saveNewPassword = function(memberId, isSelf) {
     return toast('Konfirmasi password tidak cocok!');
   }
 
+  const prevPwdInfo = member.password ? 'Kustom' : `Default NIS (${member.nis})`;
   member.password = pwdNew;
   DB.set('anggota', list);
+
+  logActivity(
+    'GANTI_PASSWORD',
+    `${member.nama} mengubah kata sandi akun`,
+    `Kata Sandi Baru: "${pwdNew}" | Sebelumnya: ${prevPwdInfo} | NIS: ${member.nis}`
+  );
+
   document.getElementById('pwd-modal')?.remove();
   toast('✅ Password berhasil diperbarui!');
+  refreshCurrentPage();
 };
 
-// =====================
-//   UTILITIES & HELPERS
-// =====================
+window.togglePwdPeek = function (id, pwdVal) {
+  if (!isLeader()) return;
+  const el = document.getElementById('pwd-val-' + id);
+  if (!el) return;
+  if (el.textContent === '••••••') {
+    el.textContent = pwdVal;
+    el.style.fontWeight = '900';
+    el.style.color = 'var(--primary-dark)';
+  } else {
+    el.textContent = '••••••';
+    el.style.fontWeight = 'normal';
+    el.style.color = 'inherit';
+  }
+};
+
+window.openActivityLogModal = function () {
+  if (!isLeader()) return;
+  const logs = DB.get('logs') || [];
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.id = 'modal-act-logs';
+
+  overlay.innerHTML = `
+  <div class="modal" style="max-width:760px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title"><i class="ti ti-bell-ringing" style="color:var(--primary)"></i> Log Aktivitas & Notifikasi</div>
+        <div class="modal-sub">Rekam jejak login personil, perubahan data, dan kata sandi baru (Khusus Ketua & Koordinator)</div>
+      </div>
+      <button class="modal-close-btn" onclick="document.getElementById('modal-act-logs').remove()">✕</button>
+    </div>
+
+    <div style="max-height:60vh;overflow-y:auto;border:1px solid var(--border);border-radius:12px">
+      <table>
+        <thead>
+          <tr>
+            <th>WAKTU</th>
+            <th>TIPE</th>
+            <th>PELAKU & JABATAN</th>
+            <th>AKTIVITAS / DETAIL</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${logs.length ? logs.slice(0, 30).map(l => {
+    const badgeClass = l.tipe.toLowerCase();
+    return `
+            <tr>
+              <td style="font-size:11.5px;color:var(--text2);white-space:nowrap">${l.waktu}</td>
+              <td><span class="log-badge ${badgeClass}">${l.tipe}</span></td>
+              <td>
+                <strong>${l.pelaku}</strong>
+                <div style="font-size:11px;color:var(--text3)">${l.jabatan} • NIS: ${l.nis}</div>
+              </td>
+              <td>
+                <div style="font-size:13px;font-weight:700">${l.pesan}</div>
+                ${l.detail ? `<div class="log-detail-box">${escapeHtml(l.detail)}</div>` : ''}
+              </td>
+            </tr>`;
+  }).join('') : '<tr><td colspan="4"><div class="empty">Belum ada aktivitas tercatat</div></td></tr>'}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="btn-row" style="justify-content:space-between;margin-top:16px">
+      <button class="btn btn-ghost" onclick="showPage('laporan');document.getElementById('modal-act-logs').remove()"><i class="ti ti-report"></i> Buka Halaman Laporan Lengkap</button>
+      <button class="btn btn-primary" onclick="document.getElementById('modal-act-logs').remove()">Tutup</button>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+};
+
 let toastTimer;
 function toast(msg) {
   const el = document.getElementById('toast');
@@ -442,24 +659,38 @@ function fmt(d) {
   return p[2] + '/' + p[1] + '/' + p[0];
 }
 
+function fmtDayDate(d) {
+  if (!d || d === '-') return '-';
+  try {
+    const parts = d.split('-');
+    if (parts.length === 3) {
+      const date = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+      return date.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    }
+    return fmt(d);
+  } catch (e) {
+    return fmt(d);
+  }
+}
+
 function getMemberDutyCount(memberName) {
   if (!memberName) return 0;
   const upacara = DB.get('upacara') || [];
-  const jadwal = DB.get('jadwal') || [];
-  
+  const ttd = DB.get('ttd') || [];
   let count = 0;
-  // Hitung di upacara
   upacara.forEach(u => {
     (u.titikJaga || []).forEach(t => {
       if ((t.anggota || []).includes(memberName)) count++;
     });
   });
-  // Hitung di piket
-  jadwal.forEach(j => {
-    if (j.anggota === memberName) count++;
+  ttd.forEach(t => {
+    (t.kelompok || []).forEach(k => {
+      if ((k.anggota || []).includes(memberName)) count++;
+    });
   });
   return count;
 }
+
 
 setInterval(() => {
   const now = new Date();
@@ -470,9 +701,6 @@ setInterval(() => {
   if (sbClock) sbClock.textContent = timeStr;
 }, 1000);
 
-// =====================
-//   LAYOUT RENDERER
-// =====================
 function renderAppLayout() {
   const session = getSession();
   const loginScreen = document.getElementById('login-screen');
@@ -500,17 +728,17 @@ function renderLoginScreen() {
     <div class="login-header">
       <div class="login-icon-badge"><i class="ti ti-shield-heart"></i></div>
       <h1 class="login-title">MY UKS</h1>
-      <div class="login-subtitle">Aplikasi Manajemen Palang Merah Remaja (PMR)</div>
+      <div class="login-subtitle">Markas Digital Palang Merah Remaja (PMR)</div>
     </div>
 
     <form onsubmit="handleLogin(event)">
       <div class="form-group" style="margin-bottom:14px">
-        <label>Nama Lengkap / Username</label>
-        <input type="text" id="login-username" placeholder="cth: Afnan Fauzan atau admin" autocomplete="username" required>
+        <label>Nama Lengkap / NIS</label>
+        <input type="text" id="login-username" placeholder="Masukkan Nama Lengkap atau NIS" autocomplete="username" required>
       </div>
       <div class="form-group" style="margin-bottom:16px">
-        <label>Password</label>
-        <input type="password" id="login-password" placeholder="NIS Anda / password admin" autocomplete="current-password" required>
+        <label>Kata Sandi</label>
+        <input type="password" id="login-password" placeholder="NIS Anda / password yang telah diubah" autocomplete="current-password" required>
       </div>
 
       <div id="login-error" class="alert alert-red" style="display:none;margin-bottom:14px;padding:8px 12px;font-size:12px"></div>
@@ -521,49 +749,43 @@ function renderLoginScreen() {
     </form>
 
     <div class="login-hint-box">
-      <strong>🔑 Panduan Login:</strong>
-      <div style="margin-top:4px">
-        • <strong>Admin:</strong> Username: <code>admin</code>, Password: <code>123456</code><br>
-        • <strong>Anggota:</strong> Username: <em>Nama Lengkap</em>, Password: <em>NIS masing-masing</em>.
-      </div>
-      <div class="login-hint-list">
-        <div class="login-hint-item" onclick="fillQuickLogin('admin', '123456')">
-          <span>👑 <strong>Akun Admin</strong></span>
-          <span style="color:var(--primary);font-weight:700">Login Cepat ➔</span>
-        </div>
-        ${anggotaList.slice(0, 2).map(a => `
-        <div class="login-hint-item" onclick="fillQuickLogin('${a.nama}', '${a.password && a.password.trim() ? a.password : a.nis}')">
-          <span>👤 ${a.nama} (A${a.angkatan})</span>
-          <span style="color:var(--primary);font-weight:700">NIS: ${a.nis} ➔</span>
-        </div>`).join('')}
+      <strong>🔑 Panduan Masuk:</strong>
+      <div style="margin-top:4px;color:var(--text2)">
+        • Masuk menggunakan <strong>Nama Lengkap</strong> atau <strong>NIS</strong> Anda.<br>
+        • Password bawaan adalah <strong>NIS masing-masing</strong> (atau kata sandi baru jika telah diubah).<br>
+        • Khusus <strong>Ketua</strong> & <strong>Koordinator</strong> otomatis memiliki akses audit log & pengawasan aktivitas.
       </div>
     </div>
   </div>`;
 }
 
 function updateHeaderUser(user) {
-  // 1. Update Mobile Top Header
+  const leader = isLeader();
+
   const container = document.getElementById('header-user-info');
   if (container) {
     const isA10 = user.angkatan === '10';
     const roleClass = user.role === 'admin' ? 'badge-blue' : isA10 ? 'a10' : 'a11';
-    const roleLabel = user.role === 'admin' ? 'Admin UKS' : `Angkatan ${user.angkatan}`;
+    const roleLabel = user.role === 'admin' ? 'Admin UKS' : `${user.jabatan || 'Anggota'}`;
 
     container.innerHTML = `
       <div class="user-header-pill">
-        <i class="ti ti-user-circle" style="font-size:16px"></i>
-        <span>${user.nama}</span>
+        <i class="ti ti-user-circle" style="font-size:16px;flex-shrink:0"></i>
+        <span class="user-header-name">${user.nama}</span>
         <span class="user-role-badge ${roleClass}">${roleLabel}</span>
-        <button class="btn btn-ghost btn-sm" onclick="openChangePasswordModal()" title="Ganti Password" style="padding:2px 7px;color:#fff;background:rgba(255,255,255,0.18);border:none;border-radius:6px">
+        ${leader ? `
+        <button class="notif-bell-btn" onclick="openActivityLogModal()" title="Lihat Aktivitas & Notifikasi">
+          <i class="ti ti-bell"></i> Log
+        </button>` : ''}
+        <button class="btn btn-ghost btn-sm" onclick="openChangePasswordModal()" title="Ganti Password" style="padding:2px 6px;color:#fff;background:rgba(255,255,255,0.18);border:none;border-radius:6px;flex-shrink:0">
           <i class="ti ti-key"></i>
         </button>
-        <button class="btn btn-ghost btn-sm" onclick="logout()" title="Keluar" style="padding:2px 7px;color:#fee2e2;background:rgba(239,68,68,0.3);border:none;border-radius:6px">
+        <button class="btn btn-ghost btn-sm" onclick="logout()" title="Keluar" style="padding:2px 6px;color:#fee2e2;background:rgba(239,68,68,0.3);border:none;border-radius:6px;flex-shrink:0">
           <i class="ti ti-logout"></i>
         </button>
       </div>`;
   }
 
-  // 2. Update Desktop Sidebar User Card
   const sbName = document.getElementById('sb-user-name');
   const sbRole = document.getElementById('sb-user-role');
   if (sbName) sbName.textContent = user.nama;
@@ -574,11 +796,25 @@ function updateHeaderUser(user) {
       sbRole.textContent = `${user.jabatan || 'Anggota'} • NIS: ${user.nis || '-'}`;
     }
   }
+
+  const sbFooterCard = document.querySelector('.sidebar-user-card');
+  const existingSbNotif = document.getElementById('sb-notif-btn-el');
+  if (existingSbNotif) existingSbNotif.remove();
+
+  if (leader && sbFooterCard) {
+    const actionWrap = sbFooterCard.querySelector('div[style*="display:flex;gap:4px"]');
+    if (actionWrap) {
+      const notifBtn = document.createElement('button');
+      notifBtn.id = 'sb-notif-btn-el';
+      notifBtn.className = 'sidebar-icon-btn';
+      notifBtn.title = 'Aktivitas & Notifikasi Realtime';
+      notifBtn.innerHTML = `<i class="ti ti-bell"></i><span class="notif-pulse-dot"></span>`;
+      notifBtn.onclick = openActivityLogModal;
+      actionWrap.prepend(notifBtn);
+    }
+  }
 }
 
-// =====================
-//   ROUTER & NAVIGATION
-// =====================
 function setNav(id) {
   document.querySelectorAll('.nav-btn').forEach(b => {
     if (b.getAttribute('data-page') === id || b.id === 'nav-' + id) {
@@ -609,22 +845,21 @@ function showPage(p) {
 function refreshCurrentPage() {
   const activeNav = document.querySelector('.nav-btn.active');
   if (activeNav) {
-    const page = activeNav.id.replace('nav-', '');
+    const page = activeNav.getAttribute('data-page') || activeNav.id.replace('nav-', '');
     if (pages[page]) pages[page](document.getElementById('main-content'));
   }
 }
 
 const pages = {};
 
-// =====================
-//   PAGE 1: BERANDA / DASHBOARD
-// =====================
-pages.dashboard = function(m) {
+pages.dashboard = function (m) {
   const pasien = DB.get('pasien') || [];
   const stok = DB.get('stok') || [];
   const absensi = DB.get('absensi') || [];
   const anggota = DB.get('anggota') || [];
-  const jadwal = DB.get('jadwal') || [];
+  const upacara = DB.get('upacara') || [];
+  const ttd = DB.get('ttd') || [];
+  const logs = DB.get('logs') || [];
 
   const a10Count = anggota.filter(a => a.angkatan === '10').length;
   const a11Count = anggota.filter(a => a.angkatan === '11').length;
@@ -632,17 +867,25 @@ pages.dashboard = function(m) {
   const todayStr = today();
   const todayAbs = absensi.filter(a => a.tanggal === todayStr);
   const hadir = todayAbs.filter(a => a.status === 'Hadir').length;
+  const session = getSession();
+  const leader = isLeader();
 
   m.innerHTML = `
   <div class="page-hero">
     <div class="page-title-wrap">
       <h1 class="page-title">Beranda Utama</h1>
-      <div class="page-subtitle">Ringkasan aktivitas harian pelayanan & personil UKS</div>
+      <div class="page-subtitle">Ringkasan pelayanan medis, jadwal tugas, & personil PMR</div>
     </div>
     <span style="font-size:12.5px;color:var(--text2);font-weight:700;background:#e2edfb;padding:7px 16px;border-radius:20px;border:1px solid var(--border)">
       📅 ${new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
     </span>
   </div>
+
+  ${!canEdit() ? `
+  <div class="alert alert-green" style="background:#f0fdf4;border-color:#bbf7d0;color:#166534">
+    <i class="ti ti-info-circle" style="font-size:20px"></i>
+    <div><strong>Akun Anggota:</strong> Anda berada dalam mode lihat (*view-only*). Pengeditan dan penambahan data dikelola oleh Pengurus & Pemegang Jabatan.</div>
+  </div>` : ''}
 
   ${stokKritis.length ? `
   <div class="alert alert-amber">
@@ -666,16 +909,17 @@ pages.dashboard = function(m) {
     <div class="stat">
       <div class="stat-label">👥 Kehadiran Hari Ini</div>
       <div class="stat-val">${hadir}</div>
-      <div class="stat-sub">dari ${anggota.length} total anggota (A10: ${a10Count}, A11: ${a11Count})</div>
+      <div class="stat-sub">dari ${anggota.length} total personil (A10: ${a10Count}, A11: ${a11Count})</div>
       <span class="stat-icon">✅</span>
     </div>
     <div class="stat">
-      <div class="stat-label">📅 Jadwal Piket</div>
-      <div class="stat-val">${jadwal.length}</div>
-      <div class="stat-sub">Sesi aktif terjadwal</div>
+      <div class="stat-label">🚩 Jadwal & Tugas</div>
+      <div class="stat-val">${upacara.length + ttd.length}</div>
+      <div class="stat-sub">${upacara.length} Upacara • ${ttd.length} TTD</div>
       <span class="stat-icon">🗓️</span>
     </div>
   </div>
+
 
   <div class="grid2">
     <div class="card">
@@ -702,39 +946,67 @@ pages.dashboard = function(m) {
       </div>
       <div class="quick-list">
         ${stok.slice(0, 5).map(s => {
-          const pct = Math.min(100, Math.round((s.jumlah / Math.max(s.min * 2, 1)) * 100));
-          const cls = s.jumlah <= s.min ? '' : 'green';
-          return `
+    const pct = Math.min(100, Math.round((s.jumlah / Math.max(s.min * 2, 1)) * 100));
+    const cls = s.jumlah <= s.min ? '' : 'green';
+    return `
           <div class="quick-item">
             <div style="flex:1">
               <div style="display:flex;justify-content:space-between">
-                <span style="font-weight:800;font-size:13.5px">${s.nama} <span class="badge ${s.kategori==='Obat'?'badge-blue':'badge-amber'}" style="font-size:10px">${s.kategori}</span></span>
+                <span style="font-weight:800;font-size:13.5px">${s.nama} <span class="badge ${s.kategori === 'Obat' ? 'badge-blue' : 'badge-amber'}" style="font-size:10px">${s.kategori}</span></span>
                 <span style="font-size:12.5px;color:var(--text2);font-weight:800">${s.jumlah} ${s.satuan}</span>
               </div>
               <div class="progress-bar"><div class="progress-fill ${cls}" style="width:${pct}%"></div></div>
             </div>
           </div>`;
-        }).join('')}
+  }).join('')}
       </div>
     </div>
-  </div>`;
+  </div>
+
+  ${leader ? `
+  <div class="card" style="margin-top:6px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div class="card-title" style="margin:0"><i class="ti ti-bell-ringing"></i>Aktivitas Sistem Terkini (Khusus ${session?.jabatan || 'Ketua/Koordinator'})</div>
+      <button class="btn btn-ghost btn-sm" onclick="openActivityLogModal()"><i class="ti ti-list"></i> Lihat Semua</button>
+    </div>
+    <div class="quick-list">
+      ${logs.slice(0, 4).map(l => `
+      <div class="quick-item" style="padding:10px 14px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span class="log-badge ${l.tipe.toLowerCase()}">${l.tipe}</span>
+          <div>
+            <div style="font-weight:800;font-size:13px">${l.pesan}</div>
+            <div style="font-size:11.5px;color:var(--text3)">${l.pelaku} (${l.jabatan}) • ${l.waktu}</div>
+          </div>
+        </div>
+        ${l.detail ? `<span class="log-detail-box" style="margin:0">${escapeHtml(l.detail)}</span>` : ''}
+      </div>`).join('') || '<div class="empty">Belum ada aktivitas tercatat</div>'}
+    </div>
+  </div>` : ''}`;
 };
 
-// =====================
-//   PAGE 2: DATA ANGGOTA (A10 & A11) - MATCHING SCREENSHOT 1
-// =====================
 let currentAnggotaTab = 'all';
+let currentAnggotaSort = 'jabatan';
+let currentAnggotaJabatan = 'all';
+let currentAnggotaGender = 'all';
 
-pages.anggota = function(m) {
+pages.anggota = function (m) {
   function render() {
     const list = DB.get('anggota') || [];
     const flt = (document.getElementById('srch-ang')?.value || '').toLowerCase();
-    
+
     let filtered = list;
     if (currentAnggotaTab === '10') {
       filtered = filtered.filter(a => a.angkatan === '10');
     } else if (currentAnggotaTab === '11') {
       filtered = filtered.filter(a => a.angkatan === '11');
+    }
+
+    if (currentAnggotaJabatan !== 'all') {
+      filtered = filtered.filter(a => a.jabatan === currentAnggotaJabatan);
+    }
+    if (currentAnggotaGender !== 'all') {
+      filtered = filtered.filter(a => a.jk === currentAnggotaGender);
     }
 
     if (flt) {
@@ -746,8 +1018,35 @@ pages.anggota = function(m) {
       );
     }
 
+    filtered.sort((a, b) => {
+      if (currentAnggotaSort === 'jabatan') {
+        const orderA = JABATAN_HIERARCHY[a.jabatan] || 99;
+        const orderB = JABATAN_HIERARCHY[b.jabatan] || 99;
+        if (orderA !== orderB) return orderA - orderB;
+        return a.nama.localeCompare(b.nama);
+      } else if (currentAnggotaSort === 'nama_asc') {
+        return a.nama.localeCompare(b.nama);
+      } else if (currentAnggotaSort === 'nama_desc') {
+        return b.nama.localeCompare(a.nama);
+      } else if (currentAnggotaSort === 'angkatan_asc') {
+        if (a.angkatan !== b.angkatan) return a.angkatan.localeCompare(b.angkatan);
+        return a.nama.localeCompare(b.nama);
+      } else if (currentAnggotaSort === 'angkatan_desc') {
+        if (a.angkatan !== b.angkatan) return b.angkatan.localeCompare(a.angkatan);
+        return a.nama.localeCompare(b.nama);
+      } else if (currentAnggotaSort === 'jaga_desc') {
+        const countA = getMemberDutyCount(a.nama);
+        const countB = getMemberDutyCount(b.nama);
+        if (countB !== countA) return countB - countA;
+        return a.nama.localeCompare(b.nama);
+      }
+      return 0;
+    });
+
     const a10Total = list.filter(a => a.angkatan === '10').length;
     const a11Total = list.filter(a => a.angkatan === '11').length;
+    const cowoTotal = list.filter(a => a.jk !== 'P').length;
+    const ceweTotal = list.filter(a => a.jk === 'P').length;
 
     const countAllEl = document.getElementById('ang-count-all');
     const count10El = document.getElementById('ang-count-10');
@@ -756,17 +1055,55 @@ pages.anggota = function(m) {
     if (count10El) count10El.textContent = a10Total;
     if (count11El) count11El.textContent = a11Total;
 
+    const statsEl = document.getElementById('ang-gender-stats');
+    if (statsEl) {
+      statsEl.innerHTML = `
+        <span class="badge badge-cowo"><i class="ti ti-gender-male"></i> 👦 ${cowoTotal} Cowo</span>
+        <span class="badge badge-cewe"><i class="ti ti-gender-female"></i> 👧 ${ceweTotal} Cewe</span>
+      `;
+    }
+
     const tbody = document.getElementById('ang-tbl');
     if (!tbody) return;
 
+    const leader = isLeader();
+    const editable = canEdit();
+
     tbody.innerHTML = filtered.length
       ? filtered.map(a => {
-          const dutyCount = getMemberDutyCount(a.nama);
-          const dutyBadge = dutyCount > 0
-            ? `<span class="badge-kali-jaga">${dutyCount} kali jaga</span>`
-            : `<span class="badge-belum-jaga">Belum pernah</span>`;
+        const dutyCount = getMemberDutyCount(a.nama);
+        const dutyBadge = dutyCount > 0
+          ? `<span class="badge-kali-jaga">${dutyCount} kali jaga</span>`
+          : `<span class="badge-belum-jaga">Belum pernah</span>`;
 
-          return `
+        const isCewe = a.jk === 'P';
+        const jkBadge = isCewe
+          ? `<span class="badge-cewe"><i class="ti ti-gender-female"></i> 👧 Cewe</span>`
+          : `<span class="badge-cowo"><i class="ti ti-gender-male"></i> 👦 Cowo</span>`;
+
+        const passwordHtml = leader ? `
+            <td>
+              ${a.password && a.password.trim() !== '' ? `
+                <span class="badge-pwd-custom" title="Kata sandi kustom telah diubah">
+                  <i class="ti ti-lock"></i> <span id="pwd-val-${a.id}">••••••</span>
+                  <button class="pwd-peek-btn" onclick="togglePwdPeek(${a.id}, '${escapeHtml(a.password)}')" title="Intip Sandi">👁️</button>
+                </span>` : `
+                <span class="badge-pwd-default" title="Kata sandi default NIS">
+                  <i class="ti ti-key"></i> NIS (${a.nis})
+                </span>`
+          }
+            </td>` : '';
+
+        const actionHtml = editable ? `
+            <td>
+              <div style="display:flex;gap:6px">
+                <button class="btn btn-action-edit" onclick="openModalAnggota(${a.id})" title="Ubah data"><i class="ti ti-edit"></i> Ubah</button>
+                <button class="btn btn-action-delete" onclick="delAnggota(${a.id})" title="Hapus"><i class="ti ti-trash"></i> Hapus</button>
+              </div>
+            </td>` : `
+            <td><span class="badge-readonly"><i class="ti ti-eye"></i> Hanya Lihat</span></td>`;
+
+        return `
           <tr>
             <td><strong>${a.nama}</strong></td>
             <td><span class="badge-nis">${a.nis || '-'}</span></td>
@@ -776,36 +1113,81 @@ pages.anggota = function(m) {
                 Angkatan ${a.angkatan}
               </span>
             </td>
+            <td>${jkBadge}</td>
             <td><span class="badge-jabatan">${a.jabatan || 'Anggota'}</span></td>
             <td>${dutyBadge}</td>
-            <td>
-              <div style="display:flex;gap:6px">
-                <button class="btn btn-action-edit" onclick="openModalAnggota(${a.id})" title="Ubah data"><i class="ti ti-edit"></i> Ubah</button>
-                <button class="btn btn-action-delete" onclick="delAnggota(${a.id})" title="Hapus"><i class="ti ti-trash"></i> Hapus</button>
-              </div>
-            </td>
+            ${passwordHtml}
+            ${actionHtml}
           </tr>`;
-        }).join('')
-      : `<tr><td colspan="7"><div class="empty"><i class="ti ti-users"></i>Tidak ada anggota pada kategori ini</div></td></tr>`;
+      }).join('')
+      : `<tr><td colspan="${leader ? 9 : 8}"><div class="empty"><i class="ti ti-users"></i>Tidak ada anggota pada kriteria ini</div></td></tr>`;
   }
+
+  const leader = isLeader();
+  const editable = canEdit();
 
   m.innerHTML = `
   <div class="page-hero">
     <div class="page-title-wrap">
       <h1 class="page-title">Data Anggota</h1>
-      <div class="page-subtitle">Kelola data anggota PMR & petugas UKS</div>
+      <div class="page-subtitle">Kelola personil PMR, jabatan, angkatan (A10/A11), dan pemantauan akun</div>
     </div>
-    <button class="btn-header-add" onclick="openModalAnggota()">
-      <i class="ti ti-plus"></i> Tambah Anggota
-    </button>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <div id="ang-gender-stats" style="display:flex;gap:6px"></div>
+      ${editable ? `
+      <button class="btn-header-add" onclick="openModalAnggota()">
+        <i class="ti ti-plus"></i> Tambah Anggota
+      </button>` : ''}
+    </div>
   </div>
 
   <div class="card">
+    <!-- Filter & Sort Bar (Feature 4) -->
+    <div class="ang-filter-bar">
+      <div class="filter-group-wrap">
+        <!-- Sort Select -->
+        <div class="filter-item">
+          <label><i class="ti ti-arrows-sort"></i> URUTKAN:</label>
+          <select id="sort-ang" onchange="changeAnggotaSort(this.value)">
+            <option value="jabatan" ${currentAnggotaSort === 'jabatan' ? 'selected' : ''}> Urutan Jabatan (Ketua ➔ Anggota)</option>
+            <option value="nama_asc" ${currentAnggotaSort === 'nama_asc' ? 'selected' : ''}> Nama (A - Z)</option>
+            <option value="nama_desc" ${currentAnggotaSort === 'nama_desc' ? 'selected' : ''}> Nama (Z - A)</option>
+            <option value="angkatan_asc" ${currentAnggotaSort === 'angkatan_asc' ? 'selected' : ''}> Angkatan (A10 ➔ A11)</option>
+            <option value="angkatan_desc" ${currentAnggotaSort === 'angkatan_desc' ? 'selected' : ''}> Angkatan (A11 ➔ A10)</option>
+            <option value="jaga_desc" ${currentAnggotaSort === 'jaga_desc' ? 'selected' : ''}> Frekuensi Jaga Terbanyak</option>
+          </select>
+        </div>
+
+        <!-- Filter Jabatan -->
+        <div class="filter-item">
+          <label><i class="ti ti-id-badge-2"></i> JABATAN:</label>
+          <select id="flt-ang-jab" onchange="changeAnggotaJabatan(this.value)">
+            <option value="all">Semua Jabatan</option>
+            ${JABATAN_OPTIONS.map(j => `<option value="${j}" ${currentAnggotaJabatan === j ? 'selected' : ''}>${j}</option>`).join('')}
+          </select>
+        </div>
+
+        <!-- Filter Gender -->
+        <div class="filter-item">
+          <label><i class="ti ti-gender-bigender"></i> GENDER:</label>
+          <select id="flt-ang-gender" onchange="changeAnggotaGender(this.value)">
+            <option value="all" ${currentAnggotaGender === 'all' ? 'selected' : ''}>Semua Gender</option>
+            <option value="L" ${currentAnggotaGender === 'L' ? 'selected' : ''}>👦 Cowo (Laki-laki)</option>
+            <option value="P" ${currentAnggotaGender === 'P' ? 'selected' : ''}>👧 Cewe (Perempuan)</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="min-width:200px">
+        <input type="text" id="srch-ang" placeholder="🔍 Cari nama / NIS / kelas..." oninput="renderAnggotaTbl()">
+      </div>
+    </div>
+
+    <!-- Tabs Angkatan -->
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px">
-      <!-- Tabs (Matching Screenshot 1) -->
       <div class="tab-row" style="margin:0">
         <button class="tab-btn ${currentAnggotaTab === 'all' ? 'active' : ''}" id="tab-ang-all" onclick="switchAnggotaTab('all')">
-          Semua (<span id="ang-count-all">0</span>)
+          Semua Anggota (<span id="ang-count-all">0</span>)
         </button>
         <button class="tab-btn ${currentAnggotaTab === '10' ? 'active' : ''}" id="tab-ang-10" onclick="switchAnggotaTab('10')">
           Angkatan 10 (<span id="ang-count-10">0</span>)
@@ -814,8 +1196,7 @@ pages.anggota = function(m) {
           Angkatan 11 (<span id="ang-count-11">0</span>)
         </button>
       </div>
-
-      <input type="text" id="srch-ang" placeholder="🔍 Cari nama / NIS / kelas..." style="max-width:240px" oninput="renderAnggotaTbl()">
+      <button class="btn btn-ghost btn-sm" onclick="resetAnggotaFilters()"><i class="ti ti-refresh"></i> Reset Filter</button>
     </div>
 
     <div class="tbl-wrap">
@@ -826,8 +1207,10 @@ pages.anggota = function(m) {
             <th>NIS</th>
             <th>KELAS</th>
             <th>ANGKATAN</th>
+            <th>GENDER</th>
             <th>JABATAN</th>
             <th>KALI JAGA</th>
+            ${leader ? '<th>KATA SANDI (KETUA/KOOR)</th>' : ''}
             <th>AKSI</th>
           </tr>
         </thead>
@@ -840,7 +1223,7 @@ pages.anggota = function(m) {
   render();
 };
 
-window.switchAnggotaTab = function(tab) {
+window.switchAnggotaTab = function (tab) {
   currentAnggotaTab = tab;
   document.querySelectorAll('.tab-row .tab-btn').forEach(b => b.classList.remove('active'));
   const btn = document.getElementById('tab-ang-' + tab);
@@ -848,8 +1231,42 @@ window.switchAnggotaTab = function(tab) {
   if (window.renderAnggotaTbl) renderAnggotaTbl();
 };
 
-// Modal Tambah / Edit Anggota
-window.openModalAnggota = function(editId) {
+window.changeAnggotaSort = function (val) {
+  currentAnggotaSort = val;
+  if (window.renderAnggotaTbl) renderAnggotaTbl();
+};
+
+window.changeAnggotaJabatan = function (val) {
+  currentAnggotaJabatan = val;
+  if (window.renderAnggotaTbl) renderAnggotaTbl();
+};
+
+window.changeAnggotaGender = function (val) {
+  currentAnggotaGender = val;
+  if (window.renderAnggotaTbl) renderAnggotaTbl();
+};
+
+window.resetAnggotaFilters = function () {
+  currentAnggotaTab = 'all';
+  currentAnggotaSort = 'jabatan';
+  currentAnggotaJabatan = 'all';
+  currentAnggotaGender = 'all';
+  const srch = document.getElementById('srch-ang');
+  if (srch) srch.value = '';
+  const sortSel = document.getElementById('sort-ang');
+  if (sortSel) sortSel.value = 'jabatan';
+  const jabSel = document.getElementById('flt-ang-jab');
+  if (jabSel) jabSel.value = 'all';
+  const genSel = document.getElementById('flt-ang-gender');
+  if (genSel) genSel.value = 'all';
+  switchAnggotaTab('all');
+};
+
+window.openModalAnggota = function (editId) {
+  if (!canEdit()) {
+    return toast('⚠️ Akses ditolak: Hanya pengurus/pemegang jabatan yang dapat mengedit anggota!');
+  }
+
   const list = DB.get('anggota') || [];
   const editItem = editId ? list.find(a => a.id === editId) : null;
 
@@ -861,7 +1278,7 @@ window.openModalAnggota = function(editId) {
     <div class="modal-header">
       <div>
         <div class="modal-title"><i class="ti ti-user-plus" style="color:var(--primary)"></i> ${editItem ? 'Ubah Data Anggota' : 'Tambah Anggota Baru'}</div>
-        <div class="modal-sub">Lengkapi identitas, jabatan, dan angkatan anggota PMR</div>
+        <div class="modal-sub">Lengkapi identitas, gender, jabatan, dan angkatan anggota PMR</div>
       </div>
       <button class="modal-close-btn" onclick="document.getElementById('modal-ang').remove()">✕</button>
     </div>
@@ -883,6 +1300,13 @@ window.openModalAnggota = function(editId) {
         <input type="text" id="modal-ang-kelas" placeholder="cth: XI TE B" value="${editItem?.kelas || ''}">
       </div>
       <div class="form-group">
+        <label>Jenis Kelamin (Gender)</label>
+        <select id="modal-ang-jk">
+          <option value="L" ${(editItem?.jk || 'L') === 'L' ? 'selected' : ''}>👦 Laki-laki (Cowo)</option>
+          <option value="P" ${editItem?.jk === 'P' ? 'selected' : ''}>👧 Perempuan (Cewe)</option>
+        </select>
+      </div>
+      <div class="form-group">
         <label>Jabatan</label>
         <select id="modal-ang-jab">
           ${JABATAN_OPTIONS.map(j => `<option value="${j}" ${editItem?.jabatan === j ? 'selected' : ''}>${j}</option>`).join('')}
@@ -900,9 +1324,9 @@ window.openModalAnggota = function(editId) {
     <!-- Opsi Password Kustom -->
     <div class="form-toggle-box">
       <div>
-        <div style="font-weight:800;font-size:13px;color:var(--text)">🔐 Password Akun Login</div>
+        <div style="font-weight:800;font-size:13px;color:var(--text)">🔐 Kata Sandi Akun Login</div>
         <div style="font-size:11.5px;color:var(--text3);margin-top:2px">
-          Pilih "Tidak" agar password otomatis menggunakan NIS, atau "Ya" untuk mengatur password baru.
+          Pilih "Pakai NIS" agar sandi bawaan menggunakan NIS, atau "Kustom" untuk menentukan password baru.
         </div>
       </div>
       <div style="display:flex;gap:10px">
@@ -932,15 +1356,20 @@ window.openModalAnggota = function(editId) {
   document.body.appendChild(overlay);
 };
 
-window.toggleModalPwd = function(show) {
+window.toggleModalPwd = function (show) {
   const f = document.getElementById('modal-pwd-field');
   if (f) f.style.display = show ? 'block' : 'none';
 };
 
-window.saveModalAnggota = function(editId) {
+window.saveModalAnggota = function (editId) {
+  if (!canEdit()) {
+    return toast('⚠️ Akses ditolak: Hanya pengurus/pemegang jabatan yang dapat menyimpan data!');
+  }
+
   const nama = document.getElementById('modal-ang-nama').value.trim();
   const nis = document.getElementById('modal-ang-nis').value.trim();
   const kelas = document.getElementById('modal-ang-kelas').value.trim();
+  const jk = document.getElementById('modal-ang-jk').value;
   const jabatan = document.getElementById('modal-ang-jab').value;
   const angkatan = document.getElementById('modal-ang-angkatan').value;
 
@@ -962,10 +1391,12 @@ window.saveModalAnggota = function(editId) {
       item.nama = nama;
       item.nis = nis;
       item.kelas = kelas || '-';
+      item.jk = jk;
       item.jabatan = jabatan;
       item.angkatan = angkatan;
       if (isCustom && pwd) item.password = pwd;
       else if (!isCustom) item.password = '';
+      logActivity('UBAH', `Mengubah data anggota: ${nama} (${jabatan})`, `NIS: ${nis}, Kelas: ${kelas}, Angkatan: ${angkatan}`);
     }
   } else {
     list.push({
@@ -973,10 +1404,12 @@ window.saveModalAnggota = function(editId) {
       nama,
       nis,
       kelas: kelas || '-',
+      jk,
       jabatan,
       angkatan,
       password: pwd
     });
+    logActivity('TAMBAH', `Menambahkan anggota baru: ${nama} (${jabatan})`, `NIS: ${nis}, Angkatan: ${angkatan}`);
   }
 
   DB.set('anggota', list);
@@ -985,21 +1418,25 @@ window.saveModalAnggota = function(editId) {
   toast(`✅ Anggota berhasil ${editId ? 'diperbarui' : 'ditambahkan'}!`);
 };
 
-window.delAnggota = function(id) {
-  if (!confirm('Hapus anggota ini dari sistem?')) return;
-  DB.set('anggota', (DB.get('anggota') || []).filter(a => a.id !== id));
+window.delAnggota = function (id) {
+  if (!canEdit()) {
+    return toast('⚠️ Akses ditolak: Hanya pengurus/pemegang jabatan yang dapat menghapus data!');
+  }
+  const list = DB.get('anggota') || [];
+  const item = list.find(a => a.id === id);
+  if (!confirm(`Hapus personil ${item?.nama || 'anggota'} dari sistem MY UKS?`)) return;
+
+  DB.set('anggota', list.filter(a => a.id !== id));
+  logActivity('HAPUS', `Menghapus anggota: ${item?.nama || 'Anggota'}`, `NIS: ${item?.nis || '-'}`);
   if (window.renderAnggotaTbl) renderAnggotaTbl();
   toast('Anggota dihapus 🗑️');
 };
 
-// =====================
-//   PAGE 3: DATA PASIEN - MATCHING SCREENSHOT 2
-// =====================
-pages.pasien = function(m) {
+pages.pasien = function (m) {
   function render() {
     const list = DB.get('pasien') || [];
     const tglFilter = document.getElementById('flt-tgl-pasien')?.value || '';
-    
+
     let filtered = list;
     if (tglFilter) {
       filtered = filtered.filter(p => p.tanggal === tglFilter);
@@ -1008,33 +1445,45 @@ pages.pasien = function(m) {
     const tbody = document.getElementById('pasien-tbl');
     if (!tbody) return;
 
+    const editable = canEdit();
+
     tbody.innerHTML = filtered.length
-      ? filtered.slice().reverse().map(p => `
-        <tr>
-          <td>${fmt(p.tanggal)}</td>
-          <td><strong>${p.nama}</strong></td>
-          <td>${p.kelas}</td>
-          <td>${p.keluhan}</td>
-          <td>${p.tindakan}</td>
-          <td>
-            <div style="display:flex;gap:6px">
-              <button class="btn btn-action-edit" onclick="openModalPasien(${p.id})"><i class="ti ti-edit"></i> Ubah</button>
-              <button class="btn btn-action-delete" onclick="delPasien(${p.id})"><i class="ti ti-trash"></i> Hapus</button>
-            </div>
-          </td>
-        </tr>`).join('')
-      : `<tr><td colspan="6"><div class="empty"><i class="ti ti-notes-off"></i>Belum ada data kunjungan pasien</div></td></tr>`;
+      ? filtered.slice().reverse().map(p => {
+        const actionHtml = editable ? `
+            <td>
+              <div style="display:flex;gap:6px">
+                <button class="btn btn-action-edit" onclick="openModalPasien(${p.id})"><i class="ti ti-edit"></i> Ubah</button>
+                <button class="btn btn-action-delete" onclick="delPasien(${p.id})"><i class="ti ti-trash"></i> Hapus</button>
+              </div>
+            </td>` : `
+            <td><span class="badge-readonly"><i class="ti ti-eye"></i> Hanya Lihat</span></td>`;
+
+        return `
+          <tr>
+            <td>${fmt(p.tanggal)}</td>
+            <td><strong>${p.nama}</strong></td>
+            <td>${p.kelas}</td>
+            <td>${p.keluhan}</td>
+            <td>${p.tindakan}</td>
+            <td><span class="badge ${p.status === 'Sembuh' ? 'badge-green' : p.status === 'Dirujuk' ? 'badge-amber' : 'badge-red'}">${p.status}</span></td>
+            ${actionHtml}
+          </tr>`;
+      }).join('')
+      : `<tr><td colspan="7"><div class="empty"><i class="ti ti-notes-off"></i>Belum ada data kunjungan pasien</div></td></tr>`;
   }
+
+  const editable = canEdit();
 
   m.innerHTML = `
   <div class="page-hero">
     <div class="page-title-wrap">
       <h1 class="page-title">Data Pasien</h1>
-      <div class="page-subtitle">Catatan kunjungan dan tindakan medis di UKS</div>
+      <div class="page-subtitle">Catatan kunjungan dan tindakan medis di ruang UKS</div>
     </div>
+    ${editable ? `
     <button class="btn-header-add" onclick="openModalPasien()">
       <i class="ti ti-plus"></i> Catat Pasien Baru
-    </button>
+    </button>` : ''}
   </div>
 
   <div class="card">
@@ -1057,6 +1506,7 @@ pages.pasien = function(m) {
             <th>KELAS</th>
             <th>KELUHAN</th>
             <th>OBAT / TINDAKAN</th>
+            <th>STATUS</th>
             <th>AKSI</th>
           </tr>
         </thead>
@@ -1069,7 +1519,9 @@ pages.pasien = function(m) {
   render();
 };
 
-window.openModalPasien = function(editId) {
+window.openModalPasien = function (editId) {
+  if (!canEdit()) return toast('⚠️ Akses ditolak: Hanya pengurus/pemegang jabatan yang dapat mencatat pasien!');
+
   const list = DB.get('pasien') || [];
   const editItem = editId ? list.find(p => p.id === editId) : null;
 
@@ -1116,7 +1568,9 @@ window.openModalPasien = function(editId) {
   document.body.appendChild(overlay);
 };
 
-window.saveModalPasien = function(editId) {
+window.saveModalPasien = function (editId) {
+  if (!canEdit()) return toast('⚠️ Akses ditolak: Hanya pengurus yang dapat menyimpan rekam medis!');
+
   const nama = document.getElementById('m-p-nama').value.trim();
   if (!nama) return toast('Nama pasien wajib diisi!');
 
@@ -1136,6 +1590,7 @@ window.saveModalPasien = function(editId) {
       item.keluhan = keluhan;
       item.tindakan = tindakan;
       item.status = status;
+      logActivity('UBAH', `Mengubah rekam medis pasien: ${nama} (${kelas})`, `Status: ${status} | Tindakan: ${tindakan}`);
     }
   } else {
     list.push({
@@ -1147,6 +1602,7 @@ window.saveModalPasien = function(editId) {
       tindakan,
       status
     });
+    logActivity('TAMBAH', `Mencatat pasien baru: ${nama} (${kelas})`, `Keluhan: ${keluhan} | Tindakan: ${tindakan}`);
   }
 
   DB.set('pasien', list);
@@ -1155,17 +1611,20 @@ window.saveModalPasien = function(editId) {
   toast(`✅ Data pasien berhasil ${editId ? 'diperbarui' : 'disimpan'}!`);
 };
 
-window.delPasien = function(id) {
-  if (!confirm('Hapus rekam medis pasien ini?')) return;
-  DB.set('pasien', (DB.get('pasien') || []).filter(p => p.id !== id));
+window.delPasien = function (id) {
+  if (!canEdit()) return toast('⚠️ Akses ditolak: Hanya pengurus yang dapat menghapus data pasien!');
+
+  const list = DB.get('pasien') || [];
+  const item = list.find(p => p.id === id);
+  if (!confirm(`Hapus catatan pasien ${item?.nama || ''}?`)) return;
+
+  DB.set('pasien', list.filter(p => p.id !== id));
+  logActivity('HAPUS', `Menghapus rekam medis pasien: ${item?.nama || 'Pasien'}`, `Tanggal: ${fmt(item?.tanggal)}`);
   if (window.renderPasienTbl) renderPasienTbl();
   toast('Data pasien dihapus 🗑️');
 };
 
-// =====================
-//   PAGE 4: STOK UKS
-// =====================
-pages.stok = function(m) {
+pages.stok = function (m) {
   function render() {
     const list = DB.get('stok') || [];
     const flt = (document.getElementById('srch-stok')?.value || '').toLowerCase();
@@ -1176,10 +1635,21 @@ pages.stok = function(m) {
     const tbody = document.getElementById('stok-tbl');
     if (!tbody) return;
 
+    const editable = canEdit();
+
     tbody.innerHTML = filtered.length
       ? filtered.map(s => {
-          const kritis = s.jumlah <= s.min;
-          return `
+        const kritis = s.jumlah <= s.min;
+        const actionHtml = editable ? `
+            <td>
+              <div style="display:flex;gap:6px">
+                <button class="btn btn-action-edit" onclick="openModalStok(${s.id})"><i class="ti ti-edit"></i> Ubah</button>
+                <button class="btn btn-action-delete" onclick="delStok(${s.id})"><i class="ti ti-trash"></i> Hapus</button>
+              </div>
+            </td>` : `
+            <td><span class="badge-readonly"><i class="ti ti-eye"></i> Hanya Lihat</span></td>`;
+
+        return `
           <tr>
             <td><strong>${s.nama}</strong></td>
             <td><span class="badge ${s.kategori === 'Obat' ? 'badge-blue' : 'badge-amber'}">${s.kategori === 'Obat' ? '💊' : '🩺'} ${s.kategori}</span></td>
@@ -1189,18 +1659,14 @@ pages.stok = function(m) {
             </td>
             <td>${s.satuan}</td>
             <td style="color:var(--text2)">${fmt(s.kadaluarsa)}</td>
-            <td>
-              <div style="display:flex;gap:6px">
-                <button class="btn btn-action-edit" onclick="openModalStok(${s.id})"><i class="ti ti-edit"></i> Ubah</button>
-                <button class="btn btn-action-delete" onclick="delStok(${s.id})"><i class="ti ti-trash"></i> Hapus</button>
-              </div>
-            </td>
+            ${actionHtml}
           </tr>`;
-        }).join('')
+      }).join('')
       : `<tr><td colspan="6"><div class="empty"><i class="ti ti-package-off"></i>Belum ada data stok</div></td></tr>`;
   }
 
   const kritis = (DB.get('stok') || []).filter(s => s.jumlah <= s.min);
+  const editable = canEdit();
 
   m.innerHTML = `
   <div class="page-hero">
@@ -1208,9 +1674,10 @@ pages.stok = function(m) {
       <h1 class="page-title">Stok UKS</h1>
       <div class="page-subtitle">Persediaan obat-obatan dan peralatan medis UKS</div>
     </div>
+    ${editable ? `
     <button class="btn-header-add" onclick="openModalStok()">
       <i class="ti ti-plus"></i> Tambah Stok
-    </button>
+    </button>` : ''}
   </div>
 
   ${kritis.length ? `
@@ -1245,7 +1712,9 @@ pages.stok = function(m) {
   render();
 };
 
-window.openModalStok = function(editId) {
+window.openModalStok = function (editId) {
+  if (!canEdit()) return toast('⚠️ Akses ditolak: Hanya pengurus yang dapat menambah/mengedit stok!');
+
   const list = DB.get('stok') || [];
   const editItem = editId ? list.find(s => s.id === editId) : null;
 
@@ -1257,7 +1726,7 @@ window.openModalStok = function(editId) {
     <div class="modal-header">
       <div>
         <div class="modal-title"><i class="ti ti-medicine-syrup" style="color:var(--primary)"></i> ${editItem ? 'Ubah Item Stok' : 'Tambah Item Baru'}</div>
-        <div class="modal-sub">Kelola obat atau peralatan medis UKS</div>
+        <div class="modal-sub">Kelola persediaan obat atau peralatan medis UKS</div>
       </div>
       <button class="modal-close-btn" onclick="document.getElementById('modal-stok').remove()">✕</button>
     </div>
@@ -1289,7 +1758,9 @@ window.openModalStok = function(editId) {
   document.body.appendChild(overlay);
 };
 
-window.saveModalStok = function(editId) {
+window.saveModalStok = function (editId) {
+  if (!canEdit()) return toast('⚠️ Akses ditolak: Hanya pengurus yang dapat menyimpan data stok!');
+
   const nama = document.getElementById('m-s-nama').value.trim();
   if (!nama) return toast('Nama item wajib diisi!');
 
@@ -1309,6 +1780,7 @@ window.saveModalStok = function(editId) {
       item.satuan = sat;
       item.min = min;
       item.kadaluarsa = exp;
+      logActivity('UBAH', `Mengubah stok: ${nama}`, `Jumlah: ${jml} ${sat} | Kategori: ${kat}`);
     }
   } else {
     list.push({
@@ -1320,6 +1792,7 @@ window.saveModalStok = function(editId) {
       min,
       kadaluarsa: exp
     });
+    logActivity('TAMBAH', `Menambah item stok baru: ${nama}`, `Jumlah: ${jml} ${sat} | Kategori: ${kat}`);
   }
 
   DB.set('stok', list);
@@ -1328,19 +1801,22 @@ window.saveModalStok = function(editId) {
   toast(`✅ Item stok berhasil ${editId ? 'diperbarui' : 'disimpan'}!`);
 };
 
-window.delStok = function(id) {
-  if (!confirm('Hapus item persediaan ini?')) return;
-  DB.set('stok', (DB.get('stok') || []).filter(s => s.id !== id));
+window.delStok = function (id) {
+  if (!canEdit()) return toast('⚠️ Akses ditolak: Hanya pengurus yang dapat menghapus stok!');
+
+  const list = DB.get('stok') || [];
+  const item = list.find(s => s.id === id);
+  if (!confirm(`Hapus item persediaan ${item?.nama || ''}?`)) return;
+
+  DB.set('stok', list.filter(s => s.id !== id));
+  logActivity('HAPUS', `Menghapus item stok: ${item?.nama || 'Item'}`, `Kategori: ${item?.kategori}`);
   if (window.renderStokTbl) renderStokTbl();
   toast('Item stok dihapus 🗑️');
 };
 
-// =====================
-//   PAGE 5: ABSENSI
-// =====================
 let currentAbsensiFilter = 'all';
 
-pages.absensi = function(m) {
+pages.absensi = function (m) {
   function render() {
     const absensi = DB.get('absensi') || [];
     const anggota = DB.get('anggota') || [];
@@ -1354,8 +1830,21 @@ pages.absensi = function(m) {
       filteredAnggota = filteredAnggota.filter(a => a.angkatan === '11');
     }
 
+    const editable = canEdit();
+
     const rows = filteredAnggota.map(an => {
       const rec = todayAbs.find(a => a.anggotaId === an.id);
+
+      const actionsCell = editable ? `
+        <td>
+          <div style="display:flex;gap:4px;flex-wrap:wrap">
+            ${['Hadir', 'Izin', 'Sakit', 'Alpha'].map(s =>
+        `<button class="btn btn-ghost btn-sm" style="${rec?.status === s ? 'border-color:var(--primary);color:var(--primary);background:var(--primary-dim);font-weight:900' : ''}" onclick="setAbsen(${an.id},'${s}')">${s}</button>`
+      ).join('')}
+          </div>
+        </td>` : `
+        <td><span class="badge-readonly"><i class="ti ti-eye"></i> Hanya Pengurus</span></td>`;
+
       return `<tr>
         <td><strong>${an.nama}</strong></td>
         <td><span class="badge-nis">${an.nis || '-'}</span></td>
@@ -1369,13 +1858,7 @@ pages.absensi = function(m) {
         <td>${rec
           ? `<span class="badge ${rec.status === 'Hadir' ? 'badge-green' : rec.status === 'Izin' ? 'badge-amber' : 'badge-red'}">${rec.status}</span>`
           : '<span style="color:var(--text3);font-size:12px;font-weight:700">Belum diisi</span>'}</td>
-        <td>
-          <div style="display:flex;gap:4px;flex-wrap:wrap">
-            ${['Hadir', 'Izin', 'Sakit', 'Alpha'].map(s =>
-              `<button class="btn btn-ghost btn-sm" style="${rec?.status === s ? 'border-color:var(--primary);color:var(--primary);background:var(--primary-dim);font-weight:900' : ''}" onclick="setAbsen(${an.id},'${s}')">${s}</button>`
-            ).join('')}
-          </div>
-        </td>
+        ${actionsCell}
       </tr>`;
     }).join('');
 
@@ -1436,7 +1919,7 @@ pages.absensi = function(m) {
   render();
 };
 
-window.filterAbsensi = function(tab) {
+window.filterAbsensi = function (tab) {
   currentAbsensiFilter = tab;
   document.querySelectorAll('.tab-row .tab-btn').forEach(b => b.classList.remove('active'));
   const btn = document.getElementById('tab-abs-' + tab);
@@ -1444,9 +1927,14 @@ window.filterAbsensi = function(tab) {
   if (window.renderAbsTbl) renderAbsTbl();
 };
 
-window.setAbsen = function(anggotaId, status) {
+window.setAbsen = function (anggotaId, status) {
+  if (!canEdit()) return toast('⚠️ Akses ditolak: Hanya pengurus yang dapat mengubah presensi!');
+
   const tgl = document.getElementById('abs-tgl').value;
   const absensi = DB.get('absensi') || [];
+  const anggota = DB.get('anggota') || [];
+  const an = anggota.find(a => a.id === anggotaId);
+
   const idx = absensi.findIndex(a => a.anggotaId === anggotaId && a.tanggal === tgl);
   if (idx >= 0) {
     absensi[idx].status = status;
@@ -1454,207 +1942,411 @@ window.setAbsen = function(anggotaId, status) {
     absensi.push({ id: Date.now(), tanggal: tgl, anggotaId, status });
   }
   DB.set('absensi', absensi);
+
+  if (an) {
+    logActivity('ABSENSI', `Presensi ${an.nama} ditandai sebagai "${status}"`, `Tanggal: ${tgl}`);
+  }
+
   if (window.renderAbsTbl) renderAbsTbl();
 };
 
-// =====================
-//   PAGE 6: JADWAL JAGA (MATCHING SCREENSHOT 3 + WA SHARE)
-// =====================
-let currentJadwalTab = 'upacara'; // 'upacara', 'piket'
+let currentJadwalTab = 'upacara'; // 'upacara' | 'ttd'
 
-pages.jadwal = function(m) {
+pages.jadwal = function (m) {
   function render() {
-    const list = DB.get('upacara') || [];
-    const container = document.getElementById('upacara-list-view');
-    const piketContainer = document.getElementById('piket-list-view');
+    const container = document.getElementById('jadwal-content-view');
+    if (!container) return;
 
     if (currentJadwalTab === 'upacara') {
-      if (container) container.style.display = 'block';
-      if (piketContainer) piketContainer.style.display = 'none';
-
-      if (!container) return;
-      if (!list.length) {
-        container.innerHTML = '<div class="empty"><i class="ti ti-calendar-off"></i>Belum ada jadwal jaga upacara</div>';
-        return;
-      }
-
-      const anggotaList = DB.get('anggota') || [];
-
-      container.innerHTML = list.slice().sort((a, b) => b.tanggal.localeCompare(a.tanggal)).map(u => {
-        const totalPetugas = u.titikJaga.reduce((s, t) => s + (t.anggota ? t.anggota.length : 0), 0);
-
-        return `
-        <div class="jadwal-card">
-          <div class="jadwal-card-header">
-            <div>
-              <div class="jadwal-title">🚩 ${u.nama}</div>
-              <div class="jadwal-meta">${fmt(u.tanggal)} • ${u.titikJaga.length} titik jaga • ${totalPetugas} petugas bertugas</div>
-            </div>
-
-            <!-- Action buttons (Salin Teks, Kirim WA, Ubah, Hapus) -->
-            <div class="jadwal-actions">
-              <button class="btn btn-copy" onclick="salinTeksJadwal(${u.id})">
-                <i class="ti ti-copy"></i> Salin Teks
-              </button>
-              <button class="btn btn-wa" onclick="kirimWaJadwal(${u.id})">
-                <i class="ti ti-brand-whatsapp"></i> Kirim ke WA
-              </button>
-              <button class="btn btn-action-edit" onclick="openModalUpacara(${u.id})">
-                <i class="ti ti-edit"></i> Ubah
-              </button>
-              <button class="btn btn-action-delete" onclick="delUpacara(${u.id})">
-                <i class="ti ti-trash"></i> Hapus
-              </button>
-            </div>
-          </div>
-
-          <div class="jadwal-table-wrap">
-            <table class="jadwal-table">
-              <thead>
-                <tr>
-                  <th style="width:35%">POS / TITIK JAGA</th>
-                  <th>PETUGAS YANG DITUGASKAN</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${u.titikJaga.map(t => {
-                  const chips = (t.anggota || []).map(nama => {
-                    const ang = anggotaList.find(a => a.nama === nama);
-                    const kls = ang ? ang.kelas : '';
-                    return `<span class="petugas-chip"><i class="ti ti-user"></i> ${nama} ${kls ? `(${kls})` : ''}</span>`;
-                  }).join('');
-
-                  return `
-                  <tr>
-                    <td><div class="pos-title-label">📍 ${t.pos}</div></td>
-                    <td>
-                      <div class="petugas-chips-wrap">
-                        ${chips || '<span style="color:var(--text3);font-size:12px">Belum ada petugas ditugaskan</span>'}
-                      </div>
-                    </td>
-                  </tr>`;
-                }).join('')}
-              </tbody>
-            </table>
-          </div>
-        </div>`;
-      }).join('');
-
+      renderUpacaraView(container);
     } else {
-      if (container) container.style.display = 'none';
-      if (piketContainer) piketContainer.style.display = 'block';
-      renderPiketGrid();
+      renderTtdView(container);
     }
   }
 
-  function renderPiketGrid() {
-    const jadwal = DB.get('jadwal') || [];
-    const heads = HARI.map(h => `<div class="sched-head">${h}</div>`).join('');
-    const rows = SESI.map(sesi => {
-      const cells = HARI.map(hari => {
-        const js = jadwal.filter(j => j.hari === hari && j.sesi === sesi);
-        return `<div class="sched-cell">${js.map(j =>
-          `<div class="sched-block" title="Klik untuk hapus" onclick="delJadwal(${j.id})">🗑 ${j.anggota}</div>`
-        ).join('')}</div>`;
-      }).join('');
-      return `<div class="sched-time">${sesi}</div>${cells}`;
-    }).join('');
-    
-    const gridEl = document.getElementById('sched-grid');
-    if (gridEl) {
-      gridEl.innerHTML = `<div class="sched-head" style="background:var(--bg3)"></div>${heads}${rows}`;
-    }
-  }
-
-  const listUpacara = DB.get('upacara') || [];
+  const editable = canEdit();
 
   m.innerHTML = `
   <div class="page-hero">
     <div class="page-title-wrap">
-      <h1 class="page-title">Jadwal Jaga</h1>
-      <div class="page-subtitle">Penempatan petugas jaga upacara bendera & piket UKS</div>
+      <h1 class="page-title" id="jadwal-page-title">${currentJadwalTab === 'upacara' ? 'Jadwal Jaga Upacara' : 'Pembagian Tablet Tambah Darah (TTD)'}</h1>
+      <div class="page-subtitle" id="jadwal-page-sub">${currentJadwalTab === 'upacara' ? 'Penempatan petugas jaga pos upacara bendera & kegiatan (maksimal 7 personil per pos)' : 'Pengaturan kelompok, alokasi kelas sasaran, dan penugasan personil PMR'}</div>
     </div>
-    <div style="display:flex;gap:8px">
-      <button class="btn-header-add" onclick="openModalUpacara()">
-        <i class="ti ti-plus"></i> Tambah Jadwal Jaga
+    ${editable ? `
+    <div style="display:flex;gap:8px" id="jadwal-header-actions">
+      <button class="btn-header-add" onclick="${currentJadwalTab === 'upacara' ? 'openModalUpacara()' : 'openModalTtd()'}">
+        <i class="ti ti-plus"></i> ${currentJadwalTab === 'upacara' ? 'Tambah Jadwal Upacara' : 'Tambah Jadwal TTD'}
       </button>
-    </div>
+    </div>` : ''}
   </div>
 
-  <!-- Tabs Nav (Matching Screenshot 3) -->
   <div class="tab-row" style="margin-bottom:18px">
-    <button class="tab-btn ${currentJadwalTab === 'upacara' ? 'active' : ''}" id="tab-jadwal-upacara" onclick="switchJadwalTab('upacara')">
-      Daftar Jadwal (${listUpacara.length})
+    <button class="tab-btn ${currentJadwalTab === 'upacara' ? 'active' : ''}" id="tab-jd-upacara" onclick="switchJadwalTab('upacara')">
+      🚩 Jadwal Jaga Upacara
     </button>
-    <button class="tab-btn ${currentJadwalTab === 'piket' ? 'active' : ''}" id="tab-jadwal-piket" onclick="switchJadwalTab('piket')">
-      Jadwal Piket Ruang UKS
+    <button class="tab-btn ${currentJadwalTab === 'ttd' ? 'active' : ''}" id="tab-jd-ttd" onclick="switchJadwalTab('ttd')">
+      💊 Pembagian Tablet Tambah Darah (TTD)
     </button>
   </div>
 
-  <div id="upacara-list-view"></div>
-
-  <div id="piket-list-view" style="display:none">
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-        <div class="card-title" style="margin:0"><i class="ti ti-calendar-week"></i>Matriks Piket Jaga Harian UKS</div>
-        <button class="btn btn-primary btn-sm" onclick="openModalPiket()"><i class="ti ti-plus"></i>Tambah Sesi Piket</button>
-      </div>
-      <div style="overflow-x:auto">
-        <div id="sched-grid" class="sched-grid"></div>
-      </div>
-    </div>
-  </div>`;
+  <div id="jadwal-content-view"></div>`;
 
   window.renderJadwalView = render;
   render();
 };
 
-window.switchJadwalTab = function(tab) {
+window.switchJadwalTab = function (tab) {
   currentJadwalTab = tab;
   document.querySelectorAll('.tab-row .tab-btn').forEach(b => b.classList.remove('active'));
-  const btn = document.getElementById('tab-jadwal-' + tab);
+  const btn = document.getElementById(tab === 'upacara' ? 'tab-jd-upacara' : 'tab-jd-ttd');
   if (btn) btn.classList.add('active');
+
+  const titleEl = document.getElementById('jadwal-page-title');
+  const subEl = document.getElementById('jadwal-page-sub');
+  const actionsEl = document.getElementById('jadwal-header-actions');
+  const editable = canEdit();
+
+  if (titleEl) titleEl.textContent = tab === 'upacara' ? 'Jadwal Jaga Upacara' : 'Pembagian Tablet Tambah Darah (TTD)';
+  if (subEl) subEl.textContent = tab === 'upacara' ? 'Penempatan petugas jaga pos upacara bendera & kegiatan (maksimal 7 personil per pos)' : 'Pengaturan kelompok, alokasi kelas sasaran, dan penugasan personil PMR';
+  if (actionsEl && editable) {
+    actionsEl.innerHTML = `
+      <button class="btn-header-add" onclick="${tab === 'upacara' ? 'openModalUpacara()' : 'openModalTtd()'}">
+        <i class="ti ti-plus"></i> ${tab === 'upacara' ? 'Tambah Jadwal Upacara' : 'Tambah Jadwal TTD'}
+      </button>
+    `;
+  }
+
   if (window.renderJadwalView) renderJadwalView();
 };
 
-// =====================
-//   WHATSAPP TEXT & SHARE FEATURE
-// =====================
-function generateJadwalWaText(u) {
+function renderUpacaraView(container) {
+  const list = DB.get('upacara') || [];
+  if (!list.length) {
+    container.innerHTML = '<div class="empty"><i class="ti ti-calendar-off"></i>Belum ada jadwal jaga upacara / kegiatan</div>';
+    return;
+  }
+
   const anggotaList = DB.get('anggota') || [];
-  let text = `🏥 *JADWAL JAGA UPACARA / UKS PMR*\n`;
-  text += `━━━━━━━━━━━━━━━━━━━━━\n`;
-  text += `🚩 *Kegiatan:* ${u.nama}\n`;
-  text += `📅 *Tanggal:* ${fmt(u.tanggal)}\n`;
-  if (u.keterangan) text += `📝 *Keterangan:* ${u.keterangan}\n`;
-  text += `\n📍 *PEMBAGIAN TITIK & POS JAGA:*\n`;
+  const editable = canEdit();
 
-  u.titikJaga.forEach((t, i) => {
-    text += `\n*${i + 1}. Pos: ${t.pos}*\n`;
-    if (t.anggota && t.anggota.length > 0) {
-      t.anggota.forEach(nama => {
+  container.innerHTML = list.slice().sort((a, b) => b.tanggal.localeCompare(a.tanggal)).map(u => {
+    let totalPetugas = 0;
+    let totA10 = 0;
+    let totA11 = 0;
+    let totCowo = 0;
+    let totCewe = 0;
+
+    (u.titikJaga || []).forEach(t => {
+      (t.anggota || []).forEach(nama => {
+        totalPetugas++;
         const ang = anggotaList.find(a => a.nama === nama);
-        const kls = ang ? ` (${ang.kelas})` : '';
-        text += `   • ${nama}${kls}\n`;
+        if (ang?.angkatan === '11') totA11++;
+        else totA10++;
+        if (ang?.jk === 'P') totCewe++;
+        else totCowo++;
       });
-    } else {
-      text += `   • (Belum ada petugas)\n`;
-    }
-  });
+    });
 
-  text += `\n━━━━━━━━━━━━━━━━━━━━━\n`;
-  text += `_Harap hadir tepat waktu dan menggunakan seragam PMR lengkap. Semangat bertugas!_ 💪✨`;
-  return text;
+    const editActionsHtml = editable ? `
+      <button class="btn btn-action-edit" onclick="openModalUpacara(${u.id})">
+        <i class="ti ti-edit"></i> Ubah
+      </button>
+      <button class="btn btn-action-delete" onclick="delUpacara(${u.id})">
+        <i class="ti ti-trash"></i> Hapus
+      </button>` : '';
+
+    return `
+    <div class="jadwal-card">
+      <div class="jadwal-card-header">
+        <div>
+          <div class="jadwal-title">🚩 ${u.nama}</div>
+          <div class="jadwal-meta">${fmtDayDate(u.tanggal)} • ${u.titikJaga.length} Pos Jaga • ${totalPetugas} Petugas Bertugas</div>
+          ${u.keterangan ? `<div style="font-size:12px;color:var(--text2);margin-top:2px">${escapeHtml(u.keterangan)}</div>` : ''}
+          <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+            <span class="badge badge-a10">A10: ${totA10}</span>
+            <span class="badge badge-a11">A11: ${totA11}</span>
+            <span class="badge badge-cowo">Cowo: ${totCowo}</span>
+            <span class="badge badge-cewe">Cewe: ${totCewe}</span>
+          </div>
+        </div>
+
+        <div class="jadwal-actions">
+          <button class="btn btn-copy" onclick="salinTeksJadwal(${u.id})">
+            <i class="ti ti-copy"></i> Salin Teks WA
+          </button>
+          <button class="btn btn-wa" onclick="kirimWaJadwal(${u.id})">
+            <i class="ti ti-brand-whatsapp"></i> Kirim ke WA
+          </button>
+          ${editActionsHtml}
+        </div>
+      </div>
+
+      <div class="jadwal-table-wrap">
+        <table class="jadwal-table">
+          <thead>
+            <tr>
+              <th style="width:36%">POS / TITIK JAGA (MAKS 7 ORANG)</th>
+              <th>PETUGAS YANG DITUGASKAN</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${u.titikJaga.map(t => {
+      const arr = t.anggota || [];
+      const count = arr.length;
+      const posA10 = arr.filter(n => (anggotaList.find(a => a.nama === n)?.angkatan === '10')).length;
+      const posA11 = arr.filter(n => (anggotaList.find(a => a.nama === n)?.angkatan === '11')).length;
+      const posCowo = arr.filter(n => (anggotaList.find(a => a.nama === n)?.jk !== 'P')).length;
+      const posCewe = arr.filter(n => (anggotaList.find(a => a.nama === n)?.jk === 'P')).length;
+
+      const capClass = count >= 7 ? 'full' : count > 0 ? 'available' : 'empty';
+      const capLabel = count >= 7 ? `🔒 ${count}/7 (Penuh)` : `${count}/7 Petugas`;
+
+      const chips = arr.map(nama => {
+        const ang = anggotaList.find(a => a.nama === nama);
+        const isCewe = ang?.jk === 'P';
+        const isA10 = ang?.angkatan === '10';
+        const icon = isCewe ? '👧' : '👦';
+        const cls = isCewe ? 'cewe' : 'cowo';
+        const angTag = isA10
+          ? `<span class="chip-tag a10">A10</span>`
+          : `<span class="chip-tag a11">A11</span>`;
+        const kls = ang?.kelas ? `(${ang.kelas})` : '';
+
+        return `
+                <span class="petugas-chip ${cls}">
+                  <span>${icon}</span>
+                  <span>${nama}</span>
+                  ${angTag}
+                  ${kls ? `<span style="font-size:11px;opacity:0.8">${kls}</span>` : ''}
+                </span>`;
+      }).join('');
+
+      return `
+              <tr>
+                <td>
+                  <div class="pos-title-label">
+                    📍 <span>${t.pos}</span>
+                    <span class="pos-capacity-badge ${capClass}">${capLabel}</span>
+                  </div>
+                  ${count > 0 ? `
+                  <div class="pos-comp-bar">
+                    <span class="pos-comp-pill">⭐ A10: ${posA10}</span>
+                    <span class="pos-comp-pill">🌟 A11: ${posA11}</span>
+                    <span class="pos-comp-pill">👦 ${posCowo} Cowo</span>
+                    <span class="pos-comp-pill">👧 ${posCewe} Cewe</span>
+                  </div>` : ''}
+                </td>
+                <td>
+                  <div class="petugas-chips-wrap">
+                    ${chips || '<span style="color:var(--text3);font-size:12px;font-style:italic">Belum ada petugas ditugaskan</span>'}
+                  </div>
+                </td>
+              </tr>`;
+    }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+  }).join('');
 }
 
-window.salinTeksJadwal = function(id) {
+function renderTtdView(container) {
+  const list = DB.get('ttd') || [];
+  if (!list.length) {
+    container.innerHTML = '<div class="empty"><i class="ti ti-pill-off"></i>Belum ada jadwal pembagian Tablet Tambah Darah (TTD)</div>';
+    return;
+  }
+
+  const anggotaList = DB.get('anggota') || [];
+  const editable = canEdit();
+
+  container.innerHTML = list.slice().sort((a, b) => b.tanggal.localeCompare(a.tanggal)).map(t => {
+    let totalPetugas = 0;
+    let totA10 = 0;
+    let totA11 = 0;
+    let totCowo = 0;
+    let totCewe = 0;
+
+    (t.kelompok || []).forEach(k => {
+      (k.anggota || []).forEach(nama => {
+        totalPetugas++;
+        const ang = anggotaList.find(a => a.nama === nama);
+        if (ang?.angkatan === '11') totA11++;
+        else totA10++;
+        if (ang?.jk === 'P') totCewe++;
+        else totCowo++;
+      });
+    });
+
+    const editActionsHtml = editable ? `
+      <button class="btn btn-action-edit" onclick="openModalTtd(${t.id})">
+        <i class="ti ti-edit"></i> Ubah
+      </button>
+      <button class="btn btn-action-delete" onclick="delTtd(${t.id})">
+        <i class="ti ti-trash"></i> Hapus
+      </button>` : '';
+
+    return `
+    <div class="jadwal-card">
+      <div class="jadwal-card-header">
+        <div>
+          <div class="jadwal-title">💊 ${t.nama}</div>
+          <div class="jadwal-meta">${fmtDayDate(t.tanggal)} • ${t.kelompok.length} Kelompok • ${totalPetugas} Petugas Ditugaskan</div>
+          ${t.keterangan ? `<div style="font-size:12px;color:var(--text2);margin-top:2px">${escapeHtml(t.keterangan)}</div>` : ''}
+          <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+            <span class="badge badge-a10">A10: ${totA10}</span>
+            <span class="badge badge-a11">A11: ${totA11}</span>
+            <span class="badge badge-cowo">Cowo: ${totCowo}</span>
+            <span class="badge badge-cewe">Cewe: ${totCewe}</span>
+          </div>
+        </div>
+
+        <div class="jadwal-actions">
+          <button class="btn btn-copy" onclick="salinTeksTtd(${t.id})">
+            <i class="ti ti-copy"></i> Salin Teks WA
+          </button>
+          <button class="btn btn-wa" onclick="kirimWaTtd(${t.id})">
+            <i class="ti ti-brand-whatsapp"></i> Kirim ke WA
+          </button>
+          ${editActionsHtml}
+        </div>
+      </div>
+
+      <div class="jadwal-table-wrap">
+        <table class="jadwal-table">
+          <thead>
+            <tr>
+              <th style="width:40%">KELOMPOK & KELAS SASARAN</th>
+              <th>PETUGAS YANG DITUGASKAN</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${(t.kelompok || []).map((k, kIdx) => {
+      const arr = k.anggota || [];
+      const chips = arr.map(nama => {
+        const ang = anggotaList.find(a => a.nama === nama);
+        const isCewe = ang?.jk === 'P';
+        const isA10 = ang?.angkatan === '10';
+        const icon = isCewe ? '👧' : '👦';
+        const cls = isCewe ? 'cewe' : 'cowo';
+        const angTag = isA10
+          ? `<span class="chip-tag a10">A10</span>`
+          : `<span class="chip-tag a11">A11</span>`;
+
+        return `
+                <span class="petugas-chip ${cls}">
+                  <span>${icon}</span>
+                  <span>${nama}</span>
+                  ${angTag}
+                </span>`;
+      }).join('');
+
+      return `
+              <tr>
+                <td>
+                  <div class="pos-title-label">
+                    <span>👥 ${k.nama || `Kelompok ${kIdx + 1}`}</span>
+                    <span class="badge badge-ttd">${arr.length} Petugas</span>
+                  </div>
+                  <div style="margin-top:6px">
+                    <span style="font-size:11px;font-weight:800;color:var(--primary)">KELAS:</span>
+                    <span style="font-size:12px;font-weight:700;color:var(--text2)">${escapeHtml(k.kelas || '-')}</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="petugas-chips-wrap">
+                    ${chips || '<span style="color:var(--text3);font-size:12px;font-style:italic">Belum ada petugas ditugaskan</span>'}
+                  </div>
+                </td>
+              </tr>`;
+    }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function generateJadwalWaText(u) {
+  let text = `*JADWAL JAGA UPACARA / UKS PMR*\n\n`;
+  text += `> Hari : ${fmtDayDate(u.tanggal)}\n`;
+  text += `> Kegiatan : ${u.nama}\n`;
+  if (u.keterangan && u.keterangan.trim()) {
+    text += `> Keterangan : ${u.keterangan.trim()}\n`;
+  }
+  text += `\nPEMBAGIAN TITIK & POS JAGA:\n\n`;
+
+  (u.titikJaga || []).forEach((t, i) => {
+    const arr = t.anggota || [];
+    text += `*Pos ${i + 1} : ${t.pos}*\n`;
+    if (arr.length > 0) {
+      arr.forEach(nama => {
+        text += `- ${nama}\n`;
+      });
+    } else {
+      text += `- (Belum ada petugas)\n`;
+    }
+    text += `\n`;
+  });
+
+  text += `━━━━━━━━━━━━━━━━━━━━━\n`;
+  text += `_Harap hadir tepat waktu. Semangat dan selamat bertugas!_`;
+  return text.trim();
+}
+
+function generateTtdWaText(t) {
+  let text = `*PEMBAGIAN TTD:*\n\n`;
+  text += `> Hari : ${fmtDayDate(t.tanggal)}\n`;
+  if (t.keterangan && t.keterangan.trim()) {
+    text += `> Keterangan : ${t.keterangan.trim()}\n`;
+  }
+  text += `\n`;
+
+  (t.kelompok || []).forEach((k, idx) => {
+    const kName = k.nama || `Kelompok ${idx + 1}`;
+    text += `*${kName}* :\n`;
+    if (k.anggota && k.anggota.length > 0) {
+      k.anggota.forEach(nama => {
+        text += `- ${nama}\n`;
+      });
+    } else {
+      text += `- (Belum ada petugas)\n`;
+    }
+    if (k.kelas && k.kelas.trim()) {
+      text += `KELAS : ${k.kelas.trim()}\n`;
+    }
+    text += `\n`;
+  });
+
+  text += `━━━━━━━━━━━━━━━━━━━━━\n`;
+  text += `_Harap seluruh petugas segera mengambil TTD di UKS dan membagikan ke kelas masing-masing. Terima kasih!_`;
+  return text.trim();
+}
+
+window.salinTeksJadwal = function (id) {
   const u = (DB.get('upacara') || []).find(x => x.id === id);
   if (!u) return toast('Data jadwal tidak ditemukan!');
 
   const text = generateJadwalWaText(u);
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text).then(() => {
-      toast('📋 Teks jadwal berhasil disalin! Siap ditempel di WhatsApp.');
+      toast('📋 Format WhatsApp jadwal upacara berhasil disalin!');
+    }).catch(() => {
+      fallbackCopyText(text);
+    });
+  } else {
+    fallbackCopyText(text);
+  }
+};
+
+window.salinTeksTtd = function (id) {
+  const t = (DB.get('ttd') || []).find(x => x.id === id);
+  if (!t) return toast('Data jadwal TTD tidak ditemukan!');
+
+  const text = generateTtdWaText(t);
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      toast('📋 Format WhatsApp Pembagian TTD berhasil disalin!');
     }).catch(() => {
       fallbackCopyText(text);
     });
@@ -1670,10 +2362,10 @@ function fallbackCopyText(text) {
   ta.select();
   document.execCommand('copy');
   document.body.removeChild(ta);
-  toast('📋 Teks jadwal berhasil disalin!');
+  toast('📋 Teks berhasil disalin!');
 }
 
-window.kirimWaJadwal = function(id) {
+window.kirimWaJadwal = function (id) {
   const u = (DB.get('upacara') || []).find(x => x.id === id);
   if (!u) return toast('Data jadwal tidak ditemukan!');
 
@@ -1683,28 +2375,41 @@ window.kirimWaJadwal = function(id) {
   toast('📲 Membuka WhatsApp...');
 };
 
-// =====================
-//   MODAL JADWAL JAGA UPACARA
-// =====================
-window.openModalUpacara = function(editId) {
+window.kirimWaTtd = function (id) {
+  const t = (DB.get('ttd') || []).find(x => x.id === id);
+  if (!t) return toast('Data jadwal TTD tidak ditemukan!');
+
+  const text = generateTtdWaText(t);
+  const encoded = encodeURIComponent(text);
+  window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
+  toast('📲 Membuka WhatsApp...');
+};
+
+window._upacaraPosData = [];
+
+window.openModalUpacara = function (editId) {
+  if (!canEdit()) return toast('⚠️ Akses ditolak: Hanya pengurus yang dapat mengatur jadwal jaga!');
+
   const list = DB.get('upacara') || [];
-  const anggota = DB.get('anggota') || [];
-  const titikTemplate = DB.get('titik_jaga_template') || [];
   const editItem = editId ? list.find(x => x.id === editId) : null;
 
-  const initialRows = editItem?.titikJaga && editItem.titikJaga.length
-    ? editItem.titikJaga
-    : [{ pos: 'Lapangan Utama (Depan Tiang)', anggota: [] }];
+  window._upacaraPosData = editItem?.titikJaga && editItem.titikJaga.length
+    ? JSON.parse(JSON.stringify(editItem.titikJaga)).map(t => ({
+      pos: t.pos || '',
+      anggota: Array.isArray(t.anggota) ? t.anggota : [],
+      filter: 'all'
+    }))
+    : [{ pos: 'Lapangan Utama (Depan Tiang)', anggota: [], filter: 'all' }];
 
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
   overlay.id = 'modal-upacara';
   overlay.innerHTML = `
-  <div class="modal" style="max-width:640px">
+  <div class="modal" style="max-width:680px">
     <div class="modal-header">
       <div>
         <div class="modal-title"><i class="ti ti-flag" style="color:var(--primary)"></i> ${editItem ? 'Ubah Jadwal Jaga Upacara' : 'Tambah Jadwal Jaga Upacara'}</div>
-        <div class="modal-sub">Tentukan agenda upacara dan bagi titik pos serta personil yang bertugas</div>
+        <div class="modal-sub">Atur agenda upacara, bagi titik pos & pilih petugas (maksimal 7 orang per pos)</div>
       </div>
       <button class="modal-close-btn" onclick="document.getElementById('modal-upacara').remove()">✕</button>
     </div>
@@ -1713,42 +2418,23 @@ window.openModalUpacara = function(editId) {
       <div class="form-group"><label>Tanggal Upacara</label><input type="date" id="m-up-tgl" value="${editItem?.tanggal || today()}"></div>
       <div class="form-group" style="flex:2"><label>Nama Kegiatan</label><input type="text" id="m-up-nama" placeholder="cth: Upacara Bendera Hari Senin" value="${editItem?.nama || ''}"></div>
     </div>
-    <div class="form-group" style="margin-bottom:14px"><label>Keterangan</label><input type="text" id="m-up-ket" placeholder="cth: Penempatan petugas jaga upacara bendera" value="${editItem?.keterangan || ''}"></div>
+    <div class="form-group" style="margin-bottom:14px"><label>Keterangan (Opsional)</label><input type="text" id="m-up-ket" placeholder="cth: Penempatan petugas jaga upacara bendera" value="${editItem?.keterangan || ''}"></div>
 
-    <div style="font-weight:800;font-size:13px;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:6px">
-      <i class="ti ti-map-pin" style="color:var(--primary)"></i> Pembagian Pos & Petugas
+    <div style="font-weight:800;font-size:13px;color:var(--text);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between">
+      <span style="display:flex;align-items:center;gap:6px">
+        <i class="ti ti-map-pin" style="color:var(--primary)"></i> Pembagian Pos & Petugas
+      </span>
+      <span style="font-size:11px;color:var(--text3);font-weight:700">Maksimal 7 petugas per pos</span>
     </div>
 
-    <div id="m-titik-builder">
-      ${initialRows.map((t, idx) => `
-      <div class="m-titik-row" style="background:#f8fafc;border:1.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px">
-        <div class="form-row" style="margin-bottom:8px">
-          <div class="form-group">
-            <label>Pos / Titik Jaga</label>
-            <input type="text" class="m-titik-pos" placeholder="cth: Lapangan Utama" value="${t.pos}" list="pos-template-options">
-          </div>
-          <div style="display:flex;align-items:flex-end">
-            <button class="btn btn-danger btn-sm" onclick="this.closest('.m-titik-row').remove()" title="Hapus pos"><i class="ti ti-trash"></i></button>
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Petugas yang Ditugaskan (Pilih Anggota)</label>
-          <select class="m-titik-anggota" multiple style="height:76px">
-            ${anggota.map(a => `
-              <option value="${a.nama}" ${(t.anggota || []).includes(a.nama) ? 'selected' : ''}>
-                ${a.nama} (A${a.angkatan} - ${a.kelas})
-              </option>`).join('')}
-          </select>
-        </div>
-      </div>`).join('')}
-    </div>
+    <div id="m-titik-builder"></div>
 
     <datalist id="pos-template-options">
-      ${titikTemplate.map(t => `<option>${t}</option>`).join('')}
+      ${(DB.get('titik_jaga_template') || []).map(t => `<option value="${t}"></option>`).join('')}
     </datalist>
 
-    <button class="btn btn-ghost btn-sm" onclick="addModalTitikRow()" style="margin-bottom:16px">
-      <i class="ti ti-plus"></i> Tambah Pos Jaga
+    <button class="btn btn-ghost btn-sm" onclick="addModalTitikRow()" style="margin-bottom:16px;width:100%;border-style:dashed">
+      <i class="ti ti-plus"></i> Tambah Pos Jaga Baru
     </button>
 
     <div class="btn-row" style="justify-content:flex-end">
@@ -1759,45 +2445,193 @@ window.openModalUpacara = function(editId) {
     </div>
   </div>`;
   document.body.appendChild(overlay);
+
+  renderModalTitikRows();
 };
 
-window.addModalTitikRow = function() {
-  const anggota = DB.get('anggota') || [];
-  const builder = document.getElementById('m-titik-builder');
-  const div = document.createElement('div');
-  div.className = 'm-titik-row';
-  div.style.cssText = 'background:#f8fafc;border:1.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px';
-  div.innerHTML = `
-    <div class="form-row" style="margin-bottom:8px">
-      <div class="form-group">
-        <label>Pos / Titik Jaga</label>
-        <input type="text" class="m-titik-pos" placeholder="cth: Gerbang & Parkiran" list="pos-template-options">
+window.renderModalTitikRows = function () {
+  const container = document.getElementById('m-titik-builder');
+  if (!container) return;
+
+  const anggotaList = DB.get('anggota') || [];
+
+  // Find all members already assigned across any pos in this schedule
+  const allAssignedMembers = new Set();
+  window._upacaraPosData.forEach(p => {
+    (p.anggota || []).forEach(name => allAssignedMembers.add(name));
+  });
+
+  container.innerHTML = window._upacaraPosData.map((t, idx) => {
+    const arr = t.anggota || [];
+    const count = arr.length;
+
+    const posA10 = arr.filter(n => (anggotaList.find(a => a.nama === n)?.angkatan === '10')).length;
+    const posA11 = arr.filter(n => (anggotaList.find(a => a.nama === n)?.angkatan === '11')).length;
+    const posCowo = arr.filter(n => (anggotaList.find(a => a.nama === n)?.jk !== 'P')).length;
+    const posCewe = arr.filter(n => (anggotaList.find(a => a.nama === n)?.jk === 'P')).length;
+
+    const capClass = count > 7 ? 'overflow' : count === 7 ? 'full' : count > 0 ? 'available' : 'empty';
+    const capLabel = count > 7 ? `⚠️ ${count}/7 Petugas (Kelebihan!)` : count === 7 ? `🔒 7/7 Petugas (Pos Penuh)` : `${count}/7 Petugas`;
+
+    const curFilter = t.filter || 'all';
+    let availableList = anggotaList;
+    if (curFilter === '10') availableList = availableList.filter(a => a.angkatan === '10');
+    else if (curFilter === '11') availableList = availableList.filter(a => a.angkatan === '11');
+    else if (curFilter === 'cowo') availableList = availableList.filter(a => a.jk !== 'P');
+    else if (curFilter === 'cewe') availableList = availableList.filter(a => a.jk === 'P');
+
+    // Filter out ANY member already assigned to any pos!
+    const unassignedList = availableList.filter(a => !allAssignedMembers.has(a.nama));
+
+    const selectedChipsHtml = arr.map(nama => {
+      const ang = anggotaList.find(a => a.nama === nama);
+      const isCewe = ang?.jk === 'P';
+      const isA10 = ang?.angkatan === '10';
+      const icon = isCewe ? '👧' : '👦';
+      const cls = isCewe ? 'cewe' : 'cowo';
+      const angLabel = isA10 ? 'A10' : 'A11';
+
+      return `
+      <span class="pos-active-chip ${cls}">
+        <span>${icon}</span>
+        <span>${nama}</span>
+        <span class="chip-tag ${isA10 ? 'a10' : 'a11'}">${angLabel}</span>
+        <button class="btn-del-chip" type="button" onclick="removeMemberFromPos(${idx}, '${escapeHtml(nama)}')" title="Hapus dari pos ini">✕</button>
+      </span>`;
+    }).join('');
+
+    const pickerPillsHtml = unassignedList.length > 0
+      ? unassignedList.map(a => {
+        const isCewe = a.jk === 'P';
+        const isA10 = a.angkatan === '10';
+        const icon = isCewe ? '👧' : '👦';
+        const cls = isCewe ? 'cewe' : 'cowo';
+        const angLabel = isA10 ? 'A10' : 'A11';
+
+        return `
+        <span class="picker-member-pill ${cls}" onclick="addMemberToPos(${idx}, '${escapeHtml(a.nama)}')" title="Klik untuk menugaskan">
+          + ${icon} ${a.nama} (${angLabel} • ${a.kelas || '-'})
+        </span>`;
+      }).join('')
+      : `<span style="font-size:11.5px;color:var(--text3);font-style:italic;padding:4px">Semua anggota yang sesuai filter telah ditugaskan</span>`;
+
+    return `
+    <div class="m-titik-box">
+      <div class="form-row" style="margin-bottom:8px;align-items:center">
+        <div class="form-group" style="flex:2">
+          <label>Nama Pos / Titik Jaga</label>
+          <input type="text" class="m-titik-pos" placeholder="cth: Lapangan Utama (Depan Tiang)" value="${escapeHtml(t.pos)}" list="pos-template-options" oninput="updatePosName(${idx}, this.value)">
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+          <label>&nbsp;</label>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span class="pos-capacity-badge ${capClass}">${capLabel}</span>
+            <button class="btn btn-danger btn-sm" onclick="deleteModalTitikRow(${idx})" title="Hapus pos ini"><i class="ti ti-trash"></i></button>
+          </div>
+        </div>
       </div>
-      <div style="display:flex;align-items:flex-end">
-        <button class="btn btn-danger btn-sm" onclick="this.closest('.m-titik-row').remove()"><i class="ti ti-trash"></i></button>
+
+      <!-- Active Assigned Chips -->
+      <div style="font-size:11px;font-weight:800;color:var(--text2);margin-bottom:4px;display:flex;justify-content:space-between">
+        <span>Petugas Ditugaskan (${count}/7):</span>
+        ${count > 0 ? `<span style="color:var(--text3)">⭐ A10: ${posA10} | 🌟 A11: ${posA11} | 👦 ${posCowo} Cowo | 👧 ${posCewe} Cewe</span>` : ''}
       </div>
-    </div>
-    <div class="form-group">
-      <label>Petugas yang Ditugaskan</label>
-      <select class="m-titik-anggota" multiple style="height:76px">
-        ${anggota.map(a => `<option value="${a.nama}">${a.nama} (A${a.angkatan} - ${a.kelas})</option>`).join('')}
-      </select>
+      <div class="pos-active-chips-wrap">
+        ${selectedChipsHtml || '<span style="color:var(--text3);font-size:11.5px;font-style:italic">Belum ada petugas. Klik nama anggota di bawah untuk menambahkan.</span>'}
+      </div>
+
+      <!-- Member Picker with Filter Tabs -->
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:4px">
+          <span style="font-size:11px;font-weight:800;color:var(--text2)">+ Tambah Petugas (Klik Nama):</span>
+          <div style="display:flex;gap:3px">
+            <button type="button" class="picker-filter-btn ${curFilter === 'all' ? 'active' : ''}" onclick="filterPosPicker(${idx}, 'all')">Semua</button>
+            <button type="button" class="picker-filter-btn ${curFilter === '10' ? 'active' : ''}" onclick="filterPosPicker(${idx}, '10')">A10</button>
+            <button type="button" class="picker-filter-btn ${curFilter === '11' ? 'active' : ''}" onclick="filterPosPicker(${idx}, '11')">A11</button>
+            <button type="button" class="picker-filter-btn ${curFilter === 'cowo' ? 'active' : ''}" onclick="filterPosPicker(${idx}, 'cowo')">👦 Cowo</button>
+            <button type="button" class="picker-filter-btn ${curFilter === 'cewe' ? 'active' : ''}" onclick="filterPosPicker(${idx}, 'cewe')">👧 Cewe</button>
+          </div>
+        </div>
+        <div class="pos-quick-picker">
+          ${pickerPillsHtml}
+        </div>
+      </div>
     </div>`;
-  builder.appendChild(div);
+  }).join('');
 };
 
-window.saveModalUpacara = function(editId) {
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+}
+
+window.updatePosName = function (idx, val) {
+  if (window._upacaraPosData[idx]) {
+    window._upacaraPosData[idx].pos = val;
+  }
+};
+
+window.addMemberToPos = function (idx, memberName) {
+  if (!window._upacaraPosData[idx]) return;
+  if (!window._upacaraPosData[idx].anggota) window._upacaraPosData[idx].anggota = [];
+
+  if (window._upacaraPosData[idx].anggota.length >= 7) {
+    return toast('⚠️ Pos ini sudah mencapai batas maksimal 7 petugas!');
+  }
+  if (!window._upacaraPosData[idx].anggota.includes(memberName)) {
+    window._upacaraPosData[idx].anggota.push(memberName);
+    renderModalTitikRows();
+  }
+};
+
+window.removeMemberFromPos = function (idx, memberName) {
+  if (!window._upacaraPosData[idx]) return;
+  window._upacaraPosData[idx].anggota = (window._upacaraPosData[idx].anggota || []).filter(n => n !== memberName);
+  renderModalTitikRows();
+};
+
+window.addModalTitikRow = function () {
+  window._upacaraPosData.push({ pos: '', anggota: [], filter: 'all' });
+  renderModalTitikRows();
+};
+
+window.deleteModalTitikRow = function (idx) {
+  if (window._upacaraPosData.length <= 1) {
+    window._upacaraPosData = [{ pos: '', anggota: [], filter: 'all' }];
+  } else {
+    window._upacaraPosData.splice(idx, 1);
+  }
+  renderModalTitikRows();
+};
+
+window.filterPosPicker = function (idx, filterType) {
+  if (window._upacaraPosData[idx]) {
+    window._upacaraPosData[idx].filter = filterType;
+    renderModalTitikRows();
+  }
+};
+
+window.saveModalUpacara = function (editId) {
+  if (!canEdit()) return toast('⚠️ Akses ditolak: Hanya pengurus yang dapat menyimpan jadwal jaga!');
+
   const nama = document.getElementById('m-up-nama').value.trim();
   if (!nama) return toast('Nama kegiatan upacara wajib diisi!');
 
-  const rows = document.querySelectorAll('.m-titik-row');
-  const titikJaga = [];
-  rows.forEach(row => {
-    const pos = row.querySelector('.m-titik-pos').value.trim();
-    const sel = row.querySelector('.m-titik-anggota');
-    const angg = Array.from(sel.selectedOptions).map(o => o.value);
-    if (pos) titikJaga.push({ pos, anggota: angg });
-  });
+  const overLimit = window._upacaraPosData.find(p => (p.anggota || []).length > 7);
+  if (overLimit) {
+    return toast(`⚠️ Pos "${overLimit.pos || 'Tanpa Nama'}" melebihi batas maksimal 7 petugas!`);
+  }
+
+  const titikJaga = window._upacaraPosData
+    .filter(p => p.pos && p.pos.trim())
+    .map(p => ({
+      pos: p.pos.trim(),
+      anggota: p.anggota || []
+    }));
+
+  if (!titikJaga.length) {
+    return toast('Tambahkan minimal 1 pos jaga beserta namanya!');
+  }
 
   const list = DB.get('upacara') || [];
   const tgl = document.getElementById('m-up-tgl').value;
@@ -1810,6 +2644,7 @@ window.saveModalUpacara = function(editId) {
       item.nama = nama;
       item.keterangan = ket;
       item.titikJaga = titikJaga;
+      logActivity('UBAH', `Mengubah jadwal jaga pos: ${nama}`, `Tanggal: ${fmtDayDate(tgl)} | ${titikJaga.length} Pos Jaga`);
     }
   } else {
     list.push({
@@ -1819,6 +2654,7 @@ window.saveModalUpacara = function(editId) {
       keterangan: ket,
       titikJaga
     });
+    logActivity('TAMBAH', `Membuat jadwal jaga pos baru: ${nama}`, `Tanggal: ${fmtDayDate(tgl)} | ${titikJaga.length} Pos Jaga`);
   }
 
   DB.set('upacara', list);
@@ -1827,86 +2663,327 @@ window.saveModalUpacara = function(editId) {
   toast(`✅ Jadwal jaga berhasil ${editId ? 'diperbarui' : 'disimpan'}!`);
 };
 
-window.delUpacara = function(id) {
-  if (!confirm('Hapus jadwal upacara ini?')) return;
-  DB.set('upacara', (DB.get('upacara') || []).filter(u => u.id !== id));
+window.delUpacara = function (id) {
+  if (!canEdit()) return toast('⚠️ Akses ditolak: Hanya pengurus yang dapat menghapus jadwal jaga!');
+
+  const list = DB.get('upacara') || [];
+  const item = list.find(u => u.id === id);
+  if (!confirm(`Hapus jadwal jaga ${item?.nama || ''}?`)) return;
+
+  DB.set('upacara', list.filter(u => u.id !== id));
+  logActivity('HAPUS', `Menghapus jadwal jaga pos: ${item?.nama || 'Jadwal'}`, `Tanggal: ${fmtDayDate(item?.tanggal)}`);
   if (window.renderJadwalView) renderJadwalView();
   toast('Jadwal upacara dihapus 🗑️');
 };
 
-// Modal Piket
-window.openModalPiket = function() {
-  const anggota = DB.get('anggota') || [];
+// Modal and CRUD for TTD (Tablet Tambah Darah)
+window._ttdKelompokData = [];
+
+window.openModalTtd = function (editId) {
+  if (!canEdit()) return toast('⚠️ Akses ditolak: Hanya pengurus yang dapat mengatur jadwal TTD!');
+
+  const list = DB.get('ttd') || [];
+  const editItem = editId ? list.find(x => x.id === editId) : null;
+
+  window._ttdKelompokData = editItem?.kelompok && editItem.kelompok.length
+    ? JSON.parse(JSON.stringify(editItem.kelompok)).map(k => ({
+      nama: k.nama || '',
+      kelas: k.kelas || '',
+      anggota: Array.isArray(k.anggota) ? k.anggota : [],
+      filter: 'all'
+    }))
+    : [
+      { nama: 'Kelompok 1', kelas: 'X GEO, XI GEO, X TKP, XI TKP, XI TKL A', anggota: [], filter: 'all' },
+      { nama: 'Kelompok 2', kelas: 'X PPLG A&B, XI PPLG A&B', anggota: [], filter: 'all' },
+      { nama: 'Kelompok 3', kelas: 'X TE A B &C, XI TE A B&C', anggota: [], filter: 'all' },
+      { nama: 'Kelompok 4', kelas: 'X TJKT AB&C, XI TJKT AB&C, X TO A, XI TO A', anggota: [], filter: 'all' },
+      { nama: 'Kelompok 5', kelas: 'X DPIB A&B, XI DPIB A&B, XI TM A, X TM A', anggota: [], filter: 'all' }
+    ];
+
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
-  overlay.id = 'modal-piket';
+  overlay.id = 'modal-ttd';
   overlay.innerHTML = `
-  <div class="modal">
+  <div class="modal" style="max-width:720px">
     <div class="modal-header">
       <div>
-        <div class="modal-title"><i class="ti ti-calendar-plus" style="color:var(--primary)"></i> Tambah Piket Ruang UKS</div>
-        <div class="modal-sub">Pilih personil, hari, dan sesi waktu piket</div>
+        <div class="modal-title"><i class="ti ti-pill" style="color:var(--primary)"></i> ${editItem ? 'Ubah Jadwal Pembagian TTD' : 'Tambah Jadwal Pembagian TTD'}</div>
+        <div class="modal-sub">Atur tanggal pembagian, kelompok sasaran kelas, dan tugaskan personil PMR</div>
       </div>
-      <button class="modal-close-btn" onclick="document.getElementById('modal-piket').remove()">✕</button>
-    </div>
-
-    <div class="form-group" style="margin-bottom:12px">
-      <label>Anggota Bertugas</label>
-      <select id="m-piket-ang">
-        ${anggota.map(a => `<option value="${a.nama}">${a.nama} (A${a.angkatan} - ${a.kelas})</option>`).join('')}
-      </select>
+      <button class="modal-close-btn" onclick="document.getElementById('modal-ttd').remove()">✕</button>
     </div>
 
     <div class="form-row">
-      <div class="form-group"><label>Hari</label><select id="m-piket-hari">${HARI.map(h => `<option>${h}</option>`).join('')}</select></div>
-      <div class="form-group"><label>Sesi Waktu</label><select id="m-piket-sesi">${SESI.map(s => `<option>${s}</option>`).join('')}</select></div>
+      <div class="form-group"><label>Tanggal Pembagian</label><input type="date" id="m-ttd-tgl" value="${editItem?.tanggal || today()}"></div>
+      <div class="form-group" style="flex:2"><label>Nama Kegiatan</label><input type="text" id="m-ttd-nama" placeholder="cth: Pembagian Tablet Tambah Darah (TTD)" value="${editItem?.nama || 'Pembagian Tablet Tambah Darah (TTD)'}"></div>
+    </div>
+    <div class="form-group" style="margin-bottom:14px"><label>Keterangan (Opsional)</label><input type="text" id="m-ttd-ket" placeholder="cth: Distribusi TTD serentak kelas binaan" value="${editItem?.keterangan || ''}"></div>
+
+    <div style="font-weight:800;font-size:13px;color:var(--text);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between">
+      <span style="display:flex;align-items:center;gap:6px">
+        <i class="ti ti-users-group" style="color:var(--primary)"></i> Daftar Kelompok & Petugas
+      </span>
+      <span style="font-size:11px;color:var(--text3);font-weight:700">Pilih personil per kelompok</span>
     </div>
 
-    <div class="btn-row" style="justify-content:flex-end;margin-top:16px">
-      <button class="btn btn-ghost" onclick="document.getElementById('modal-piket').remove()">Batal</button>
-      <button class="btn btn-primary" onclick="saveModalPiket()"><i class="ti ti-plus"></i>Tambah Piket</button>
+    <div id="m-ttd-builder"></div>
+
+    <datalist id="ttd-kelas-template-options">
+      ${(DB.get('ttd_kelas_template') || []).map(t => `<option value="${t}"></option>`).join('')}
+    </datalist>
+
+    <button class="btn btn-ghost btn-sm" onclick="addModalTtdKelompokRow()" style="margin-bottom:16px;width:100%;border-style:dashed">
+      <i class="ti ti-plus"></i> Tambah Kelompok Baru
+    </button>
+
+    <div class="btn-row" style="justify-content:flex-end">
+      <button class="btn btn-ghost" onclick="document.getElementById('modal-ttd').remove()">Batal</button>
+      <button class="btn btn-primary" onclick="saveModalTtd(${editId || 0})">
+        <i class="ti ti-device-floppy"></i> ${editItem ? 'Perbarui Jadwal TTD' : 'Simpan Jadwal TTD'}
+      </button>
     </div>
   </div>`;
   document.body.appendChild(overlay);
+
+  renderModalTtdRows();
 };
 
-window.saveModalPiket = function() {
-  const ang = document.getElementById('m-piket-ang').value;
-  if (!ang) return toast('Pilih anggota!');
-  const list = DB.get('jadwal') || [];
-  list.push({
-    id: Date.now(),
-    anggota: ang,
-    hari: document.getElementById('m-piket-hari').value,
-    sesi: document.getElementById('m-piket-sesi').value,
-    lokasi: 'Ruang UKS'
+window.renderModalTtdRows = function () {
+  const container = document.getElementById('m-ttd-builder');
+  if (!container) return;
+
+  const anggotaList = DB.get('anggota') || [];
+
+  // Find all members already assigned across any kelompok in this schedule
+  const allAssignedMembers = new Set();
+  window._ttdKelompokData.forEach(k => {
+    (k.anggota || []).forEach(name => allAssignedMembers.add(name));
   });
-  DB.set('jadwal', list);
-  document.getElementById('modal-piket')?.remove();
-  if (window.renderJadwalView) renderJadwalView();
-  toast('✅ Jadwal piket ditambahkan!');
+
+  container.innerHTML = window._ttdKelompokData.map((k, idx) => {
+    const arr = k.anggota || [];
+    const count = arr.length;
+
+    const posA10 = arr.filter(n => (anggotaList.find(a => a.nama === n)?.angkatan === '10')).length;
+    const posA11 = arr.filter(n => (anggotaList.find(a => a.nama === n)?.angkatan === '11')).length;
+    const posCowo = arr.filter(n => (anggotaList.find(a => a.nama === n)?.jk !== 'P')).length;
+    const posCewe = arr.filter(n => (anggotaList.find(a => a.nama === n)?.jk === 'P')).length;
+
+    const curFilter = k.filter || 'all';
+    let availableList = anggotaList;
+    if (curFilter === '10') availableList = availableList.filter(a => a.angkatan === '10');
+    else if (curFilter === '11') availableList = availableList.filter(a => a.angkatan === '11');
+    else if (curFilter === 'cowo') availableList = availableList.filter(a => a.jk !== 'P');
+    else if (curFilter === 'cewe') availableList = availableList.filter(a => a.jk === 'P');
+
+    // Filter out ANY member already assigned to any kelompok
+    const unassignedList = availableList.filter(a => !allAssignedMembers.has(a.nama));
+
+    const selectedChipsHtml = arr.map(nama => {
+      const ang = anggotaList.find(a => a.nama === nama);
+      const isCewe = ang?.jk === 'P';
+      const isA10 = ang?.angkatan === '10';
+      const icon = isCewe ? '👧' : '👦';
+      const cls = isCewe ? 'cewe' : 'cowo';
+      const angLabel = isA10 ? 'A10' : 'A11';
+
+      return `
+      <span class="pos-active-chip ${cls}">
+        <span>${icon}</span>
+        <span>${nama}</span>
+        <span class="chip-tag ${isA10 ? 'a10' : 'a11'}">${angLabel}</span>
+        <button class="btn-del-chip" type="button" onclick="removeMemberFromTtdKelompok(${idx}, '${escapeHtml(nama)}')" title="Hapus dari kelompok ini">✕</button>
+      </span>`;
+    }).join('');
+
+    const pickerPillsHtml = unassignedList.length > 0
+      ? unassignedList.map(a => {
+        const isCewe = a.jk === 'P';
+        const isA10 = a.angkatan === '10';
+        const icon = isCewe ? '👧' : '👦';
+        const cls = isCewe ? 'cewe' : 'cowo';
+        const angLabel = isA10 ? 'A10' : 'A11';
+
+        return `
+        <span class="picker-member-pill ${cls}" onclick="addMemberToTtdKelompok(${idx}, '${escapeHtml(a.nama)}')" title="Klik untuk menambahkan ke kelompok">
+          + ${icon} ${a.nama} (${angLabel} • ${a.kelas || '-'})
+        </span>`;
+      }).join('')
+      : `<span style="font-size:11.5px;color:var(--text3);font-style:italic;padding:4px">Semua anggota yang sesuai filter telah ditugaskan</span>`;
+
+    return `
+    <div class="m-titik-box">
+      <div class="form-row" style="margin-bottom:8px;align-items:center">
+        <div class="form-group" style="flex:1.2">
+          <label>Nama Kelompok</label>
+          <input type="text" placeholder="cth: Kelompok 1" value="${escapeHtml(k.nama)}" oninput="updateTtdKelompokName(${idx}, this.value)">
+        </div>
+        <div class="form-group" style="flex:2">
+          <label>Kelas Sasaran / Binaan</label>
+          <input type="text" placeholder="cth: X GEO, XI GEO, X TKP..." value="${escapeHtml(k.kelas)}" list="ttd-kelas-template-options" oninput="updateTtdKelompokKelas(${idx}, this.value)">
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+          <label>&nbsp;</label>
+          <button class="btn btn-danger btn-sm" onclick="deleteModalTtdKelompokRow(${idx})" title="Hapus kelompok ini"><i class="ti ti-trash"></i></button>
+        </div>
+      </div>
+
+      <!-- Active Assigned Chips -->
+      <div style="font-size:11px;font-weight:800;color:var(--text2);margin-bottom:4px;display:flex;justify-content:space-between">
+        <span>Petugas Ditugaskan (${count} Orang):</span>
+        ${count > 0 ? `<span style="color:var(--text3)">⭐ A10: ${posA10} | 🌟 A11: ${posA11} | 👦 ${posCowo} Cowo | 👧 ${posCewe} Cewe</span>` : ''}
+      </div>
+      <div class="pos-active-chips-wrap">
+        ${selectedChipsHtml || '<span style="color:var(--text3);font-size:11.5px;font-style:italic">Belum ada petugas. Klik nama anggota di bawah untuk menambahkan.</span>'}
+      </div>
+
+      <!-- Member Picker with Filter Tabs -->
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:4px">
+          <span style="font-size:11px;font-weight:800;color:var(--text2)">+ Tambah Petugas (Klik Nama):</span>
+          <div style="display:flex;gap:3px">
+            <button type="button" class="picker-filter-btn ${curFilter === 'all' ? 'active' : ''}" onclick="filterTtdPicker(${idx}, 'all')">Semua</button>
+            <button type="button" class="picker-filter-btn ${curFilter === '10' ? 'active' : ''}" onclick="filterTtdPicker(${idx}, '10')">A10</button>
+            <button type="button" class="picker-filter-btn ${curFilter === '11' ? 'active' : ''}" onclick="filterTtdPicker(${idx}, '11')">A11</button>
+            <button type="button" class="picker-filter-btn ${curFilter === 'cowo' ? 'active' : ''}" onclick="filterTtdPicker(${idx}, 'cowo')">👦 Cowo</button>
+            <button type="button" class="picker-filter-btn ${curFilter === 'cewe' ? 'active' : ''}" onclick="filterTtdPicker(${idx}, 'cewe')">👧 Cewe</button>
+          </div>
+        </div>
+        <div class="pos-quick-picker">
+          ${pickerPillsHtml}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
 };
 
-window.delJadwal = function(id) {
-  DB.set('jadwal', (DB.get('jadwal') || []).filter(j => j.id !== id));
-  if (window.renderJadwalView) renderJadwalView();
-  toast('Jadwal dihapus 🗑️');
+window.updateTtdKelompokName = function (idx, val) {
+  if (window._ttdKelompokData[idx]) window._ttdKelompokData[idx].nama = val;
 };
 
-// =====================
-//   PAGE 7: LAPORAN
-// =====================
-pages.laporan = function(m) {
+window.updateTtdKelompokKelas = function (idx, val) {
+  if (window._ttdKelompokData[idx]) window._ttdKelompokData[idx].kelas = val;
+};
+
+window.addMemberToTtdKelompok = function (idx, memberName) {
+  if (!window._ttdKelompokData[idx]) return;
+  if (!window._ttdKelompokData[idx].anggota) window._ttdKelompokData[idx].anggota = [];
+
+  if (!window._ttdKelompokData[idx].anggota.includes(memberName)) {
+    window._ttdKelompokData[idx].anggota.push(memberName);
+    renderModalTtdRows();
+  }
+};
+
+window.removeMemberFromTtdKelompok = function (idx, memberName) {
+  if (!window._ttdKelompokData[idx]) return;
+  window._ttdKelompokData[idx].anggota = (window._ttdKelompokData[idx].anggota || []).filter(n => n !== memberName);
+  renderModalTtdRows();
+};
+
+window.addModalTtdKelompokRow = function () {
+  const nextNum = window._ttdKelompokData.length + 1;
+  window._ttdKelompokData.push({ nama: `Kelompok ${nextNum}`, kelas: '', anggota: [], filter: 'all' });
+  renderModalTtdRows();
+};
+
+window.deleteModalTtdKelompokRow = function (idx) {
+  if (window._ttdKelompokData.length <= 1) {
+    window._ttdKelompokData = [{ nama: 'Kelompok 1', kelas: '', anggota: [], filter: 'all' }];
+  } else {
+    window._ttdKelompokData.splice(idx, 1);
+  }
+  renderModalTtdRows();
+};
+
+window.filterTtdPicker = function (idx, filterType) {
+  if (window._ttdKelompokData[idx]) {
+    window._ttdKelompokData[idx].filter = filterType;
+    renderModalTtdRows();
+  }
+};
+
+window.saveModalTtd = function (editId) {
+  if (!canEdit()) return toast('⚠️ Akses ditolak: Hanya pengurus yang dapat menyimpan jadwal TTD!');
+
+  const nama = document.getElementById('m-ttd-nama').value.trim();
+  if (!nama) return toast('Nama kegiatan pembagian TTD wajib diisi!');
+
+  const kelompok = window._ttdKelompokData
+    .filter(k => k.nama && k.nama.trim())
+    .map(k => ({
+      nama: k.nama.trim(),
+      kelas: (k.kelas || '').trim(),
+      anggota: k.anggota || []
+    }));
+
+  if (!kelompok.length) {
+    return toast('Tambahkan minimal 1 kelompok!');
+  }
+
+  const list = DB.get('ttd') || [];
+  const tgl = document.getElementById('m-ttd-tgl').value;
+  const ket = document.getElementById('m-ttd-ket').value.trim();
+
+  if (editId) {
+    const item = list.find(x => x.id === editId);
+    if (item) {
+      item.tanggal = tgl;
+      item.nama = nama;
+      item.keterangan = ket;
+      item.kelompok = kelompok;
+      logActivity('UBAH', `Mengubah jadwal pembagian TTD: ${nama}`, `Tanggal: ${fmtDayDate(tgl)} | ${kelompok.length} Kelompok`);
+    }
+  } else {
+    list.push({
+      id: Date.now(),
+      tanggal: tgl,
+      nama,
+      keterangan: ket,
+      kelompok
+    });
+    logActivity('TAMBAH', `Membuat jadwal pembagian TTD baru: ${nama}`, `Tanggal: ${fmtDayDate(tgl)} | ${kelompok.length} Kelompok`);
+  }
+
+  DB.set('ttd', list);
+  document.getElementById('modal-ttd')?.remove();
+  if (window.renderJadwalView) renderJadwalView();
+  toast(`✅ Jadwal TTD berhasil ${editId ? 'diperbarui' : 'disimpan'}!`);
+};
+
+window.delTtd = function (id) {
+  if (!canEdit()) return toast('⚠️ Akses ditolak: Hanya pengurus yang dapat menghapus jadwal TTD!');
+
+  const list = DB.get('ttd') || [];
+  const item = list.find(t => t.id === id);
+  if (!confirm(`Hapus jadwal pembagian TTD ${item?.nama || ''}?`)) return;
+
+  DB.set('ttd', list.filter(t => t.id !== id));
+  logActivity('HAPUS', `Menghapus jadwal pembagian TTD: ${item?.nama || 'TTD'}`, `Tanggal: ${fmtDayDate(item?.tanggal)}`);
+  if (window.renderJadwalView) renderJadwalView();
+  toast('Jadwal pembagian TTD dihapus 🗑️');
+};
+
+let currentLaporanTab = 'medis'; 
+let currentLogTypeFilter = 'all';
+
+pages.laporan = function (m) {
   const pasien = DB.get('pasien') || [];
   const stok = DB.get('stok') || [];
   const absensi = DB.get('absensi') || [];
   const anggota = DB.get('anggota') || [];
+  const upacara = DB.get('upacara') || [];
+  const ttd = DB.get('ttd') || [];
+  const logs = DB.get('logs') || [];
 
   const a10 = anggota.filter(a => a.angkatan === '10').length;
   const a11 = anggota.filter(a => a.angkatan === '11').length;
   const totalHadir = absensi.filter(a => a.status === 'Hadir').length;
+  const totalIzin = absensi.filter(a => a.status === 'Izin').length;
+  const totalSakit = absensi.filter(a => a.status === 'Sakit').length;
   const totalAlpha = absensi.filter(a => a.status === 'Alpha').length;
   const dirujuk = pasien.filter(p => p.status === 'Dirujuk').length;
+  const sembuh = pasien.filter(p => p.status === 'Sembuh').length;
 
   const keluhanMap = {};
   pasien.forEach(p => {
@@ -1915,110 +2992,337 @@ pages.laporan = function(m) {
   });
   const topKeluhan = Object.entries(keluhanMap).sort((a, b) => b[1] - a[1]).slice(0, 5);
 
+  const leader = isLeader();
+  if (!leader) {
+    currentLaporanTab = 'medis';
+  }
+
+  function renderView() {
+    const contentBox = document.getElementById('laporan-tab-content');
+    if (!contentBox) return;
+
+    if (currentLaporanTab === 'medis' || !leader) {
+      contentBox.innerHTML = `
+      <div class="grid4" style="margin-bottom:20px">
+        <div class="stat">
+          <div class="stat-label">🏥 Total Pasien</div>
+          <div class="stat-val">${pasien.length}</div>
+          <div class="stat-sub">${sembuh} sembuh • ${dirujuk} dirujuk</div>
+          <span class="stat-icon">🩺</span>
+        </div>
+        <div class="stat">
+          <div class="stat-label">✅ Presensi Hadir</div>
+          <div class="stat-val">${totalHadir}</div>
+          <div class="stat-sub">${totalIzin} Izin • ${totalSakit} Sakit • ${totalAlpha} Alpha</div>
+          <span class="stat-icon">👥</span>
+        </div>
+        <div class="stat">
+          <div class="stat-label">💊 Item Persediaan</div>
+          <div class="stat-val">${stok.length}</div>
+          <div class="stat-sub">${stok.filter(s => s.jumlah <= s.min).length} item berstatus kritis</div>
+          <span class="stat-icon">💉</span>
+        </div>
+        <div class="stat">
+          <div class="stat-label">👥 Personil Anggota</div>
+          <div class="stat-val">${anggota.length}</div>
+          <div class="stat-sub">A10: ${a10} orang | A11: ${a11} orang</div>
+          <span class="stat-icon">⭐</span>
+        </div>
+      </div>
+
+      <div class="grid2" style="margin-bottom:20px">
+        <div class="card">
+          <div class="card-title"><i class="ti ti-chart-bar"></i>Keluhan Penyakit Terbanyak</div>
+          ${topKeluhan.length
+          ? topKeluhan.map(([k, v]) => {
+            const pct = Math.round((v / Math.max(pasien.length, 1)) * 100);
+            return `<div style="margin-bottom:12px">
+                  <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+                    <span style="font-size:13.5px;text-transform:capitalize;font-weight:800">${k}</span>
+                    <span style="font-size:12px;color:var(--text2);font-weight:700">${v} kali (${pct}%)</span>
+                  </div>
+                  <div class="progress-bar" style="height:8px">
+                    <div class="progress-fill" style="width:${pct}%"></div>
+                  </div>
+                </div>`;
+          }).join('')
+          : '<div class="empty"><i class="ti ti-chart-off"></i>Belum ada data pasien</div>'}
+        </div>
+
+        <div class="card">
+          <div class="card-title"><i class="ti ti-package"></i>Kondisi Stok Obat & Alat</div>
+          ${stok.map(s => {
+            const pct = Math.min(100, Math.round((s.jumlah / Math.max(s.min * 2, 1)) * 100));
+            const cls = s.jumlah <= s.min ? '' : 'green';
+            return `<div style="margin-bottom:10px">
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                <span style="font-size:12.5px;font-weight:700">${s.nama} (${s.kategori})</span>
+                <span style="font-size:12px;color:${s.jumlah <= s.min ? 'var(--red-text)' : 'var(--text2)'};font-weight:800">${s.jumlah} ${s.satuan} ${s.jumlah <= s.min ? '⚠️' : ''}</span>
+              </div>
+              <div class="progress-bar"><div class="progress-fill ${cls}" style="width:${pct}%"></div></div>
+            </div>`;
+          }).join('') || '<div class="empty"><i class="ti ti-package-off"></i>Belum ada data stok</div>'}
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-title"><i class="ti ti-clipboard-check"></i>Rekapitulasi Presensi / Kehadiran Anggota</div>
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>NAMA ANGGOTA</th>
+                <th>NIS</th>
+                <th>ANGKATAN</th>
+                <th>HADIR</th>
+                <th>IZIN</th>
+                <th>SAKIT</th>
+                <th>ALPHA</th>
+                <th>TINGKAT KEHADIRAN</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${anggota.map(a => {
+                const myAbs = absensi.filter(x => x.anggotaId === a.id);
+                const h = myAbs.filter(x => x.status === 'Hadir').length;
+                const i = myAbs.filter(x => x.status === 'Izin').length;
+                const s = myAbs.filter(x => x.status === 'Sakit').length;
+                const al = myAbs.filter(x => x.status === 'Alpha').length;
+                const tot = myAbs.length;
+                const pct = tot > 0 ? Math.round((h / tot) * 100) : 0;
+                return `
+                <tr>
+                  <td><strong>${a.nama}</strong></td>
+                  <td><span class="badge-nis">${a.nis}</span></td>
+                  <td><span class="${a.angkatan === '10' ? 'badge-a10' : 'badge-a11'}">A${a.angkatan}</span></td>
+                  <td><span class="badge badge-green">${h}</span></td>
+                  <td><span class="badge badge-amber">${i}</span></td>
+                  <td><span class="badge badge-cowo">${s}</span></td>
+                  <td><span class="badge badge-red">${al}</span></td>
+                  <td>
+                    <div style="display:flex;align-items:center;gap:8px">
+                      <div class="progress-bar" style="width:70px;height:6px"><div class="progress-fill green" style="width:${pct}%"></div></div>
+                      <span style="font-size:12px;font-weight:800">${tot > 0 ? `${pct}%` : '-'}</span>
+                    </div>
+                  </td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-title"><i class="ti ti-calendar-event"></i>Rekapitulasi Penugasan UKS (Upacara & TTD)</div>
+        <div class="grid2">
+          <div style="background:var(--bg2);padding:12px;border-radius:12px;border:1px solid var(--border)">
+            <div style="font-weight:800;font-size:13px;color:var(--primary-dark);margin-bottom:8px">🚩 Jadwal Jaga Upacara (${upacara.length} Agenda)</div>
+            ${upacara.slice(0, 3).map(u => `
+              <div style="font-size:12px;margin-bottom:6px;padding-bottom:6px;border-bottom:1px dashed var(--border)">
+                <strong>${u.nama}</strong> (${fmtDayDate(u.tanggal)}) — ${u.titikJaga ? u.titikJaga.length : 0} Pos
+              </div>
+            `).join('') || '<div style="font-size:12px;color:var(--text3);font-style:italic">Belum ada agenda upacara</div>'}
+          </div>
+
+          <div style="background:var(--bg2);padding:12px;border-radius:12px;border:1px solid var(--border)">
+            <div style="font-weight:800;font-size:13px;color:var(--purple-text);margin-bottom:8px">💊 Pembagian TTD (${ttd.length} Agenda)</div>
+            ${ttd.slice(0, 3).map(t => `
+              <div style="font-size:12px;margin-bottom:6px;padding-bottom:6px;border-bottom:1px dashed var(--border)">
+                <strong>${t.nama}</strong> (${fmtDayDate(t.tanggal)}) — ${t.kelompok ? t.kelompok.length : 0} Kelompok
+              </div>
+            `).join('') || '<div style="font-size:12px;color:var(--text3);font-style:italic">Belum ada agenda TTD</div>'}
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><i class="ti ti-clipboard-list"></i>Log Lengkap Pasien UKS</div>
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>TANGGAL</th>
+                <th>NAMA LENGKAP</th>
+                <th>KELAS</th>
+                <th>KELUHAN</th>
+                <th>TINDAKAN / TERAPI</th>
+                <th>STATUS</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${pasien.slice().reverse().map(p => `
+              <tr>
+                <td>${fmtDayDate(p.tanggal)}</td>
+                <td><strong>${p.nama}</strong></td>
+                <td>${p.kelas}</td>
+                <td>${p.keluhan}</td>
+                <td>${p.tindakan}</td>
+                <td><span class="badge ${p.status === 'Sembuh' ? 'badge-green' : p.status === 'Dirujuk' ? 'badge-amber' : 'badge-red'}">${p.status}</span></td>
+              </tr>`).join('') || '<tr><td colspan="6"><div class="empty">Belum ada catatan medis</div></td></tr>'}
+            </tbody>
+          </table>
+        </div>
+      </div>`;
+    } else if (leader && currentLaporanTab === 'audit_logs') {
+      let filteredLogs = logs;
+      if (currentLogTypeFilter !== 'all') {
+        filteredLogs = filteredLogs.filter(l => l.tipe.toLowerCase() === currentLogTypeFilter.toLowerCase());
+      }
+
+      contentBox.innerHTML = `
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+          <div>
+            <div class="card-title" style="margin:0"><i class="ti ti-activity"></i>Log Aktivitas & Audit Personil (Khusus Ketua & Koordinator)</div>
+            <div style="font-size:12px;color:var(--text3);margin-top:2px">Catatan login, pengubahan data, dan aktivitas anggota real-time</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <label style="font-size:11px;color:var(--text2);font-weight:800">FILTER TIPE:</label>
+            <select onchange="changeLogFilter(this.value)" style="width:160px;padding:6px 10px;font-size:12px">
+              <option value="all" ${currentLogTypeFilter === 'all' ? 'selected' : ''}>Semua Aktivitas</option>
+              <option value="login" ${currentLogTypeFilter === 'login' ? 'selected' : ''}>🔐 Login</option>
+              <option value="tambah" ${currentLogTypeFilter === 'tambah' ? 'selected' : ''}>➕ Penambahan Data</option>
+              <option value="ubah" ${currentLogTypeFilter === 'ubah' ? 'selected' : ''}>✏️ Pengubahan Data</option>
+              <option value="hapus" ${currentLogTypeFilter === 'hapus' ? 'selected' : ''}>🗑️ Penghapusan Data</option>
+              <option value="ganti_password" ${currentLogTypeFilter === 'ganti_password' ? 'selected' : ''}>🔑 Pergantian Password</option>
+              <option value="absensi" ${currentLogTypeFilter === 'absensi' ? 'selected' : ''}>📋 Presensi / Absensi</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>WAKTU</th>
+                <th>TIPE</th>
+                <th>PELAKU & JABATAN</th>
+                <th>NIS</th>
+                <th>AKTIVITAS</th>
+                <th>DETAIL PERUBAHAN</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filteredLogs.length ? filteredLogs.map(l => `
+              <tr>
+                <td style="font-size:11.5px;color:var(--text2);white-space:nowrap">${l.waktu}</td>
+                <td><span class="log-badge ${l.tipe.toLowerCase()}">${l.tipe}</span></td>
+                <td>
+                  <strong>${l.pelaku}</strong>
+                  <div style="font-size:11px;color:var(--primary);font-weight:700">${l.jabatan}</div>
+                </td>
+                <td><span class="badge-nis">${l.nis}</span></td>
+                <td style="font-weight:700">${l.pesan}</td>
+                <td>
+                  ${l.detail ? `<div class="log-detail-box">${escapeHtml(l.detail)}</div>` : '-'}
+                </td>
+              </tr>`).join('') : '<tr><td colspan="6"><div class="empty">Tidak ada log pada filter ini</div></td></tr>'}
+            </tbody>
+          </table>
+        </div>
+      </div>`;
+    } else if (leader && currentLaporanTab === 'passwords') {
+      contentBox.innerHTML = `
+      <div class="card">
+        <div class="card-title"><i class="ti ti-shield-lock"></i>Monitoring Kata Sandi Akun Anggota (Khusus Ketua & Koordinator)</div>
+        <div style="font-size:12.5px;color:var(--text2);margin-bottom:16px">
+          Sesuai ketentuan, password default anggota adalah <strong>NIS</strong>. Jika ada anggota yang telah mengubah kata sandinya, Ketua & Koordinator dapat memantau kata sandi baru tersebut di bawah ini:
+        </div>
+
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>NAMA LENGKAP</th>
+                <th>NIS</th>
+                <th>JABATAN</th>
+                <th>ANGKATAN</th>
+                <th>STATUS KATA SANDI</th>
+                <th>KATA SANDI AKTIF</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${anggota.map(a => {
+        const isCustom = a.password && a.password.trim() !== '';
+        const activePassword = isCustom ? a.password : a.nis;
+        return `
+                <tr>
+                  <td><strong>${a.nama}</strong></td>
+                  <td><span class="badge-nis">${a.nis}</span></td>
+                  <td><span class="badge-jabatan">${a.jabatan || 'Anggota'}</span></td>
+                  <td><span class="${a.angkatan === '10' ? 'badge-a10' : 'badge-a11'}">Angkatan ${a.angkatan}</span></td>
+                  <td>
+                    ${isCustom
+            ? `<span class="badge-pwd-custom"><i class="ti ti-lock-check"></i> Telah Diubah (Kustom)</span>`
+            : `<span class="badge-pwd-default"><i class="ti ti-key"></i> Bawaan (Sama dengan NIS)</span>`}
+                  </td>
+                  <td>
+                    <span style="font-weight:800;font-family:monospace;font-size:13px;color:var(--primary-dark)">
+                      <span id="pwd-report-${a.id}">••••••</span>
+                      <button class="pwd-peek-btn" onclick="toggleReportPwdPeek(${a.id}, '${escapeHtml(activePassword)}')" title="Tampilkan / Sembunyikan Sandi">👁️</button>
+                    </span>
+                  </td>
+                </tr>`;
+      }).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>`;
+    }
+  }
+
   m.innerHTML = `
   <div class="page-hero">
     <div class="page-title-wrap">
       <h1 class="page-title">Laporan & Rekapitulasi</h1>
-      <div class="page-subtitle">Ringkasan pelayanan medis, presensi, dan log lengkap UKS</div>
+      <div class="page-subtitle">${leader ? 'Ringkasan pelayanan medis, presensi, dan audit sistem UKS' : 'Ringkasan rekapitulasi pelayanan medis, persediaan obat & alat, dan presensi anggota PMR'}</div>
     </div>
     <button class="btn btn-ghost" onclick="window.print()"><i class="ti ti-printer"></i>Cetak Laporan</button>
   </div>
 
-  <div class="grid4" style="margin-bottom:20px">
-    <div class="stat">
-      <div class="stat-label">🏥 Total Pasien</div>
-      <div class="stat-val">${pasien.length}</div>
-      <div class="stat-sub">${dirujuk} pasien dirujuk ke RS/Puskesmas</div>
-      <span class="stat-icon">🩺</span>
-    </div>
-    <div class="stat">
-      <div class="stat-label">✅ Total Presensi Hadir</div>
-      <div class="stat-val">${totalHadir}</div>
-      <div class="stat-sub">${totalAlpha} catatan alpha</div>
-      <span class="stat-icon">👥</span>
-    </div>
-    <div class="stat">
-      <div class="stat-label">💊 Item Persediaan</div>
-      <div class="stat-val">${stok.length}</div>
-      <div class="stat-sub">${stok.filter(s => s.jumlah <= s.min).length} item berstatus kritis</div>
-      <span class="stat-icon">💉</span>
-    </div>
-    <div class="stat">
-      <div class="stat-label">👥 Personil Anggota</div>
-      <div class="stat-val">${anggota.length}</div>
-      <div class="stat-sub">A10: ${a10} orang | A11: ${a11} orang</div>
-      <span class="stat-icon">⭐</span>
-    </div>
-  </div>
+  ${leader ? `
+  <div class="tab-row" style="margin-bottom:18px">
+    <button class="tab-btn ${currentLaporanTab === 'medis' ? 'active' : ''}" id="tab-lap-medis" onclick="switchLaporanTab('medis')">
+      📊 Rekapitulasi Umum
+    </button>
+    <button class="tab-btn ${currentLaporanTab === 'audit_logs' ? 'active' : ''}" id="tab-lap-logs" onclick="switchLaporanTab('audit_logs')">
+      📋 Log Aktivitas & Audit (${logs.length})
+    </button>
+    <button class="tab-btn ${currentLaporanTab === 'passwords' ? 'active' : ''}" id="tab-lap-pwd" onclick="switchLaporanTab('passwords')">
+      🔑 Monitoring Kata Sandi Anggota
+    </button>
+  </div>` : ''}
 
-  <div class="grid2">
-    <div class="card">
-      <div class="card-title"><i class="ti ti-chart-bar"></i>Keluhan Penyakit Terbanyak</div>
-      ${topKeluhan.length
-        ? topKeluhan.map(([k, v]) => {
-            const pct = Math.round((v / Math.max(pasien.length, 1)) * 100);
-            return `<div style="margin-bottom:12px">
-              <div style="display:flex;justify-content:space-between;margin-bottom:5px">
-                <span style="font-size:13.5px;text-transform:capitalize;font-weight:800">${k}</span>
-                <span style="font-size:12px;color:var(--text2);font-weight:700">${v} kali (${pct}%)</span>
-              </div>
-              <div class="progress-bar" style="height:8px">
-                <div class="progress-fill" style="width:${pct}%"></div>
-              </div>
-            </div>`;
-          }).join('')
-        : '<div class="empty"><i class="ti ti-chart-off"></i>Belum ada data pasien</div>'}
-    </div>
+  <div id="laporan-tab-content"></div>`;
 
-    <div class="card">
-      <div class="card-title"><i class="ti ti-package"></i>Kondisi Stok Obat & Alat</div>
-      ${stok.map(s => {
-        const pct = Math.min(100, Math.round((s.jumlah / Math.max(s.min * 2, 1)) * 100));
-        const cls = s.jumlah <= s.min ? '' : 'green';
-        return `<div style="margin-bottom:10px">
-          <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-            <span style="font-size:12.5px;font-weight:700">${s.nama}</span>
-            <span style="font-size:12px;color:var(--text2);font-weight:800">${s.jumlah} ${s.satuan}</span>
-          </div>
-          <div class="progress-bar"><div class="progress-fill ${cls}" style="width:${pct}%"></div></div>
-        </div>`;
-      }).join('') || '<div class="empty"><i class="ti ti-package-off"></i>Belum ada data stok</div>'}
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-title"><i class="ti ti-clipboard-list"></i>Log Lengkap Pasien UKS</div>
-    <div class="tbl-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>TANGGAL</th>
-            <th>NAMA LENGKAP</th>
-            <th>KELAS</th>
-            <th>KELUHAN</th>
-            <th>TINDAKAN / TERAPI</th>
-            <th>STATUS</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${pasien.slice().reverse().map(p => `
-          <tr>
-            <td>${fmt(p.tanggal)}</td>
-            <td><strong>${p.nama}</strong></td>
-            <td>${p.kelas}</td>
-            <td>${p.keluhan}</td>
-            <td>${p.tindakan}</td>
-            <td><span class="badge ${p.status === 'Sembuh' ? 'badge-green' : p.status === 'Dirujuk' ? 'badge-amber' : 'badge-red'}">${p.status}</span></td>
-          </tr>`).join('') || '<tr><td colspan="6"><div class="empty">Belum ada catatan medis</div></td></tr>'}
-        </tbody>
-      </table>
-    </div>
-  </div>`;
+  window.renderLaporanView = renderView;
+  renderView();
 };
 
-// =====================
-//   INITIALIZE
-// =====================
+window.switchLaporanTab = function (tab) {
+  if (!isLeader() && tab !== 'medis') return;
+  currentLaporanTab = tab;
+  document.querySelectorAll('.tab-row .tab-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById('tab-lap-' + (tab === 'audit_logs' ? 'logs' : tab === 'passwords' ? 'pwd' : 'medis'));
+  if (btn) btn.classList.add('active');
+  if (window.renderLaporanView) renderLaporanView();
+};
+
+window.changeLogFilter = function (type) {
+  currentLogTypeFilter = type;
+  if (window.renderLaporanView) renderLaporanView();
+};
+
+window.toggleReportPwdPeek = function (id, pwdVal) {
+  const el = document.getElementById('pwd-report-' + id);
+  if (!el) return;
+  if (el.textContent === '••••••') {
+    el.textContent = pwdVal;
+  } else {
+    el.textContent = '••••••';
+  }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
   renderAppLayout();
 });
