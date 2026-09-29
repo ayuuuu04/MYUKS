@@ -779,11 +779,8 @@ function updateHeaderUser(user) {
         <span class="user-role-badge ${roleClass}">${roleLabel}</span>
         ${leader ? `
         <button class="notif-bell-btn" onclick="openActivityLogModal()" title="Lihat Aktivitas & Notifikasi">
-          <i class="ti ti-bell"></i> Log
+          <i class="ti ti-bell"></i>
         </button>` : ''}
-        <button class="btn btn-ghost btn-sm" onclick="toggleTheme()" title="Ganti Mode Gelap / Terang" style="padding:2px 6px;color:#fff;background:rgba(255,255,255,0.18);border:none;border-radius:6px;flex-shrink:0">
-          <i class="ti ti-moon theme-icon"></i>
-        </button>
         <button class="btn btn-ghost btn-sm" onclick="openChangePasswordModal()" title="Ganti Password" style="padding:2px 6px;color:#fff;background:rgba(255,255,255,0.18);border:none;border-radius:6px;flex-shrink:0">
           <i class="ti ti-key"></i>
         </button>
@@ -805,21 +802,18 @@ function updateHeaderUser(user) {
     }
   }
 
-  const sbFooterCard = document.querySelector('.sidebar-user-card');
+  const actionWrap = document.getElementById('sb-actions-wrap');
   const existingSbNotif = document.getElementById('sb-notif-btn-el');
   if (existingSbNotif) existingSbNotif.remove();
 
-  if (leader && sbFooterCard) {
-    const actionWrap = sbFooterCard.querySelector('div[style*="display:flex;gap:4px"]');
-    if (actionWrap) {
-      const notifBtn = document.createElement('button');
-      notifBtn.id = 'sb-notif-btn-el';
-      notifBtn.className = 'sidebar-icon-btn';
-      notifBtn.title = 'Aktivitas & Notifikasi Realtime';
-      notifBtn.innerHTML = `<i class="ti ti-bell"></i><span class="notif-pulse-dot"></span>`;
-      notifBtn.onclick = openActivityLogModal;
-      actionWrap.prepend(notifBtn);
-    }
+  if (leader && actionWrap) {
+    const notifBtn = document.createElement('button');
+    notifBtn.id = 'sb-notif-btn-el';
+    notifBtn.className = 'sidebar-icon-btn';
+    notifBtn.title = 'Aktivitas & Notifikasi Realtime';
+    notifBtn.innerHTML = `<i class="ti ti-bell"></i><span class="notif-pulse-dot"></span>`;
+    notifBtn.onclick = openActivityLogModal;
+    actionWrap.prepend(notifBtn);
   }
 }
 
@@ -2276,58 +2270,62 @@ function renderTtdView(container) {
 }
 
 function generateJadwalWaText(u) {
-  let text = `*JADWAL JAGA UPACARA / UKS PMR*\n\n`;
-  text += `> Hari : ${fmtDayDate(u.tanggal)}\n`;
-  text += `> Kegiatan : ${u.nama}\n`;
+  let text = `*JADWAL JAGA UPACARA / UKS PMR*\n`;
+  text += `━━━━━━━━━━━━━━━━━━━━━\n`;
+  text += `🚩 *Kegiatan:* ${u.nama || '-'}\n`;
+  text += `📅 *Tanggal:* ${fmt(u.tanggal)}\n`;
   if (u.keterangan && u.keterangan.trim()) {
-    text += `> Keterangan : ${u.keterangan.trim()}\n`;
+    text += `ℹ️ *Keterangan:* ${u.keterangan.trim()}\n`;
   }
-  text += `\nPEMBAGIAN TITIK & POS JAGA:\n\n`;
+  text += `\n📍 *PEMBAGIAN TITIK & POS JAGA :*\n\n`;
 
   (u.titikJaga || []).forEach((t, i) => {
     const arr = t.anggota || [];
-    text += `*Pos ${i + 1} : ${t.pos}*\n`;
+    text += `*${i + 1}. Pos: ${t.pos}*\n`;
     if (arr.length > 0) {
       arr.forEach(nama => {
-        text += `- ${nama}\n`;
+        text += `   • ${nama}\n`;
       });
     } else {
-      text += `- (Belum ada petugas)\n`;
+      text += `   • (Belum ada petugas)\n`;
     }
     text += `\n`;
   });
 
   text += `━━━━━━━━━━━━━━━━━━━━━\n`;
-  text += `_Harap hadir tepat waktu. Semangat dan selamat bertugas!_`;
+  text += `_Harap hadir tepat waktu yaa. Semangat bertugas!_ 💪✨`;
   return text.trim();
 }
 
 function generateTtdWaText(t) {
-  let text = `*PEMBAGIAN TTD:*\n\n`;
-  text += `> Hari : ${fmtDayDate(t.tanggal)}\n`;
+  let text = `*PEMBAGIAN TABLET TAMBAH DARAH (TTD)*\n`;
+  text += `━━━━━━━━━━━━━━━━━━━━━\n`;
+  text += `🚩 *Kegiatan:* ${t.nama || 'Pembagian TTD'}\n`;
+  text += `📅 *Tanggal:* ${fmt(t.tanggal)}\n`;
   if (t.keterangan && t.keterangan.trim()) {
-    text += `> Keterangan : ${t.keterangan.trim()}\n`;
+    text += `ℹ️ *Keterangan:* ${t.keterangan.trim()}\n`;
   }
-  text += `\n`;
+  text += `\n📍 *PEMBAGIAN KELOMPOK & KELAS BINAAN :*\n\n`;
 
   (t.kelompok || []).forEach((k, idx) => {
     const kName = k.nama || `Kelompok ${idx + 1}`;
-    text += `*${kName}* :\n`;
+    text += `*${idx + 1}. ${kName}*\n`;
+    if (k.kelas && k.kelas.trim()) {
+      text += `   🏫 *Kelas:* ${k.kelas.trim()}\n`;
+    }
+    text += `   👥 *Petugas:*\n`;
     if (k.anggota && k.anggota.length > 0) {
       k.anggota.forEach(nama => {
-        text += `- ${nama}\n`;
+        text += `   • ${nama}\n`;
       });
     } else {
-      text += `- (Belum ada petugas)\n`;
-    }
-    if (k.kelas && k.kelas.trim()) {
-      text += `KELAS : ${k.kelas.trim()}\n`;
+      text += `   • (Belum ada petugas)\n`;
     }
     text += `\n`;
   });
 
   text += `━━━━━━━━━━━━━━━━━━━━━\n`;
-  text += `_Harap seluruh petugas segera mengambil TTD di UKS dan membagikan ke kelas masing-masing. Terima kasih!_`;
+  text += `_Harap seluruh petugas segera mengambil TTD di UKS dan membagikan ke kelas masing-masing. Semangat bertugas!_ 💪✨`;
   return text.trim();
 }
 

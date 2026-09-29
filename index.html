@@ -103,21 +103,19 @@
 
       <div class="sidebar-footer">
         <div class="sidebar-user-card">
-          <div style="display:flex;align-items:center;justify-content:space-between">
-            <div style="display:flex;align-items:center;gap:10px;overflow:hidden">
-              <div class="sidebar-avatar"><i class="ti ti-user"></i></div>
-              <div style="overflow:hidden">
-                <div class="sidebar-username" id="sb-user-name">Admin PMR</div>
-                <div class="sidebar-userrole" id="sb-user-role">Ketua • NIS: -</div>
-              </div>
-            </div>
-            <div style="display:flex;gap:4px">
-              <button class="sidebar-icon-btn theme-toggle-btn" onclick="toggleTheme()" title="Ganti Mode Gelap / Terang"><i class="ti ti-moon theme-icon"></i></button>
-              <button class="sidebar-icon-btn" onclick="openChangePasswordModal()" title="Ubah Password"><i class="ti ti-key"></i></button>
-              <button class="sidebar-icon-btn logout" onclick="logout()" title="Keluar"><i class="ti ti-logout"></i></button>
+          <div class="sidebar-user-top">
+            <div class="sidebar-avatar"><i class="ti ti-user"></i></div>
+            <div class="sidebar-user-details">
+              <div class="sidebar-username" id="sb-user-name">Admin PMR</div>
+              <div class="sidebar-userrole" id="sb-user-role">Ketua • NIS: -</div>
             </div>
           </div>
-          <div style="margin-top:10px;display:flex;align-items:center;justify-content:space-between">
+          <div class="sidebar-user-actions" id="sb-actions-wrap">
+            <button class="sidebar-icon-btn theme-toggle-btn" onclick="toggleTheme()" title="Ganti Mode Gelap / Terang"><i class="ti ti-moon theme-icon"></i></button>
+            <button class="sidebar-icon-btn" onclick="openChangePasswordModal()" title="Ubah Password"><i class="ti ti-key"></i></button>
+            <button class="sidebar-icon-btn logout" onclick="logout()" title="Keluar"><i class="ti ti-logout"></i></button>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border);padding-top:8px">
             <span id="sb-fb-badge" class="fb-status disconnected" onclick="openFbModal()" title="Status Sinkronisasi">
               <span class="fb-dot amber"></span>Firebase Cloud
             </span>
