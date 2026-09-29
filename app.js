@@ -724,7 +724,10 @@ function renderLoginScreen() {
   const anggotaList = DB.get('anggota') || [];
 
   loginScreen.innerHTML = `
-  <div class="login-card">
+  <div class="login-card" style="position:relative">
+    <button class="theme-toggle-btn-login" onclick="toggleTheme()" title="Ganti Mode Gelap / Terang">
+      <i class="ti ti-moon theme-icon"></i>
+    </button>
     <div class="login-header">
       <div class="login-icon-badge"><i class="ti ti-shield-heart"></i></div>
       <h1 class="login-title">MY UKS</h1>
@@ -757,6 +760,7 @@ function renderLoginScreen() {
       </div>
     </div>
   </div>`;
+  updateThemeIcons();
 }
 
 function updateHeaderUser(user) {
@@ -777,6 +781,9 @@ function updateHeaderUser(user) {
         <button class="notif-bell-btn" onclick="openActivityLogModal()" title="Lihat Aktivitas & Notifikasi">
           <i class="ti ti-bell"></i> Log
         </button>` : ''}
+        <button class="btn btn-ghost btn-sm" onclick="toggleTheme()" title="Ganti Mode Gelap / Terang" style="padding:2px 6px;color:#fff;background:rgba(255,255,255,0.18);border:none;border-radius:6px;flex-shrink:0">
+          <i class="ti ti-moon theme-icon"></i>
+        </button>
         <button class="btn btn-ghost btn-sm" onclick="openChangePasswordModal()" title="Ganti Password" style="padding:2px 6px;color:#fff;background:rgba(255,255,255,0.18);border:none;border-radius:6px;flex-shrink:0">
           <i class="ti ti-key"></i>
         </button>
@@ -784,6 +791,7 @@ function updateHeaderUser(user) {
           <i class="ti ti-logout"></i>
         </button>
       </div>`;
+    updateThemeIcons();
   }
 
   const sbName = document.getElementById('sb-user-name');
@@ -3323,6 +3331,43 @@ window.toggleReportPwdPeek = function (id, pwdVal) {
   }
 };
 
+window.getTheme = function() {
+  return localStorage.getItem('pmr_theme') || 'light';
+};
+
+window.setTheme = function(theme) {
+  localStorage.setItem('pmr_theme', theme);
+  if (theme === 'dark') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+  }
+  updateThemeIcons();
+};
+
+window.toggleTheme = function() {
+  const current = getTheme();
+  const next = current === 'dark' ? 'light' : 'dark';
+  setTheme(next);
+  toast(next === 'dark' ? '🌙 Mode Gelap Aktif' : '☀️ Mode Terang Aktif');
+};
+
+function updateThemeIcons() {
+  const isDark = getTheme() === 'dark';
+  document.querySelectorAll('.theme-icon').forEach(icon => {
+    if (isDark) {
+      icon.className = 'ti ti-sun theme-icon';
+      icon.style.color = '#f59e0b';
+    } else {
+      icon.className = 'ti ti-moon theme-icon';
+      icon.style.color = '';
+    }
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+  const savedTheme = getTheme();
+  setTheme(savedTheme);
   renderAppLayout();
 });
+

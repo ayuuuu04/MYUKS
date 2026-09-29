@@ -11,6 +11,14 @@
   
 
   <link rel="stylesheet" href="style.css">
+  <script>
+    (function() {
+      const savedTheme = localStorage.getItem('pmr_theme') || 'light';
+      if (savedTheme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
 
 
   <script type="module">
@@ -104,6 +112,7 @@
               </div>
             </div>
             <div style="display:flex;gap:4px">
+              <button class="sidebar-icon-btn theme-toggle-btn" onclick="toggleTheme()" title="Ganti Mode Gelap / Terang"><i class="ti ti-moon theme-icon"></i></button>
               <button class="sidebar-icon-btn" onclick="openChangePasswordModal()" title="Ubah Password"><i class="ti ti-key"></i></button>
               <button class="sidebar-icon-btn logout" onclick="logout()" title="Keluar"><i class="ti ti-logout"></i></button>
             </div>
@@ -128,6 +137,9 @@
 
         <div class="header-right">
           <div id="header-user-info"></div>
+          <button class="btn btn-ghost btn-sm theme-header-toggle" onclick="toggleTheme()" title="Ganti Mode Gelap / Terang">
+            <i class="ti ti-moon theme-icon"></i>
+          </button>
           <span class="hbadge"><span class="dot"></span> Online</span>
           <span id="fb-status-badge" class="fb-status disconnected" onclick="openFbModal()" title="Konfigurasi Firebase">
             <span class="fb-dot amber"></span>Firebase
