@@ -26,28 +26,8 @@
     import { getFirestore, collection, doc, getDocs, addDoc, deleteDoc, setDoc, onSnapshot, serverTimestamp }
       from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
-    const customConfig = JSON.parse(localStorage.getItem('pmr_fb_config') || 'null');
-    const firebaseConfig = customConfig || {
-      apiKey: "AIzaSyBZmAP4Udr15GSU_HVLnkkpw2sgLrwoefQ",
-      authDomain: "sijaga-uks.firebaseapp.com",
-      projectId: "sijaga-uks",
-      storageBucket: "sijaga-uks.firebasestorage.app",
-      messagingSenderId: "1011150387166",
-      appId: "1:1011150387166:web:b36c1a27d858fc279fcf4f"
-    };
-
     let db = null;
     let firebaseReady = false;
-
-    try {
-      const app = initializeApp(firebaseConfig);
-      db = getFirestore(app);
-      firebaseReady = true;
-      console.log('✅ Firebase terhubung!');
-    } catch (e) {
-      console.warn('⚠️ Firebase belum tersambung, menggunakan database lokal:', e.message);
-    }
-
 
     window._fb = {
       ready: () => firebaseReady && db !== null,
@@ -55,7 +35,44 @@
       collection, doc, getDocs, addDoc, deleteDoc, setDoc, onSnapshot, serverTimestamp
     };
 
-    window.dispatchEvent(new Event('firebase-ready'));
+    async function initFirebase() {
+      // 1. Coba ambil config custom dari localStorage (jika diinput manual via modal)
+      let firebaseConfig = JSON.parse(localStorage.getItem('pmr_fb_config') || 'null');
+
+      // 2. Jika tidak ada di localStorage, ambil dari endpoint serverless /api/config (Vercel Environment Variables)
+      if (!firebaseConfig || !firebaseConfig.apiKey) {
+        try {
+          const res = await fetch('/api/config');
+          if (res.ok) {
+            const remoteConfig = await res.json();
+            if (remoteConfig && remoteConfig.apiKey) {
+              firebaseConfig = remoteConfig;
+            }
+          }
+        } catch (err) {
+          console.warn('Tidak dapat mengambil konfigurasi dari /api/config:', err.message);
+        }
+      }
+
+      // 3. Inisialisasi Firebase jika config ditemukan
+      if (firebaseConfig && firebaseConfig.apiKey && firebaseConfig.projectId) {
+        try {
+          const app = initializeApp(firebaseConfig);
+          db = getFirestore(app);
+          firebaseReady = true;
+          console.log('✅ Firebase terhubung!');
+        } catch (e) {
+          console.warn('⚠️ Firebase gagal diinisialisasi:', e.message);
+        }
+      } else {
+        console.warn('⚠️ Konfigurasi Firebase belum diatur. Menggunakan database lokal.');
+      }
+
+      // Beritahu app.js bahwa Firebase siap dicek
+      window.dispatchEvent(new Event('firebase-ready'));
+    }
+
+    initFirebase();
   </script>
 </head>
 <body>
