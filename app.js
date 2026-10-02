@@ -223,6 +223,51 @@ DB.def('ttd_kelas_template', [
   'X DPIB A&B, XI DPIB A&B, XI TM A, X TM A'
 ]);
 
+DB.def('jadwal_materi', [
+  {
+    id: 1,
+    tujuan: 'Semua Calon PMR Wira Angkatan 11 SMK Negeri 2 Surakarta',
+    tanggal: '2026-10-02',
+    hariTanggal: 'Jumat, 2 Oktober 2026',
+    jam: '15.15 - 17.00 WIB',
+    tempat: 'UKS',
+    kegiatan: 'Materi Pertolongan Pertama (PP) & Pembidaian',
+    urgensi: 'DIHARAPKAN SEMUANYA DATANG!',
+    seragam: 'Seragam sesuai hari',
+    note: 'Izin, Menyusul, Mendahului lebih dari yang ditetapkan akan mendapat Konsekuensi'
+  }
+]);
+
+DB.def('jadwal_forum', [
+  {
+    id: 1,
+    tujuan: 'Semua Calon PMR Wira Angkatan 11 SMK Negeri 2 Surakarta',
+    tanggal: '2026-10-09',
+    hariTanggal: 'Jumat, 9 Oktober 2026',
+    jam: '15.15 - 17.00 WIB',
+    tempat: 'UKS',
+    kegiatan: 'Pemilihan Jabatan & Diskusi Program Kerja',
+    urgensi: 'DIHARAPKAN SEMUANYA DATANG!',
+    seragam: 'Seragam sesuai hari',
+    note: 'Izin, Menyusul, Mendahului lebih dari yang ditetapkan akan mendapat Konsekuensi'
+  }
+]);
+
+DB.def('pengumuman', [
+  {
+    id: 1,
+    tujuan: 'Semua Calon PMR Wira Angkatan 11 SMK Negeri 2 Surakarta',
+    tanggal: '2026-10-02',
+    hariTanggal: 'Jumat, 2 Oktober 2026',
+    jam: '15.15 - 17.00 WIB',
+    tempat: 'UKS',
+    kegiatan: 'Pemilihan Jabatan',
+    urgensi: 'DIHARAPKAN SEMUANYA DATANG!',
+    seragam: 'Seragam sesuai hari',
+    note: 'Izin, Menyusul, Mendahului lebih dari yang ditetapkan akan mendapat Konsekuensi'
+  }
+]);
+
 
 async function syncFromFirebase() {
   if (!window._fb?.ready()) return;
@@ -361,6 +406,14 @@ function isLeader() {
   if (session.role === 'admin') return true;
   const jab = (session.jabatan || '').trim().toLowerCase();
   return jab === 'ketua' || jab === 'koordinator';
+}
+
+function canAccessPimpinan() {
+  const session = getSession();
+  if (!session) return false;
+  if (session.role === 'admin') return true;
+  const jab = (session.jabatan || '').trim().toLowerCase();
+  return jab === 'ketua' || jab === 'koordinator' || jab === 'sekretaris';
 }
 
 function logActivity(tipe, pesan, detail = '') {
@@ -815,6 +868,12 @@ function updateHeaderUser(user) {
     notifBtn.onclick = openActivityLogModal;
     actionWrap.prepend(notifBtn);
   }
+
+  // Tampilkan/sembunyikan tombol nav khusus pimpinan (Ketua, Koordinator, Sekretaris)
+  const isPimpinan = canAccessPimpinan();
+  document.querySelectorAll('.nav-btn-pimpinan').forEach(b => {
+    b.style.display = isPimpinan ? '' : 'none';
+  });
 }
 
 function setNav(id) {
@@ -869,6 +928,12 @@ pages.dashboard = function (m) {
   const todayStr = today();
   const todayAbs = absensi.filter(a => a.tanggal === todayStr);
   const hadir = todayAbs.filter(a => a.status === 'Hadir').length;
+  const menyusul = todayAbs.filter(a => a.status === 'Menyusul').length;
+  const mendahului = todayAbs.filter(a => a.status === 'Mendahului').length;
+  const izin = todayAbs.filter(a => a.status === 'Izin').length;
+  const sakit = todayAbs.filter(a => a.status === 'Sakit').length;
+  const alpha = todayAbs.filter(a => a.status === 'Alpha').length;
+  const totalMasuk = hadir + menyusul + mendahului;
   const session = getSession();
   const leader = isLeader();
 
@@ -910,8 +975,8 @@ pages.dashboard = function (m) {
     </div>
     <div class="stat">
       <div class="stat-label">👥 Kehadiran Hari Ini</div>
-      <div class="stat-val">${hadir}</div>
-      <div class="stat-sub">dari ${anggota.length} total personil (A10: ${a10Count}, A11: ${a11Count})</div>
+      <div class="stat-val">${totalMasuk}</div>
+      <div class="stat-sub">${hadir} Hadir • ${menyusul} Menyusul • ${mendahului} Mendahului</div>
       <span class="stat-icon">✅</span>
     </div>
     <div class="stat">
@@ -1833,6 +1898,19 @@ pages.absensi = function (m) {
     }
 
     const editable = canEdit();
+    const statusOptions = ['Hadir', 'Menyusul', 'Mendahului', 'Izin', 'Sakit', 'Alpha'];
+
+    const getStatusBadge = (st) => {
+      switch (st) {
+        case 'Hadir': return '<span class="badge badge-green">Hadir</span>';
+        case 'Menyusul': return '<span class="badge badge-teal">Menyusul</span>';
+        case 'Mendahului': return '<span class="badge badge-indigo">Mendahului</span>';
+        case 'Izin': return '<span class="badge badge-amber">Izin</span>';
+        case 'Sakit': return '<span class="badge badge-cowo">Sakit</span>';
+        case 'Alpha': return '<span class="badge badge-red">Alpha</span>';
+        default: return '<span style="color:var(--text3);font-size:12px;font-weight:700">Belum diisi</span>';
+      }
+    };
 
     const rows = filteredAnggota.map(an => {
       const rec = todayAbs.find(a => a.anggotaId === an.id);
@@ -1840,7 +1918,7 @@ pages.absensi = function (m) {
       const actionsCell = editable ? `
         <td>
           <div style="display:flex;gap:4px;flex-wrap:wrap">
-            ${['Hadir', 'Izin', 'Sakit', 'Alpha'].map(s =>
+            ${statusOptions.map(s =>
         `<button class="btn btn-ghost btn-sm" style="${rec?.status === s ? 'border-color:var(--primary);color:var(--primary);background:var(--primary-dim);font-weight:900' : ''}" onclick="setAbsen(${an.id},'${s}')">${s}</button>`
       ).join('')}
           </div>
@@ -1857,30 +1935,34 @@ pages.absensi = function (m) {
           </span>
         </td>
         <td><span class="badge-jabatan">${an.jabatan}</span></td>
-        <td>${rec
-          ? `<span class="badge ${rec.status === 'Hadir' ? 'badge-green' : rec.status === 'Izin' ? 'badge-amber' : 'badge-red'}">${rec.status}</span>`
-          : '<span style="color:var(--text3);font-size:12px;font-weight:700">Belum diisi</span>'}</td>
+        <td>${rec ? getStatusBadge(rec.status) : '<span style="color:var(--text3);font-size:12px;font-weight:700">Belum diisi</span>'}</td>
         ${actionsCell}
       </tr>`;
     }).join('');
 
     const hadir = todayAbs.filter(a => a.status === 'Hadir').length;
+    const menyusul = todayAbs.filter(a => a.status === 'Menyusul').length;
+    const mendahului = todayAbs.filter(a => a.status === 'Mendahului').length;
     const izin = todayAbs.filter(a => a.status === 'Izin').length;
-    const absen = todayAbs.filter(a => ['Sakit', 'Alpha'].includes(a.status)).length;
+    const sakit = todayAbs.filter(a => a.status === 'Sakit').length;
+    const alpha = todayAbs.filter(a => a.status === 'Alpha').length;
 
     document.getElementById('abs-tbl').innerHTML = rows ||
       '<tr><td colspan="7"><div class="empty">Belum ada anggota pada filter ini</div></td></tr>';
     document.getElementById('abs-summary').innerHTML = `
-      <span class="badge badge-green">✅ ${hadir} Hadir</span>
-      <span class="badge badge-amber">📝 ${izin} Izin</span>
-      <span class="badge badge-red">❌ ${absen} Sakit / Alpha</span>`;
+      <span class="badge badge-green" title="Hadir">✅ ${hadir} Hadir</span>
+      <span class="badge badge-teal" title="Menyusul">⏰ ${menyusul} Menyusul</span>
+      <span class="badge badge-indigo" title="Mendahului">⚡ ${mendahului} Mendahului</span>
+      <span class="badge badge-amber" title="Izin">📝 ${izin} Izin</span>
+      <span class="badge badge-cowo" title="Sakit">🏥 ${sakit} Sakit</span>
+      <span class="badge badge-red" title="Alpha">❌ ${alpha} Alpha</span>`;
   }
 
   m.innerHTML = `
   <div class="page-hero">
     <div class="page-title-wrap">
       <h1 class="page-title">Absensi</h1>
-      <div class="page-subtitle">Presensi dan kehadiran harian anggota PMR</div>
+      <div class="page-subtitle">Presensi dan kehadiran harian anggota PMR (Hadir, Menyusul, Mendahului, Izin, Sakit, Alpha)</div>
     </div>
   </div>
 
@@ -2985,6 +3067,8 @@ pages.laporan = function (m) {
   const a10 = anggota.filter(a => a.angkatan === '10').length;
   const a11 = anggota.filter(a => a.angkatan === '11').length;
   const totalHadir = absensi.filter(a => a.status === 'Hadir').length;
+  const totalMenyusul = absensi.filter(a => a.status === 'Menyusul').length;
+  const totalMendahului = absensi.filter(a => a.status === 'Mendahului').length;
   const totalIzin = absensi.filter(a => a.status === 'Izin').length;
   const totalSakit = absensi.filter(a => a.status === 'Sakit').length;
   const totalAlpha = absensi.filter(a => a.status === 'Alpha').length;
@@ -3017,9 +3101,9 @@ pages.laporan = function (m) {
           <span class="stat-icon">🩺</span>
         </div>
         <div class="stat">
-          <div class="stat-label">✅ Presensi Hadir</div>
-          <div class="stat-val">${totalHadir}</div>
-          <div class="stat-sub">${totalIzin} Izin • ${totalSakit} Sakit • ${totalAlpha} Alpha</div>
+          <div class="stat-label">✅ Presensi Hadir & Masuk</div>
+          <div class="stat-val">${totalHadir + totalMenyusul + totalMendahului}</div>
+          <div class="stat-sub">${totalHadir} Hadir • ${totalMenyusul} Nyusul • ${totalMendahului} Dahului</div>
           <span class="stat-icon">👥</span>
         </div>
         <div class="stat">
@@ -3081,33 +3165,40 @@ pages.laporan = function (m) {
                 <th>NIS</th>
                 <th>ANGKATAN</th>
                 <th>HADIR</th>
+                <th>MENYUSUL</th>
+                <th>MENDAHULUI</th>
                 <th>IZIN</th>
                 <th>SAKIT</th>
                 <th>ALPHA</th>
-                <th>TINGKAT KEHADIRAN</th>
+                <th>KEAKTIFAN</th>
               </tr>
             </thead>
             <tbody>
               ${anggota.map(a => {
                 const myAbs = absensi.filter(x => x.anggotaId === a.id);
                 const h = myAbs.filter(x => x.status === 'Hadir').length;
+                const ny = myAbs.filter(x => x.status === 'Menyusul').length;
+                const dh = myAbs.filter(x => x.status === 'Mendahului').length;
                 const i = myAbs.filter(x => x.status === 'Izin').length;
                 const s = myAbs.filter(x => x.status === 'Sakit').length;
                 const al = myAbs.filter(x => x.status === 'Alpha').length;
                 const tot = myAbs.length;
-                const pct = tot > 0 ? Math.round((h / tot) * 100) : 0;
+                const activeCount = h + ny + dh;
+                const pct = tot > 0 ? Math.round((activeCount / tot) * 100) : 0;
                 return `
                 <tr>
                   <td><strong>${a.nama}</strong></td>
                   <td><span class="badge-nis">${a.nis}</span></td>
                   <td><span class="${a.angkatan === '10' ? 'badge-a10' : 'badge-a11'}">A${a.angkatan}</span></td>
                   <td><span class="badge badge-green">${h}</span></td>
+                  <td><span class="badge badge-teal">${ny}</span></td>
+                  <td><span class="badge badge-indigo">${dh}</span></td>
                   <td><span class="badge badge-amber">${i}</span></td>
                   <td><span class="badge badge-cowo">${s}</span></td>
                   <td><span class="badge badge-red">${al}</span></td>
                   <td>
                     <div style="display:flex;align-items:center;gap:8px">
-                      <div class="progress-bar" style="width:70px;height:6px"><div class="progress-fill green" style="width:${pct}%"></div></div>
+                      <div class="progress-bar" style="width:60px;height:6px"><div class="progress-fill green" style="width:${pct}%"></div></div>
                       <span style="font-size:12px;font-weight:800">${tot > 0 ? `${pct}%` : '-'}</span>
                     </div>
                   </td>
@@ -3368,4 +3459,712 @@ document.addEventListener('DOMContentLoaded', () => {
   setTheme(savedTheme);
   renderAppLayout();
 });
+
+/* ==========================================================================
+   FITUR KHUSUS PIMPINAN: JADWAL MATERI, JADWAL FORUM, & PENGUMUMAN
+   Hanya dapat diakses oleh: Ketua, Koordinator, Sekretaris (dan Admin)
+   ========================================================================== */
+
+function generateBroadcastWaText(item, tipeJudul) {
+  const tujuan = item.tujuan || 'Semua Calon PMR Wira Angkatan 11 SMK Negeri 2 Surakarta';
+  const hariTgl = item.hariTanggal || (item.tanggal ? fmtDayDate(item.tanggal) : '-');
+  const jam = item.jam || '15.15 - 17.00 WIB';
+  const tempat = item.tempat || 'UKS';
+  const kegiatan = item.kegiatan || '-';
+  const urgensi = item.urgensi || 'DIHARAPKAN SEMUANYA DATANG!';
+  const seragam = item.seragam || 'Seragam sesuai hari';
+  const note = item.note || 'Izin, Menyusul, Mendahului lebih dari yang ditetapkan akan mendapat Konsekuensi';
+
+  let text = `Hallo semuanya 👋🏻\n\n`;
+  text += `✨ Siamo Tutti Fratelli ✨\n`;
+  text += `⛑️⛑️⛑️\n\n`;
+  text += `📨 : Undangan untuk *${tujuan}* pada :\n\n`;
+  text += `*🗓️  : ${hariTgl}*\n`;
+  text += `*🕞  : ${jam}*\n`;
+  text += `*🏫  : ${tempat}*\n`;
+  text += `*📝  : ${kegiatan}*\n`;
+  if (urgensi && urgensi.trim()) {
+    text += `*❗  : ${urgensi}*\n`;
+  }
+  if (seragam && seragam.trim()) {
+    text += `*👔  : ${seragam}*\n`;
+  }
+  text += `\n*Note : ${note}*\n\n`;
+  text += `Terimakasihh`;
+  return text.trim();
+}
+
+function renderPimpinanAccessDenied(m, pageTitle) {
+  m.innerHTML = `
+  <div class="page-hero">
+    <div class="page-title-wrap">
+      <h1 class="page-title">${pageTitle}</h1>
+      <div class="page-subtitle">Akses Khusus Pimpinan PMR</div>
+    </div>
+  </div>
+  <div class="pimpinan-lock-screen">
+    <div class="pimpinan-lock-icon"><i class="ti ti-lock"></i></div>
+    <h2 style="font-size:20px;font-weight:900;margin-bottom:8px">Akses Terbatas Pimpinan</h2>
+    <p style="color:var(--text2);max-width:520px;margin:0 auto 18px;font-size:14px;line-height:1.6">
+      Halaman <strong>${pageTitle}</strong> hanya dapat diakses oleh <strong>Ketua</strong>, <strong>Koordinator</strong>, dan <strong>Sekretaris</strong>.
+    </p>
+    <button class="btn btn-primary" onclick="showPage('dashboard')">
+      <i class="ti ti-home"></i> Kembali ke Beranda
+    </button>
+  </div>`;
+}
+
+/* ==========================================================================
+   1. JADWAL MATERI
+   ========================================================================== */
+pages.materi = function (m) {
+  if (!canAccessPimpinan()) {
+    return renderPimpinanAccessDenied(m, 'Jadwal Materi');
+  }
+
+  function render() {
+    const list = DB.get('jadwal_materi') || [];
+    const container = document.getElementById('materi-list-box');
+    if (!container) return;
+
+    if (!list.length) {
+      container.innerHTML = '<div class="empty"><i class="ti ti-book-off"></i>Belum ada jadwal materi yang dibuat. Klik tombol di atas untuk menambah.</div>';
+      return;
+    }
+
+    container.innerHTML = list.slice().sort((a, b) => (b.tanggal || '').localeCompare(a.tanggal || '')).map(item => {
+      const waText = generateBroadcastWaText(item, 'Jadwal Materi');
+      return `
+      <div class="broadcast-card">
+        <div class="broadcast-card-header">
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+              <span class="badge badge-blue"><i class="ti ti-book-2"></i> Jadwal Materi</span>
+              <span class="badge badge-green">🗓️ ${item.hariTanggal || fmtDayDate(item.tanggal)}</span>
+            </div>
+            <div style="font-size:18px;font-weight:900;color:var(--text);margin-top:4px">${escapeHtml(item.kegiatan || 'Materi PMR')}</div>
+            <div style="font-size:12.5px;color:var(--text2);margin-top:2px">
+              🏫 Tempat: <strong>${escapeHtml(item.tempat || 'UKS')}</strong> • 🕞 Jam: <strong>${escapeHtml(item.jam || '-')}</strong>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-copy" onclick="salinBroadcastMateri(${item.id})">
+              <i class="ti ti-copy"></i> Salin Teks WA
+            </button>
+            <button class="btn btn-wa" onclick="kirimBroadcastMateri(${item.id})">
+              <i class="ti ti-brand-whatsapp"></i> Kirim ke WA
+            </button>
+            <button class="btn btn-action-edit" onclick="openModalMateri(${item.id})">
+              <i class="ti ti-edit"></i> Ubah
+            </button>
+            <button class="btn btn-action-delete" onclick="delMateri(${item.id})">
+              <i class="ti ti-trash"></i> Hapus
+            </button>
+          </div>
+        </div>
+
+        <div style="margin-top:12px">
+          <span class="wa-preview-badge"><i class="ti ti-brand-whatsapp"></i> Pratinjau Pesan Siaran WhatsApp:</span>
+          <div class="broadcast-preview-box">${escapeHtml(waText)}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  m.innerHTML = `
+  <div class="page-hero">
+    <div class="page-title-wrap">
+      <h1 class="page-title">Jadwal Materi</h1>
+      <div class="page-subtitle">Penyusunan jadwal penyampaian materi PMR & pembuatan template siaran WhatsApp (Khusus Ketua, Koordinator, Sekretaris)</div>
+    </div>
+    <button class="btn-header-add" onclick="openModalMateri()">
+      <i class="ti ti-plus"></i> Tambah Jadwal Materi
+    </button>
+  </div>
+
+  <div id="materi-list-box"></div>`;
+
+  window.renderMateriView = render;
+  render();
+};
+
+window.salinBroadcastMateri = function (id) {
+  const item = (DB.get('jadwal_materi') || []).find(x => x.id === id);
+  if (!item) return toast('Data jadwal materi tidak ditemukan!');
+  const text = generateBroadcastWaText(item, 'Jadwal Materi');
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      toast('📋 Format WhatsApp Jadwal Materi berhasil disalin!');
+    }).catch(() => fallbackCopyText(text));
+  } else {
+    fallbackCopyText(text);
+  }
+};
+
+window.kirimBroadcastMateri = function (id) {
+  const item = (DB.get('jadwal_materi') || []).find(x => x.id === id);
+  if (!item) return toast('Data jadwal materi tidak ditemukan!');
+  const text = generateBroadcastWaText(item, 'Jadwal Materi');
+  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+  toast('📲 Membuka WhatsApp...');
+};
+
+window.openModalMateri = function (editId) {
+  if (!canAccessPimpinan()) return toast('⚠️ Akses ditolak: Hanya Ketua, Koordinator, dan Sekretaris!');
+  const list = DB.get('jadwal_materi') || [];
+  const editItem = editId ? list.find(x => x.id === editId) : null;
+
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.id = 'modal-materi';
+
+  overlay.innerHTML = `
+  <div class="modal" style="max-width:680px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title"><i class="ti ti-book-2" style="color:var(--primary)"></i> ${editItem ? 'Ubah Jadwal Materi' : 'Buat Jadwal Materi Baru'}</div>
+        <div class="modal-sub">Isi detail materi yang dapat disesuaikan dan dikirim ke grup WhatsApp</div>
+      </div>
+      <button class="modal-close-btn" onclick="document.getElementById('modal-materi').remove()">✕</button>
+    </div>
+
+    <div class="form-group" style="margin-bottom:12px">
+      <label>Undangan Ditujukan Kepada (Target Audiens)</label>
+      <input type="text" id="m-mat-tujuan" placeholder="cth: Semua Calon PMR Wira Angkatan 11 SMK Negeri 2 Surakarta" value="${escapeHtml(editItem?.tujuan || 'Semua Calon PMR Wira Angkatan 11 SMK Negeri 2 Surakarta')}">
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Tanggal Pelaksanaan</label>
+        <input type="date" id="m-mat-tgl" value="${editItem?.tanggal || today()}">
+      </div>
+      <div class="form-group">
+        <label>Format Teks Hari & Tanggal</label>
+        <input type="text" id="m-mat-haritgl" placeholder="cth: Jumat, 2 Oktober 2026" value="${escapeHtml(editItem?.hariTanggal || 'Jumat, 2 Oktober 2026')}">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Waktu / Jam (WIB)</label>
+        <input type="text" id="m-mat-jam" placeholder="cth: 15.15 - 17.00 WIB" value="${escapeHtml(editItem?.jam || '15.15 - 17.00 WIB')}">
+      </div>
+      <div class="form-group">
+        <label>Tempat / Lokasi</label>
+        <input type="text" id="m-mat-tempat" placeholder="cth: UKS / Aula / Lab" value="${escapeHtml(editItem?.tempat || 'UKS')}">
+      </div>
+    </div>
+
+    <div class="form-group" style="margin-bottom:12px">
+      <label>Materi / Topik Pembahasan</label>
+      <input type="text" id="m-mat-kegiatan" placeholder="cth: Pertolongan Pertama (PP) & Pembidaian Fraktur" value="${escapeHtml(editItem?.kegiatan || '')}">
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Seragam / Pakaian</label>
+        <input type="text" id="m-mat-seragam" placeholder="cth: Seragam sesuai hari / Pramuka / PDL" value="${escapeHtml(editItem?.seragam || 'Seragam sesuai hari')}">
+      </div>
+      <div class="form-group">
+        <label>Catatan Urgensi / Pengingat</label>
+        <input type="text" id="m-mat-urgensi" placeholder="cth: DIHARAPKAN SEMUANYA DATANG!" value="${escapeHtml(editItem?.urgensi || 'DIHARAPKAN SEMUANYA DATANG!')}">
+      </div>
+    </div>
+
+    <div class="form-group" style="margin-bottom:18px">
+      <label>Catatan Khusus / Konsekuensi (Note)</label>
+      <input type="text" id="m-mat-note" placeholder="cth: Izin, Menyusul, Mendahului lebih dari yang ditetapkan akan mendapat Konsekuensi" value="${escapeHtml(editItem?.note || 'Izin, Menyusul, Mendahului lebih dari yang ditetapkan akan mendapat Konsekuensi')}">
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="document.getElementById('modal-materi').remove()">Batal</button>
+      <button class="btn btn-primary" onclick="saveMateri(${editId || 0})">
+        <i class="ti ti-check"></i> ${editItem ? 'Simpan Perubahan' : 'Buat Jadwal Materi'}
+      </button>
+    </div>
+  </div>`;
+
+  document.body.appendChild(overlay);
+};
+
+window.saveMateri = function (editId) {
+  if (!canAccessPimpinan()) return toast('⚠️ Akses ditolak!');
+  const kegiatan = document.getElementById('m-mat-kegiatan').value.trim();
+  if (!kegiatan) return toast('Topik materi wajib diisi!');
+
+  const list = DB.get('jadwal_materi') || [];
+  const itemData = {
+    id: editId || Date.now(),
+    tujuan: document.getElementById('m-mat-tujuan').value.trim() || 'Semua Calon PMR Wira Angkatan 11 SMK Negeri 2 Surakarta',
+    tanggal: document.getElementById('m-mat-tgl').value,
+    hariTanggal: document.getElementById('m-mat-haritgl').value.trim(),
+    jam: document.getElementById('m-mat-jam').value.trim() || '15.15 - 17.00 WIB',
+    tempat: document.getElementById('m-mat-tempat').value.trim() || 'UKS',
+    kegiatan: kegiatan,
+    urgensi: document.getElementById('m-mat-urgensi').value.trim(),
+    seragam: document.getElementById('m-mat-seragam').value.trim() || 'Seragam sesuai hari',
+    note: document.getElementById('m-mat-note').value.trim() || 'Izin, Menyusul, Mendahului lebih dari yang ditetapkan akan mendapat Konsekuensi'
+  };
+
+  if (editId) {
+    const idx = list.findIndex(x => x.id === editId);
+    if (idx >= 0) list[idx] = itemData;
+  } else {
+    list.unshift(itemData);
+  }
+
+  DB.set('jadwal_materi', list);
+  logActivity(editId ? 'UBAH' : 'TAMBAH', `${editId ? 'Memperbarui' : 'Menambahkan'} Jadwal Materi: ${kegiatan}`, `Tanggal: ${itemData.hariTanggal}`);
+  document.getElementById('modal-materi')?.remove();
+  if (window.renderMateriView) renderMateriView();
+  toast(`✅ Jadwal Materi berhasil ${editId ? 'diperbarui' : 'dibuat'}!`);
+};
+
+window.delMateri = function (id) {
+  if (!canAccessPimpinan()) return toast('⚠️ Akses ditolak!');
+  const list = DB.get('jadwal_materi') || [];
+  const item = list.find(x => x.id === id);
+  if (!confirm(`Hapus jadwal materi "${item?.kegiatan || ''}"?`)) return;
+
+  DB.set('jadwal_materi', list.filter(x => x.id !== id));
+  logActivity('HAPUS', `Menghapus jadwal materi: ${item?.kegiatan || 'Materi'}`);
+  if (window.renderMateriView) renderMateriView();
+  toast('Jadwal materi dihapus 🗑️');
+};
+
+/* ==========================================================================
+   2. JADWAL FORUM
+   ========================================================================== */
+pages.forum = function (m) {
+  if (!canAccessPimpinan()) {
+    return renderPimpinanAccessDenied(m, 'Jadwal Forum');
+  }
+
+  function render() {
+    const list = DB.get('jadwal_forum') || [];
+    const container = document.getElementById('forum-list-box');
+    if (!container) return;
+
+    if (!list.length) {
+      container.innerHTML = '<div class="empty"><i class="ti ti-messages-off"></i>Belum ada jadwal forum yang dibuat. Klik tombol di atas untuk menambah.</div>';
+      return;
+    }
+
+    container.innerHTML = list.slice().sort((a, b) => (b.tanggal || '').localeCompare(a.tanggal || '')).map(item => {
+      const waText = generateBroadcastWaText(item, 'Jadwal Forum');
+      return `
+      <div class="broadcast-card">
+        <div class="broadcast-card-header">
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+              <span class="badge badge-purple"><i class="ti ti-messages"></i> Jadwal Forum</span>
+              <span class="badge badge-green">🗓️ ${item.hariTanggal || fmtDayDate(item.tanggal)}</span>
+            </div>
+            <div style="font-size:18px;font-weight:900;color:var(--text);margin-top:4px">${escapeHtml(item.kegiatan || 'Forum Diskusi PMR')}</div>
+            <div style="font-size:12.5px;color:var(--text2);margin-top:2px">
+              🏫 Tempat: <strong>${escapeHtml(item.tempat || 'UKS')}</strong> • 🕞 Jam: <strong>${escapeHtml(item.jam || '-')}</strong>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-copy" onclick="salinBroadcastForum(${item.id})">
+              <i class="ti ti-copy"></i> Salin Teks WA
+            </button>
+            <button class="btn btn-wa" onclick="kirimBroadcastForum(${item.id})">
+              <i class="ti ti-brand-whatsapp"></i> Kirim ke WA
+            </button>
+            <button class="btn btn-action-edit" onclick="openModalForum(${item.id})">
+              <i class="ti ti-edit"></i> Ubah
+            </button>
+            <button class="btn btn-action-delete" onclick="delForum(${item.id})">
+              <i class="ti ti-trash"></i> Hapus
+            </button>
+          </div>
+        </div>
+
+        <div style="margin-top:12px">
+          <span class="wa-preview-badge"><i class="ti ti-brand-whatsapp"></i> Pratinjau Pesan Siaran WhatsApp:</span>
+          <div class="broadcast-preview-box">${escapeHtml(waText)}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  m.innerHTML = `
+  <div class="page-hero">
+    <div class="page-title-wrap">
+      <h1 class="page-title">Jadwal Forum</h1>
+      <div class="page-subtitle">Penyusunan jadwal forum evaluasi, rapat anggota, & format siaran WhatsApp (Khusus Ketua, Koordinator, Sekretaris)</div>
+    </div>
+    <button class="btn-header-add" onclick="openModalForum()">
+      <i class="ti ti-plus"></i> Tambah Jadwal Forum
+    </button>
+  </div>
+
+  <div id="forum-list-box"></div>`;
+
+  window.renderForumView = render;
+  render();
+};
+
+window.salinBroadcastForum = function (id) {
+  const item = (DB.get('jadwal_forum') || []).find(x => x.id === id);
+  if (!item) return toast('Data jadwal forum tidak ditemukan!');
+  const text = generateBroadcastWaText(item, 'Jadwal Forum');
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      toast('📋 Format WhatsApp Jadwal Forum berhasil disalin!');
+    }).catch(() => fallbackCopyText(text));
+  } else {
+    fallbackCopyText(text);
+  }
+};
+
+window.kirimBroadcastForum = function (id) {
+  const item = (DB.get('jadwal_forum') || []).find(x => x.id === id);
+  if (!item) return toast('Data jadwal forum tidak ditemukan!');
+  const text = generateBroadcastWaText(item, 'Jadwal Forum');
+  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+  toast('📲 Membuka WhatsApp...');
+};
+
+window.openModalForum = function (editId) {
+  if (!canAccessPimpinan()) return toast('⚠️ Akses ditolak: Hanya Ketua, Koordinator, dan Sekretaris!');
+  const list = DB.get('jadwal_forum') || [];
+  const editItem = editId ? list.find(x => x.id === editId) : null;
+
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.id = 'modal-forum';
+
+  overlay.innerHTML = `
+  <div class="modal" style="max-width:680px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title"><i class="ti ti-messages" style="color:var(--primary)"></i> ${editItem ? 'Ubah Jadwal Forum' : 'Buat Jadwal Forum Baru'}</div>
+        <div class="modal-sub">Kelola forum rapat, evaluasi, dan musyawarah anggota</div>
+      </div>
+      <button class="modal-close-btn" onclick="document.getElementById('modal-forum').remove()">✕</button>
+    </div>
+
+    <div class="form-group" style="margin-bottom:12px">
+      <label>Undangan Ditujukan Kepada (Target Audiens)</label>
+      <input type="text" id="m-for-tujuan" placeholder="cth: Semua Calon PMR Wira Angkatan 11 SMK Negeri 2 Surakarta" value="${escapeHtml(editItem?.tujuan || 'Semua Calon PMR Wira Angkatan 11 SMK Negeri 2 Surakarta')}">
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Tanggal Pelaksanaan</label>
+        <input type="date" id="m-for-tgl" value="${editItem?.tanggal || today()}">
+      </div>
+      <div class="form-group">
+        <label>Format Teks Hari & Tanggal</label>
+        <input type="text" id="m-for-haritgl" placeholder="cth: Jumat, 9 Oktober 2026" value="${escapeHtml(editItem?.hariTanggal || 'Jumat, 9 Oktober 2026')}">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Waktu / Jam (WIB)</label>
+        <input type="text" id="m-for-jam" placeholder="cth: 15.15 - 17.00 WIB" value="${escapeHtml(editItem?.jam || '15.15 - 17.00 WIB')}">
+      </div>
+      <div class="form-group">
+        <label>Tempat / Lokasi</label>
+        <input type="text" id="m-for-tempat" placeholder="cth: UKS / Aula / Ruang Teori" value="${escapeHtml(editItem?.tempat || 'UKS')}">
+      </div>
+    </div>
+
+    <div class="form-group" style="margin-bottom:12px">
+      <label>Agenda / Topik Forum</label>
+      <input type="text" id="m-for-kegiatan" placeholder="cth: Forum Evaluasi Triwulan & Pemilihan Jabatan" value="${escapeHtml(editItem?.kegiatan || '')}">
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Seragam / Pakaian</label>
+        <input type="text" id="m-for-seragam" placeholder="cth: Seragam sesuai hari / Batik" value="${escapeHtml(editItem?.seragam || 'Seragam sesuai hari')}">
+      </div>
+      <div class="form-group">
+        <label>Catatan Urgensi / Pengingat</label>
+        <input type="text" id="m-for-urgensi" placeholder="cth: DIHARAPKAN SEMUANYA DATANG!" value="${escapeHtml(editItem?.urgensi || 'DIHARAPKAN SEMUANYA DATANG!')}">
+      </div>
+    </div>
+
+    <div class="form-group" style="margin-bottom:18px">
+      <label>Catatan Khusus / Konsekuensi (Note)</label>
+      <input type="text" id="m-for-note" placeholder="cth: Izin, Menyusul, Mendahului lebih dari yang ditetapkan akan mendapat Konsekuensi" value="${escapeHtml(editItem?.note || 'Izin, Menyusul, Mendahului lebih dari yang ditetapkan akan mendapat Konsekuensi')}">
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="document.getElementById('modal-forum').remove()">Batal</button>
+      <button class="btn btn-primary" onclick="saveForum(${editId || 0})">
+        <i class="ti ti-check"></i> ${editItem ? 'Simpan Perubahan' : 'Buat Jadwal Forum'}
+      </button>
+    </div>
+  </div>`;
+
+  document.body.appendChild(overlay);
+};
+
+window.saveForum = function (editId) {
+  if (!canAccessPimpinan()) return toast('⚠️ Akses ditolak!');
+  const kegiatan = document.getElementById('m-for-kegiatan').value.trim();
+  if (!kegiatan) return toast('Agenda forum wajib diisi!');
+
+  const list = DB.get('jadwal_forum') || [];
+  const itemData = {
+    id: editId || Date.now(),
+    tujuan: document.getElementById('m-for-tujuan').value.trim() || 'Semua Calon PMR Wira Angkatan 11 SMK Negeri 2 Surakarta',
+    tanggal: document.getElementById('m-for-tgl').value,
+    hariTanggal: document.getElementById('m-for-haritgl').value.trim(),
+    jam: document.getElementById('m-for-jam').value.trim() || '15.15 - 17.00 WIB',
+    tempat: document.getElementById('m-for-tempat').value.trim() || 'UKS',
+    kegiatan: kegiatan,
+    urgensi: document.getElementById('m-for-urgensi').value.trim(),
+    seragam: document.getElementById('m-for-seragam').value.trim() || 'Seragam sesuai hari',
+    note: document.getElementById('m-for-note').value.trim() || 'Izin, Menyusul, Mendahului lebih dari yang ditetapkan akan mendapat Konsekuensi'
+  };
+
+  if (editId) {
+    const idx = list.findIndex(x => x.id === editId);
+    if (idx >= 0) list[idx] = itemData;
+  } else {
+    list.unshift(itemData);
+  }
+
+  DB.set('jadwal_forum', list);
+  logActivity(editId ? 'UBAH' : 'TAMBAH', `${editId ? 'Memperbarui' : 'Menambahkan'} Jadwal Forum: ${kegiatan}`, `Tanggal: ${itemData.hariTanggal}`);
+  document.getElementById('modal-forum')?.remove();
+  if (window.renderForumView) renderForumView();
+  toast(`✅ Jadwal Forum berhasil ${editId ? 'diperbarui' : 'dibuat'}!`);
+};
+
+window.delForum = function (id) {
+  if (!canAccessPimpinan()) return toast('⚠️ Akses ditolak!');
+  const list = DB.get('jadwal_forum') || [];
+  const item = list.find(x => x.id === id);
+  if (!confirm(`Hapus jadwal forum "${item?.kegiatan || ''}"?`)) return;
+
+  DB.set('jadwal_forum', list.filter(x => x.id !== id));
+  logActivity('HAPUS', `Menghapus jadwal forum: ${item?.kegiatan || 'Forum'}`);
+  if (window.renderForumView) renderForumView();
+  toast('Jadwal forum dihapus 🗑️');
+};
+
+/* ==========================================================================
+   3. PENGUMUMAN RESMI
+   ========================================================================== */
+pages.pengumuman = function (m) {
+  if (!canAccessPimpinan()) {
+    return renderPimpinanAccessDenied(m, 'Pengumuman');
+  }
+
+  function render() {
+    const list = DB.get('pengumuman') || [];
+    const container = document.getElementById('pengumuman-list-box');
+    if (!container) return;
+
+    if (!list.length) {
+      container.innerHTML = '<div class="empty"><i class="ti ti-speakerphone-off"></i>Belum ada pengumuman yang dibuat. Klik tombol di atas untuk menambah.</div>';
+      return;
+    }
+
+    container.innerHTML = list.slice().sort((a, b) => (b.tanggal || '').localeCompare(a.tanggal || '')).map(item => {
+      const waText = generateBroadcastWaText(item, 'Pengumuman');
+      return `
+      <div class="broadcast-card">
+        <div class="broadcast-card-header">
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+              <span class="badge badge-amber"><i class="ti ti-speakerphone"></i> Pengumuman</span>
+              <span class="badge badge-green">🗓️ ${item.hariTanggal || fmtDayDate(item.tanggal)}</span>
+            </div>
+            <div style="font-size:18px;font-weight:900;color:var(--text);margin-top:4px">${escapeHtml(item.kegiatan || 'Pengumuman Kegiatan')}</div>
+            <div style="font-size:12.5px;color:var(--text2);margin-top:2px">
+              🏫 Tempat: <strong>${escapeHtml(item.tempat || 'UKS')}</strong> • 🕞 Jam: <strong>${escapeHtml(item.jam || '-')}</strong>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-copy" onclick="salinBroadcastPengumuman(${item.id})">
+              <i class="ti ti-copy"></i> Salin Teks WA
+            </button>
+            <button class="btn btn-wa" onclick="kirimBroadcastPengumuman(${item.id})">
+              <i class="ti ti-brand-whatsapp"></i> Kirim ke WA
+            </button>
+            <button class="btn btn-action-edit" onclick="openModalPengumuman(${item.id})">
+              <i class="ti ti-edit"></i> Ubah
+            </button>
+            <button class="btn btn-action-delete" onclick="delPengumuman(${item.id})">
+              <i class="ti ti-trash"></i> Hapus
+            </button>
+          </div>
+        </div>
+
+        <div style="margin-top:12px">
+          <span class="wa-preview-badge"><i class="ti ti-brand-whatsapp"></i> Pratinjau Pesan Siaran WhatsApp:</span>
+          <div class="broadcast-preview-box">${escapeHtml(waText)}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  m.innerHTML = `
+  <div class="page-hero">
+    <div class="page-title-wrap">
+      <h1 class="page-title">Pengumuman</h1>
+      <div class="page-subtitle">Siaran informasi resmi & format pesan WhatsApp langsung siap sebar (Khusus Ketua, Koordinator, Sekretaris)</div>
+    </div>
+    <button class="btn-header-add" onclick="openModalPengumuman()">
+      <i class="ti ti-plus"></i> Buat Pengumuman Baru
+    </button>
+  </div>
+
+  <div id="pengumuman-list-box"></div>`;
+
+  window.renderPengumumanView = render;
+  render();
+};
+
+window.salinBroadcastPengumuman = function (id) {
+  const item = (DB.get('pengumuman') || []).find(x => x.id === id);
+  if (!item) return toast('Data pengumuman tidak ditemukan!');
+  const text = generateBroadcastWaText(item, 'Pengumuman');
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      toast('📋 Format WhatsApp Pengumuman berhasil disalin!');
+    }).catch(() => fallbackCopyText(text));
+  } else {
+    fallbackCopyText(text);
+  }
+};
+
+window.kirimBroadcastPengumuman = function (id) {
+  const item = (DB.get('pengumuman') || []).find(x => x.id === id);
+  if (!item) return toast('Data pengumuman tidak ditemukan!');
+  const text = generateBroadcastWaText(item, 'Pengumuman');
+  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+  toast('📲 Membuka WhatsApp...');
+};
+
+window.openModalPengumuman = function (editId) {
+  if (!canAccessPimpinan()) return toast('⚠️ Akses ditolak: Hanya Ketua, Koordinator, dan Sekretaris!');
+  const list = DB.get('pengumuman') || [];
+  const editItem = editId ? list.find(x => x.id === editId) : null;
+
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.id = 'modal-pengumuman';
+
+  overlay.innerHTML = `
+  <div class="modal" style="max-width:680px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title"><i class="ti ti-speakerphone" style="color:var(--primary)"></i> ${editItem ? 'Ubah Pengumuman' : 'Buat Pengumuman Baru'}</div>
+        <div class="modal-sub">Format undangan siaran WhatsApp otomatis dan fleksibel</div>
+      </div>
+      <button class="modal-close-btn" onclick="document.getElementById('modal-pengumuman').remove()">✕</button>
+    </div>
+
+    <div class="form-group" style="margin-bottom:12px">
+      <label>Undangan Ditujukan Kepada (Target Audiens)</label>
+      <input type="text" id="m-peng-tujuan" placeholder="cth: Semua Calon PMR Wira Angkatan 11 SMK Negeri 2 Surakarta" value="${escapeHtml(editItem?.tujuan || 'Semua Calon PMR Wira Angkatan 11 SMK Negeri 2 Surakarta')}">
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Tanggal Pelaksanaan</label>
+        <input type="date" id="m-peng-tgl" value="${editItem?.tanggal || today()}">
+      </div>
+      <div class="form-group">
+        <label>Format Teks Hari & Tanggal</label>
+        <input type="text" id="m-peng-haritgl" placeholder="cth: Jumat, 2 Oktober 2026" value="${escapeHtml(editItem?.hariTanggal || 'Jumat, 2 Oktober 2026')}">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Waktu / Jam (WIB)</label>
+        <input type="text" id="m-peng-jam" placeholder="cth: 15.15 - 17.00 WIB" value="${escapeHtml(editItem?.jam || '15.15 - 17.00 WIB')}">
+      </div>
+      <div class="form-group">
+        <label>Tempat / Lokasi</label>
+        <input type="text" id="m-peng-tempat" placeholder="cth: UKS / Aula / Lapangan" value="${escapeHtml(editItem?.tempat || 'UKS')}">
+      </div>
+    </div>
+
+    <div class="form-group" style="margin-bottom:12px">
+      <label>Acara / Agenda Pengumuman</label>
+      <input type="text" id="m-peng-kegiatan" placeholder="cth: Pemilihan Jabatan & Musyawarah" value="${escapeHtml(editItem?.kegiatan || '')}">
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Seragam / Pakaian</label>
+        <input type="text" id="m-peng-seragam" placeholder="cth: Seragam sesuai hari" value="${escapeHtml(editItem?.seragam || 'Seragam sesuai hari')}">
+      </div>
+      <div class="form-group">
+        <label>Catatan Urgensi / Pengingat</label>
+        <input type="text" id="m-peng-urgensi" placeholder="cth: DIHARAPKAN SEMUANYA DATANG!" value="${escapeHtml(editItem?.urgensi || 'DIHARAPKAN SEMUANYA DATANG!')}">
+      </div>
+    </div>
+
+    <div class="form-group" style="margin-bottom:18px">
+      <label>Catatan Khusus / Konsekuensi (Note)</label>
+      <input type="text" id="m-peng-note" placeholder="cth: Izin, Menyusul, Mendahului lebih dari yang ditetapkan akan mendapat Konsekuensi" value="${escapeHtml(editItem?.note || 'Izin, Menyusul, Mendahului lebih dari yang ditetapkan akan mendapat Konsekuensi')}">
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="document.getElementById('modal-pengumuman').remove()">Batal</button>
+      <button class="btn btn-primary" onclick="savePengumuman(${editId || 0})">
+        <i class="ti ti-check"></i> ${editItem ? 'Simpan Perubahan' : 'Buat Pengumuman'}
+      </button>
+    </div>
+  </div>`;
+
+  document.body.appendChild(overlay);
+};
+
+window.savePengumuman = function (editId) {
+  if (!canAccessPimpinan()) return toast('⚠️ Akses ditolak!');
+  const kegiatan = document.getElementById('m-peng-kegiatan').value.trim();
+  if (!kegiatan) return toast('Acara / agenda pengumuman wajib diisi!');
+
+  const list = DB.get('pengumuman') || [];
+  const itemData = {
+    id: editId || Date.now(),
+    tujuan: document.getElementById('m-peng-tujuan').value.trim() || 'Semua Calon PMR Wira Angkatan 11 SMK Negeri 2 Surakarta',
+    tanggal: document.getElementById('m-peng-tgl').value,
+    hariTanggal: document.getElementById('m-peng-haritgl').value.trim(),
+    jam: document.getElementById('m-peng-jam').value.trim() || '15.15 - 17.00 WIB',
+    tempat: document.getElementById('m-peng-tempat').value.trim() || 'UKS',
+    kegiatan: kegiatan,
+    urgensi: document.getElementById('m-peng-urgensi').value.trim(),
+    seragam: document.getElementById('m-peng-seragam').value.trim() || 'Seragam sesuai hari',
+    note: document.getElementById('m-peng-note').value.trim() || 'Izin, Menyusul, Mendahului lebih dari yang ditetapkan akan mendapat Konsekuensi'
+  };
+
+  if (editId) {
+    const idx = list.findIndex(x => x.id === editId);
+    if (idx >= 0) list[idx] = itemData;
+  } else {
+    list.unshift(itemData);
+  }
+
+  DB.set('pengumuman', list);
+  logActivity(editId ? 'UBAH' : 'TAMBAH', `${editId ? 'Memperbarui' : 'Menambahkan'} Pengumuman: ${kegiatan}`, `Tanggal: ${itemData.hariTanggal}`);
+  document.getElementById('modal-pengumuman')?.remove();
+  if (window.renderPengumumanView) renderPengumumanView();
+  toast(`✅ Pengumuman berhasil ${editId ? 'diperbarui' : 'dibuat'}!`);
+};
+
+window.delPengumuman = function (id) {
+  if (!canAccessPimpinan()) return toast('⚠️ Akses ditolak!');
+  const list = DB.get('pengumuman') || [];
+  const item = list.find(x => x.id === id);
+  if (!confirm(`Hapus pengumuman "${item?.kegiatan || ''}"?`)) return;
+
+  DB.set('pengumuman', list.filter(x => x.id !== id));
+  logActivity('HAPUS', `Menghapus pengumuman: ${item?.kegiatan || 'Pengumuman'}`);
+  if (window.renderPengumumanView) renderPengumumanView();
+  toast('Pengumuman dihapus 🗑️');
+};
 
