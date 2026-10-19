@@ -54,7 +54,19 @@
         }
       }
 
-      // 3. Inisialisasi Firebase jika config ditemukan
+      // 3. Fallback konfigurasi default jika belum diset di localStorage maupun /api/config
+      if (!firebaseConfig || !firebaseConfig.apiKey) {
+        firebaseConfig = {
+          apiKey: "AIzaSyBZmAP4Udr15GSU_HVLnkkpw2sgLrwoefQ",
+          authDomain: "sijaga-uks.firebaseapp.com",
+          projectId: "sijaga-uks",
+          storageBucket: "sijaga-uks.firebasestorage.app",
+          messagingSenderId: "1011150387166",
+          appId: "1:1011150387166:web:b36c1a27d858fc279fcf4f"
+        };
+      }
+
+      // 4. Inisialisasi Firebase jika config ditemukan
       if (firebaseConfig && firebaseConfig.apiKey && firebaseConfig.projectId) {
         try {
           const app = initializeApp(firebaseConfig);

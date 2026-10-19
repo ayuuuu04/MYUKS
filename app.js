@@ -293,13 +293,18 @@ function startFirebaseListener() {
   if (!window._fb?.ready()) return;
   const { db, collection, onSnapshot } = window._fb;
   onSnapshot(collection(db(), 'pmr_data'), (snap) => {
+    let hasChanges = false;
     snap.forEach(d => {
       const data = d.data();
       if (data.value !== undefined) {
         localStorage.setItem('pmr_' + d.id, JSON.stringify(data.value));
+        hasChanges = true;
       }
     });
     updateFbStatus('connected');
+    if (hasChanges && getSession()) {
+      refreshCurrentPage();
+    }
   }, (err) => {
     console.warn('Realtime listener error:', err);
     updateFbStatus('error');
