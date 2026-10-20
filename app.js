@@ -1,3 +1,13 @@
+document.addEventListener('click', (e) => {
+  if (e.target && e.target.tagName === 'INPUT' && e.target.type === 'date') {
+    if (typeof e.target.showPicker === 'function') {
+      try {
+        e.target.showPicker();
+      } catch (err) {}
+    }
+  }
+});
+
 (function initFloatingBackground() {
   const emojis = ['💊', '🩺', '🩵', '💉', '🩹', '⭐', '✨', '🏥', '📋', '🧊'];
   const container = document.getElementById('floaties');
@@ -617,8 +627,8 @@ window.saveNewPassword = function (memberId, isSelf) {
 
   logActivity(
     'GANTI_PASSWORD',
-    `${member.nama} mengubah kata sandi akun`,
-    `Kata Sandi Baru: "${pwdNew}" | Sebelumnya: ${prevPwdInfo} | NIS: ${member.nis}`
+    `${member.nama} berhasil memperbarui kata sandi akun`,
+    `Tipe: ${prevPwdInfo} ➜ Kustom Baru | NIS: ${member.nis}`
   );
 
   document.getElementById('pwd-modal')?.remove();
@@ -717,36 +727,68 @@ function fmt(d) {
   return p[2] + '/' + p[1] + '/' + p[0];
 }
 
-function fmtDayDate(d) {
+function getIndonesianDayDate(d) {
   if (!d || d === '-') return '-';
   try {
     const parts = d.split('-');
     if (parts.length === 3) {
-      const date = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
-      return date.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      const date = new Date(Date.UTC(year, month, day, 12, 0, 0));
+      return new Intl.DateTimeFormat('id-ID', {
+        timeZone: 'Asia/Jakarta',
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      }).format(date);
     }
-    return fmt(d);
   } catch (e) {
-    return fmt(d);
+    console.warn('Date formatting error:', e);
   }
+  return fmt(d);
+}
+
+function fmtDayDate(d) {
+  return getIndonesianDayDate(d);
+}
+
+function getMemberUpacaraDutyStats(memberName) {
+  if (!memberName) return { count: 0, lastDate: null };
+  const upacara = DB.get('upacara') || [];
+  let count = 0;
+  let lastDate = null;
+  upacara.forEach(u => {
+    let assigned = false;
+    (u.titikJaga || []).forEach(t => {
+      if ((t.anggota || []).includes(memberName)) {
+        assigned = true;
+      }
+    });
+    if (assigned) {
+      count++;
+      if (!lastDate || u.tanggal > lastDate) {
+        lastDate = u.tanggal;
+      }
+    }
+  });
+  return { count, lastDate };
 }
 
 function getMemberDutyCount(memberName) {
   if (!memberName) return 0;
-  const upacara = DB.get('upacara') || [];
+  const upacaraStats = getMemberUpacaraDutyStats(memberName);
   const ttd = DB.get('ttd') || [];
-  let count = 0;
-  upacara.forEach(u => {
-    (u.titikJaga || []).forEach(t => {
-      if ((t.anggota || []).includes(memberName)) count++;
-    });
-  });
+  let ttdCount = 0;
   ttd.forEach(t => {
+    let assigned = false;
     (t.kelompok || []).forEach(k => {
-      if ((k.anggota || []).includes(memberName)) count++;
+      if ((k.anggota || []).includes(memberName)) assigned = true;
     });
+    if (assigned) ttdCount++;
   });
-  return count;
+  return upacaraStats.count + ttdCount;
 }
 
 
@@ -831,18 +873,18 @@ function updateHeaderUser(user) {
     const roleLabel = user.role === 'admin' ? 'Admin UKS' : `${user.jabatan || 'Anggota'}`;
 
     container.innerHTML = `
-      <div class="user-header-pill">
+      <div class="user-header-pill" onclick="showPage('akun')" style="cursor:pointer" title="Buka Profil & Pengaturan Akun">
         <i class="ti ti-user-circle" style="font-size:16px;flex-shrink:0"></i>
         <span class="user-header-name">${user.nama}</span>
         <span class="user-role-badge ${roleClass}">${roleLabel}</span>
         ${leader ? `
-        <button class="notif-bell-btn" onclick="openActivityLogModal()" title="Lihat Aktivitas & Notifikasi">
+        <button class="notif-bell-btn" onclick="event.stopPropagation();openActivityLogModal()" title="Lihat Aktivitas & Notifikasi">
           <i class="ti ti-bell"></i>
         </button>` : ''}
-        <button class="btn btn-ghost btn-sm" onclick="openChangePasswordModal()" title="Ganti Password" style="padding:2px 6px;color:#fff;background:rgba(255,255,255,0.18);border:none;border-radius:6px;flex-shrink:0">
-          <i class="ti ti-key"></i>
+        <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();showPage('akun')" title="Profil & Ganti Sandi" style="padding:2px 6px;color:#fff;background:rgba(255,255,255,0.18);border:none;border-radius:6px;flex-shrink:0">
+          <i class="ti ti-user-cog"></i>
         </button>
-        <button class="btn btn-ghost btn-sm" onclick="logout()" title="Keluar" style="padding:2px 6px;color:#fee2e2;background:rgba(239,68,68,0.3);border:none;border-radius:6px;flex-shrink:0">
+        <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();logout()" title="Keluar" style="padding:2px 6px;color:#fee2e2;background:rgba(239,68,68,0.3);border:none;border-radius:6px;flex-shrink:0">
           <i class="ti ti-logout"></i>
         </button>
       </div>`;
@@ -1562,7 +1604,7 @@ pages.pasien = function (m) {
     <div style="margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
       <div class="form-group" style="max-width:240px">
         <label>Filter Tanggal Kunjungan</label>
-        <input type="date" id="flt-tgl-pasien" onchange="renderPasienTbl()">
+        <input type="date" id="flt-tgl-pasien" onchange="renderPasienTbl()" onclick="this.showPicker?.()" style="cursor:pointer">
       </div>
       <button class="btn btn-ghost" onclick="document.getElementById('flt-tgl-pasien').value='';renderPasienTbl()" style="margin-top:18px">
         Reset Filter
@@ -1611,7 +1653,7 @@ window.openModalPasien = function (editId) {
     </div>
 
     <div class="form-row">
-      <div class="form-group"><label>Tanggal Kunjungan</label><input type="date" id="m-p-tgl" value="${editItem?.tanggal || today()}"></div>
+      <div class="form-group"><label>Tanggal Kunjungan</label><input type="date" id="m-p-tgl" value="${editItem?.tanggal || today()}" onclick="this.showPicker?.()" style="cursor:pointer"></div>
       <div class="form-group" style="flex:2"><label>Nama Pasien</label><input type="text" id="m-p-nama" placeholder="Nama lengkap siswa" value="${editItem?.nama || ''}"></div>
       <div class="form-group"><label>Kelas</label><input type="text" id="m-p-kelas" placeholder="cth: X-A" value="${editItem?.kelas || ''}"></div>
     </div>
@@ -1817,7 +1859,7 @@ window.openModalStok = function (editId) {
       <div class="form-group"><label>Jumlah</label><input type="number" id="m-s-jml" min="0" placeholder="0" value="${editItem?.jumlah !== undefined ? editItem.jumlah : ''}"></div>
       <div class="form-group"><label>Satuan</label><input type="text" id="m-s-sat" placeholder="Tablet/Botol/Gulung" value="${editItem?.satuan || 'Pcs'}"></div>
       <div class="form-group"><label>Stok Minimum</label><input type="number" id="m-s-min" min="0" placeholder="5" value="${editItem?.min !== undefined ? editItem.min : 5}"></div>
-      <div class="form-group"><label>Kadaluarsa</label><input type="date" id="m-s-exp" value="${editItem?.kadaluarsa !== '-' ? editItem?.kadaluarsa : ''}"></div>
+      <div class="form-group"><label>Kadaluarsa</label><input type="date" id="m-s-exp" value="${editItem?.kadaluarsa !== '-' ? editItem?.kadaluarsa : ''}" onclick="this.showPicker?.()" style="cursor:pointer"></div>
     </div>
 
     <div class="btn-row" style="justify-content:flex-end;margin-top:16px">
@@ -1975,7 +2017,7 @@ pages.absensi = function (m) {
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:14px">
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
         <label style="font-size:12px;color:var(--text2);font-weight:800">TANGGAL:</label>
-        <input type="date" id="abs-tgl" value="${today()}" onchange="renderAbsTbl()" style="width:160px">
+        <input type="date" id="abs-tgl" value="${today()}" onchange="renderAbsTbl()" onclick="this.showPicker?.()" style="width:160px;cursor:pointer">
         
         <div class="tab-row" style="margin:0">
           <button class="tab-btn ${currentAbsensiFilter === 'all' ? 'active' : ''}" id="tab-abs-all" onclick="filterAbsensi('all')">Semua</button>
@@ -2039,7 +2081,7 @@ window.setAbsen = function (anggotaId, status) {
   if (window.renderAbsTbl) renderAbsTbl();
 };
 
-let currentJadwalTab = 'upacara'; // 'upacara' | 'ttd'
+let currentJadwalTab = 'upacara'; // 'upacara' | 'ttd' | 'frekuensi'
 
 pages.jadwal = function (m) {
   function render() {
@@ -2048,8 +2090,10 @@ pages.jadwal = function (m) {
 
     if (currentJadwalTab === 'upacara') {
       renderUpacaraView(container);
-    } else {
+    } else if (currentJadwalTab === 'ttd') {
       renderTtdView(container);
+    } else {
+      renderFrekuensiJagaView(container);
     }
   }
 
@@ -2058,14 +2102,15 @@ pages.jadwal = function (m) {
   m.innerHTML = `
   <div class="page-hero">
     <div class="page-title-wrap">
-      <h1 class="page-title" id="jadwal-page-title">${currentJadwalTab === 'upacara' ? 'Jadwal Jaga Upacara' : 'Pembagian Tablet Tambah Darah (TTD)'}</h1>
-      <div class="page-subtitle" id="jadwal-page-sub">${currentJadwalTab === 'upacara' ? 'Penempatan petugas jaga pos upacara bendera & kegiatan (maksimal 7 personil per pos)' : 'Pengaturan kelompok, alokasi kelas sasaran, dan penugasan personil PMR'}</div>
+      <h1 class="page-title" id="jadwal-page-title">${currentJadwalTab === 'upacara' ? 'Jadwal Jaga Upacara' : currentJadwalTab === 'ttd' ? 'Pembagian Tablet Tambah Darah (TTD)' : 'Frekuensi & Pemerataan Jaga Upacara'}</h1>
+      <div class="page-subtitle" id="jadwal-page-sub">${currentJadwalTab === 'upacara' ? 'Penempatan petugas jaga pos upacara bendera & kegiatan (maksimal 7 personil per pos)' : currentJadwalTab === 'ttd' ? 'Pengaturan kelompok, alokasi kelas sasaran, dan penugasan personil PMR' : 'Monitoring pemerataan beban tugas jaga upacara bendera untuk setiap personil PMR'}</div>
     </div>
     ${editable ? `
     <div style="display:flex;gap:8px" id="jadwal-header-actions">
+      ${currentJadwalTab !== 'frekuensi' ? `
       <button class="btn-header-add" onclick="${currentJadwalTab === 'upacara' ? 'openModalUpacara()' : 'openModalTtd()'}">
         <i class="ti ti-plus"></i> ${currentJadwalTab === 'upacara' ? 'Tambah Jadwal Upacara' : 'Tambah Jadwal TTD'}
-      </button>
+      </button>` : ''}
     </div>` : ''}
   </div>
 
@@ -2075,6 +2120,9 @@ pages.jadwal = function (m) {
     </button>
     <button class="tab-btn ${currentJadwalTab === 'ttd' ? 'active' : ''}" id="tab-jd-ttd" onclick="switchJadwalTab('ttd')">
       💊 Pembagian Tablet Tambah Darah (TTD)
+    </button>
+    <button class="tab-btn ${currentJadwalTab === 'frekuensi' ? 'active' : ''}" id="tab-jd-frekuensi" onclick="switchJadwalTab('frekuensi')">
+      📊 Frekuensi Jaga Upacara
     </button>
   </div>
 
@@ -2087,7 +2135,7 @@ pages.jadwal = function (m) {
 window.switchJadwalTab = function (tab) {
   currentJadwalTab = tab;
   document.querySelectorAll('.tab-row .tab-btn').forEach(b => b.classList.remove('active'));
-  const btn = document.getElementById(tab === 'upacara' ? 'tab-jd-upacara' : 'tab-jd-ttd');
+  const btn = document.getElementById(tab === 'upacara' ? 'tab-jd-upacara' : tab === 'ttd' ? 'tab-jd-ttd' : 'tab-jd-frekuensi');
   if (btn) btn.classList.add('active');
 
   const titleEl = document.getElementById('jadwal-page-title');
@@ -2095,16 +2143,190 @@ window.switchJadwalTab = function (tab) {
   const actionsEl = document.getElementById('jadwal-header-actions');
   const editable = canEdit();
 
-  if (titleEl) titleEl.textContent = tab === 'upacara' ? 'Jadwal Jaga Upacara' : 'Pembagian Tablet Tambah Darah (TTD)';
-  if (subEl) subEl.textContent = tab === 'upacara' ? 'Penempatan petugas jaga pos upacara bendera & kegiatan (maksimal 7 personil per pos)' : 'Pengaturan kelompok, alokasi kelas sasaran, dan penugasan personil PMR';
+  if (titleEl) {
+    titleEl.textContent = tab === 'upacara' ? 'Jadwal Jaga Upacara' : tab === 'ttd' ? 'Pembagian Tablet Tambah Darah (TTD)' : 'Frekuensi & Pemerataan Jaga Upacara';
+  }
+  if (subEl) {
+    subEl.textContent = tab === 'upacara' ? 'Penempatan petugas jaga pos upacara bendera & kegiatan (maksimal 7 personil per pos)' : tab === 'ttd' ? 'Pengaturan kelompok, alokasi kelas sasaran, dan penugasan personil PMR' : 'Monitoring pemerataan beban tugas jaga upacara bendera untuk setiap personil PMR';
+  }
   if (actionsEl && editable) {
-    actionsEl.innerHTML = `
-      <button class="btn-header-add" onclick="${tab === 'upacara' ? 'openModalUpacara()' : 'openModalTtd()'}">
-        <i class="ti ti-plus"></i> ${tab === 'upacara' ? 'Tambah Jadwal Upacara' : 'Tambah Jadwal TTD'}
-      </button>
-    `;
+    if (tab === 'frekuensi') {
+      actionsEl.innerHTML = '';
+    } else {
+      actionsEl.innerHTML = `
+        <button class="btn-header-add" onclick="${tab === 'upacara' ? 'openModalUpacara()' : 'openModalTtd()'}">
+          <i class="ti ti-plus"></i> ${tab === 'upacara' ? 'Tambah Jadwal Upacara' : 'Tambah Jadwal TTD'}
+        </button>
+      `;
+    }
   }
 
+  if (window.renderJadwalView) renderJadwalView();
+};
+
+let currentFreqFilterAngkatan = 'all';
+let currentFreqFilterGender = 'all';
+let currentFreqSort = 'asc';
+
+function renderFrekuensiJagaView(container) {
+  const anggotaList = DB.get('anggota') || [];
+  const upacaraList = DB.get('upacara') || [];
+
+  const memberStats = anggotaList.map(a => {
+    const stats = getMemberUpacaraDutyStats(a.nama);
+    return {
+      id: a.id,
+      nama: a.nama,
+      nis: a.nis || '-',
+      kelas: a.kelas || '-',
+      angkatan: a.angkatan || '10',
+      jk: a.jk || 'L',
+      jabatan: a.jabatan || 'Anggota',
+      count: stats.count,
+      lastDate: stats.lastDate
+    };
+  });
+
+  let filtered = memberStats;
+  if (currentFreqFilterAngkatan === '10') {
+    filtered = filtered.filter(m => m.angkatan === '10');
+  } else if (currentFreqFilterAngkatan === '11') {
+    filtered = filtered.filter(m => m.angkatan === '11');
+  }
+
+  if (currentFreqFilterGender === 'cowo') {
+    filtered = filtered.filter(m => m.jk !== 'P');
+  } else if (currentFreqFilterGender === 'cewe') {
+    filtered = filtered.filter(m => m.jk === 'P');
+  }
+
+  filtered.sort((a, b) => {
+    if (currentFreqSort === 'asc') {
+      if (a.count !== b.count) return a.count - b.count;
+      return a.nama.localeCompare(b.nama);
+    } else {
+      if (b.count !== a.count) return b.count - a.count;
+      return a.nama.localeCompare(b.nama);
+    }
+  });
+
+  const zeroDutyCount = memberStats.filter(m => m.count === 0).length;
+  const avgDuty = memberStats.length ? (memberStats.reduce((acc, m) => acc + m.count, 0) / memberStats.length).toFixed(1) : 0;
+
+  container.innerHTML = `
+  <div class="grid3" style="margin-bottom:18px">
+    <div class="stat">
+      <div class="stat-label">🚩 Total Agenda Upacara</div>
+      <div class="stat-val">${upacaraList.length}</div>
+      <div class="stat-sub">Jadwal resmi tersimpan</div>
+      <span class="stat-icon">🗓️</span>
+    </div>
+    <div class="stat">
+      <div class="stat-label">🎯 Belum Pernah Jaga (0x)</div>
+      <div class="stat-val" style="color:${zeroDutyCount > 0 ? 'var(--amber-text)' : 'var(--green-text)'}">${zeroDutyCount}</div>
+      <div class="stat-sub">Prioritas penugasan berikutnya</div>
+      <span class="stat-icon">⏳</span>
+    </div>
+    <div class="stat">
+      <div class="stat-label">⚖️ Rata-rata Penugasan</div>
+      <div class="stat-val">${avgDuty}</div>
+      <div class="stat-sub">Tugas per personil</div>
+      <span class="stat-icon">📊</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:14px">
+      <div>
+        <div class="card-title" style="margin:0"><i class="ti ti-users-group"></i>Pemerataan Tugas Jaga Upacara</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:2px">
+          Dihitung 1 kali per agenda upacara resmi untuk memantau keadilan pembagian shift tugas
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <label style="font-size:11px;font-weight:800;color:var(--text2)">ANGKATAN:</label>
+        <select onchange="changeFreqFilterAngkatan(this.value)" style="width:120px;padding:6px 10px;font-size:12px">
+          <option value="all" ${currentFreqFilterAngkatan === 'all' ? 'selected' : ''}>Semua</option>
+          <option value="10" ${currentFreqFilterAngkatan === '10' ? 'selected' : ''}>Angkatan 10</option>
+          <option value="11" ${currentFreqFilterAngkatan === '11' ? 'selected' : ''}>Angkatan 11</option>
+        </select>
+
+        <label style="font-size:11px;font-weight:800;color:var(--text2)">GENDER:</label>
+        <select onchange="changeFreqFilterGender(this.value)" style="width:120px;padding:6px 10px;font-size:12px">
+          <option value="all" ${currentFreqFilterGender === 'all' ? 'selected' : ''}>Semua</option>
+          <option value="cowo" ${currentFreqFilterGender === 'cowo' ? 'selected' : ''}>👦 Cowo</option>
+          <option value="cewe" ${currentFreqFilterGender === 'cewe' ? 'selected' : ''}>👧 Cewe</option>
+        </select>
+
+        <label style="font-size:11px;font-weight:800;color:var(--text2)">URUTKAN:</label>
+        <select onchange="changeFreqSort(this.value)" style="width:160px;padding:6px 10px;font-size:12px">
+          <option value="asc" ${currentFreqSort === 'asc' ? 'selected' : ''}>Paling Jarang (0x Duluan)</option>
+          <option value="desc" ${currentFreqSort === 'desc' ? 'selected' : ''}>Paling Sering Bertugas</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:40px">NO</th>
+            <th>NAMA ANGGOTA</th>
+            <th>NIS</th>
+            <th>KELAS</th>
+            <th>ANGKATAN</th>
+            <th>GENDER</th>
+            <th>TOTAL JAGA</th>
+            <th>TERAKHIR BERTUGAS</th>
+            <th>STATUS PEMERATAAN</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${filtered.length ? filtered.map((m, i) => {
+            const isCewe = m.jk === 'P';
+            const jkBadge = isCewe
+              ? `<span class="badge badge-cewe">👧 Cewe</span>`
+              : `<span class="badge badge-cowo">👦 Cowo</span>`;
+            const dutyBadge = m.count === 0
+              ? `<span class="badge badge-red" style="font-weight:900">0 kali</span>`
+              : `<span class="badge badge-green" style="font-weight:800">${m.count} kali</span>`;
+            const statusBadge = m.count === 0
+              ? `<span class="badge badge-amber"><i class="ti ti-target"></i> Prioritas Ditugaskan</span>`
+              : m.count <= 2
+              ? `<span class="badge badge-blue"><i class="ti ti-scale"></i> Seimbang</span>`
+              : `<span class="badge badge-green"><i class="ti ti-star"></i> Sering Bertugas</span>`;
+
+            return `
+            <tr>
+              <td><span style="font-size:12px;color:var(--text3);font-weight:800">${i + 1}</span></td>
+              <td><strong>${escapeHtml(m.nama)}</strong></td>
+              <td><span class="badge-nis">${m.nis}</span></td>
+              <td>${escapeHtml(m.kelas)}</td>
+              <td><span class="${m.angkatan === '10' ? 'badge-a10' : 'badge-a11'}">A${m.angkatan}</span></td>
+              <td>${jkBadge}</td>
+              <td>${dutyBadge}</td>
+              <td style="font-size:12px;color:var(--text2)">${m.lastDate ? getIndonesianDayDate(m.lastDate) : '<span style="color:var(--text3);font-style:italic">Belum pernah</span>'}</td>
+              <td>${statusBadge}</td>
+            </tr>`;
+          }).join('') : '<tr><td colspan="9"><div class="empty">Tidak ada personil pada kriteria ini</div></td></tr>'}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+window.changeFreqFilterAngkatan = function(val) {
+  currentFreqFilterAngkatan = val;
+  if (window.renderJadwalView) renderJadwalView();
+};
+
+window.changeFreqFilterGender = function(val) {
+  currentFreqFilterGender = val;
+  if (window.renderJadwalView) renderJadwalView();
+};
+
+window.changeFreqSort = function(val) {
+  currentFreqSort = val;
   if (window.renderJadwalView) renderJadwalView();
 };
 
@@ -2360,7 +2582,7 @@ function generateJadwalWaText(u) {
   let text = `*JADWAL JAGA UPACARA / UKS PMR*\n`;
   text += `━━━━━━━━━━━━━━━━━━━━━\n`;
   text += `🚩 *Kegiatan:* ${u.nama || '-'}\n`;
-  text += `📅 *Tanggal:* ${fmt(u.tanggal)}\n`;
+  text += `🗓️ *Hari & Tanggal:* ${getIndonesianDayDate(u.tanggal)}\n`;
   if (u.keterangan && u.keterangan.trim()) {
     text += `ℹ️ *Keterangan:* ${u.keterangan.trim()}\n`;
   }
@@ -2388,7 +2610,7 @@ function generateTtdWaText(t) {
   let text = `*PEMBAGIAN TABLET TAMBAH DARAH (TTD)*\n`;
   text += `━━━━━━━━━━━━━━━━━━━━━\n`;
   text += `🚩 *Kegiatan:* ${t.nama || 'Pembagian TTD'}\n`;
-  text += `📅 *Tanggal:* ${fmt(t.tanggal)}\n`;
+  text += `🗓️ *Hari & Tanggal:* ${getIndonesianDayDate(t.tanggal)}\n`;
   if (t.keterangan && t.keterangan.trim()) {
     text += `ℹ️ *Keterangan:* ${t.keterangan.trim()}\n`;
   }
@@ -2490,9 +2712,10 @@ window.openModalUpacara = function (editId) {
     ? JSON.parse(JSON.stringify(editItem.titikJaga)).map(t => ({
       pos: t.pos || '',
       anggota: Array.isArray(t.anggota) ? t.anggota : [],
-      filter: 'all'
+      filterAngkatan: 'all',
+      filterGender: 'all'
     }))
-    : [{ pos: 'Lapangan Utama (Depan Tiang)', anggota: [], filter: 'all' }];
+    : [{ pos: 'Lapangan Utama (Depan Tiang)', anggota: [], filterAngkatan: 'all', filterGender: 'all' }];
 
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
@@ -2508,7 +2731,13 @@ window.openModalUpacara = function (editId) {
     </div>
 
     <div class="form-row">
-      <div class="form-group"><label>Tanggal Upacara</label><input type="date" id="m-up-tgl" value="${editItem?.tanggal || today()}"></div>
+      <div class="form-group" style="flex:1">
+          <label>🗓️ Tanggal Upacara (Klik untuk Buka Kalender)</label>
+          <input type="date" id="m-up-tgl" value="${editItem?.tanggal || today()}" onclick="this.showPicker?.()" onchange="const d=getIndonesianDayDate(this.value);const el=document.getElementById('m-up-tgl-text');if(el)el.textContent=d;" style="cursor:pointer;font-weight:800;font-size:14px">
+          <div style="margin-top:6px;font-size:12.5px;font-weight:800;color:var(--primary);display:flex;align-items:center;gap:6px">
+            <i class="ti ti-calendar-event"></i> <span id="m-up-tgl-text">${getIndonesianDayDate(editItem?.tanggal || today())}</span>
+          </div>
+        </div>
       <div class="form-group" style="flex:2"><label>Nama Kegiatan</label><input type="text" id="m-up-nama" placeholder="cth: Upacara Bendera Hari Senin" value="${editItem?.nama || ''}"></div>
     </div>
     <div class="form-group" style="margin-bottom:14px"><label>Keterangan (Opsional)</label><input type="text" id="m-up-ket" placeholder="cth: Penempatan petugas jaga upacara bendera" value="${editItem?.keterangan || ''}"></div>
@@ -2566,12 +2795,15 @@ window.renderModalTitikRows = function () {
     const capClass = count > 7 ? 'overflow' : count === 7 ? 'full' : count > 0 ? 'available' : 'empty';
     const capLabel = count > 7 ? `⚠️ ${count}/7 Petugas (Kelebihan!)` : count === 7 ? `🔒 7/7 Petugas (Pos Penuh)` : `${count}/7 Petugas`;
 
-    const curFilter = t.filter || 'all';
+    const curAngkatan = t.filterAngkatan || 'all';
+    const curGender = t.filterGender || 'all';
+
     let availableList = anggotaList;
-    if (curFilter === '10') availableList = availableList.filter(a => a.angkatan === '10');
-    else if (curFilter === '11') availableList = availableList.filter(a => a.angkatan === '11');
-    else if (curFilter === 'cowo') availableList = availableList.filter(a => a.jk !== 'P');
-    else if (curFilter === 'cewe') availableList = availableList.filter(a => a.jk === 'P');
+    if (curAngkatan === '10') availableList = availableList.filter(a => a.angkatan === '10');
+    else if (curAngkatan === '11') availableList = availableList.filter(a => a.angkatan === '11');
+
+    if (curGender === 'cowo') availableList = availableList.filter(a => a.jk !== 'P');
+    else if (curGender === 'cewe') availableList = availableList.filter(a => a.jk === 'P');
 
     // Filter out ANY member already assigned to any pos!
     const unassignedList = availableList.filter(a => !allAssignedMembers.has(a.nama));
@@ -2633,16 +2865,23 @@ window.renderModalTitikRows = function () {
         ${selectedChipsHtml || '<span style="color:var(--text3);font-size:11.5px;font-style:italic">Belum ada petugas. Klik nama anggota di bawah untuk menambahkan.</span>'}
       </div>
 
-      <!-- Member Picker with Filter Tabs -->
-      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:8px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:4px">
-          <span style="font-size:11px;font-weight:800;color:var(--text2)">+ Tambah Petugas (Klik Nama):</span>
-          <div style="display:flex;gap:3px">
-            <button type="button" class="picker-filter-btn ${curFilter === 'all' ? 'active' : ''}" onclick="filterPosPicker(${idx}, 'all')">Semua</button>
-            <button type="button" class="picker-filter-btn ${curFilter === '10' ? 'active' : ''}" onclick="filterPosPicker(${idx}, '10')">A10</button>
-            <button type="button" class="picker-filter-btn ${curFilter === '11' ? 'active' : ''}" onclick="filterPosPicker(${idx}, '11')">A11</button>
-            <button type="button" class="picker-filter-btn ${curFilter === 'cowo' ? 'active' : ''}" onclick="filterPosPicker(${idx}, 'cowo')">👦 Cowo</button>
-            <button type="button" class="picker-filter-btn ${curFilter === 'cewe' ? 'active' : ''}" onclick="filterPosPicker(${idx}, 'cewe')">👧 Cewe</button>
+      <!-- Member Picker with Dual Filter (Angkatan & Gender) -->
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px">
+        <div style="margin-bottom:8px">
+          <div style="font-size:11.5px;font-weight:800;color:var(--text2);margin-bottom:6px">+ Tambah Petugas (Klik Nama untuk Menugaskan):</div>
+          <div class="picker-dual-filter">
+            <div class="picker-filter-group">
+              <span class="picker-filter-title">ANGKATAN:</span>
+              <button type="button" class="picker-filter-btn ${curAngkatan === 'all' ? 'active' : ''}" onclick="filterPosPickerAngkatan(${idx}, 'all')">Semua</button>
+              <button type="button" class="picker-filter-btn ${curAngkatan === '10' ? 'active' : ''}" onclick="filterPosPickerAngkatan(${idx}, '10')">A10</button>
+              <button type="button" class="picker-filter-btn ${curAngkatan === '11' ? 'active' : ''}" onclick="filterPosPickerAngkatan(${idx}, '11')">A11</button>
+            </div>
+            <div class="picker-filter-group">
+              <span class="picker-filter-title">GENDER:</span>
+              <button type="button" class="picker-filter-btn ${curGender === 'all' ? 'active' : ''}" onclick="filterPosPickerGender(${idx}, 'all')">Semua</button>
+              <button type="button" class="picker-filter-btn ${curGender === 'cowo' ? 'active' : ''}" onclick="filterPosPickerGender(${idx}, 'cowo')">👦 Cowo</button>
+              <button type="button" class="picker-filter-btn ${curGender === 'cewe' ? 'active' : ''}" onclick="filterPosPickerGender(${idx}, 'cewe')">👧 Cewe</button>
+            </div>
           </div>
         </div>
         <div class="pos-quick-picker">
@@ -2651,6 +2890,29 @@ window.renderModalTitikRows = function () {
       </div>
     </div>`;
   }).join('');
+};
+
+window.filterPosPickerAngkatan = function (idx, val) {
+  if (window._upacaraPosData[idx]) {
+    window._upacaraPosData[idx].filterAngkatan = val;
+    renderModalTitikRows();
+  }
+};
+
+window.filterPosPickerGender = function (idx, val) {
+  if (window._upacaraPosData[idx]) {
+    window._upacaraPosData[idx].filterGender = val;
+    renderModalTitikRows();
+  }
+};
+
+window.filterPosPicker = function (idx, tab) {
+  if (tab === '10' || tab === '11') window.filterPosPickerAngkatan(idx, tab);
+  else if (tab === 'cowo' || tab === 'cewe') window.filterPosPickerGender(idx, tab);
+  else {
+    window.filterPosPickerAngkatan(idx, 'all');
+    window.filterPosPickerGender(idx, 'all');
+  }
 };
 
 function escapeHtml(str) {
@@ -2684,13 +2946,13 @@ window.removeMemberFromPos = function (idx, memberName) {
 };
 
 window.addModalTitikRow = function () {
-  window._upacaraPosData.push({ pos: '', anggota: [], filter: 'all' });
+  window._upacaraPosData.push({ pos: '', anggota: [], filterAngkatan: 'all', filterGender: 'all' });
   renderModalTitikRows();
 };
 
 window.deleteModalTitikRow = function (idx) {
   if (window._upacaraPosData.length <= 1) {
-    window._upacaraPosData = [{ pos: '', anggota: [], filter: 'all' }];
+    window._upacaraPosData = [{ pos: '', anggota: [], filterAngkatan: 'all', filterGender: 'all' }];
   } else {
     window._upacaraPosData.splice(idx, 1);
   }
@@ -2807,7 +3069,13 @@ window.openModalTtd = function (editId) {
     </div>
 
     <div class="form-row">
-      <div class="form-group"><label>Tanggal Pembagian</label><input type="date" id="m-ttd-tgl" value="${editItem?.tanggal || today()}"></div>
+      <div class="form-group" style="flex:1">
+          <label>🗓️ Tanggal Pembagian (Klik untuk Buka Kalender)</label>
+          <input type="date" id="m-ttd-tgl" value="${editItem?.tanggal || today()}" onclick="this.showPicker?.()" onchange="const d=getIndonesianDayDate(this.value);const el=document.getElementById('m-ttd-tgl-text');if(el)el.textContent=d;" style="cursor:pointer;font-weight:800;font-size:14px">
+          <div style="margin-top:6px;font-size:12.5px;font-weight:800;color:var(--primary);display:flex;align-items:center;gap:6px">
+            <i class="ti ti-calendar-event"></i> <span id="m-ttd-tgl-text">${getIndonesianDayDate(editItem?.tanggal || today())}</span>
+          </div>
+        </div>
       <div class="form-group" style="flex:2"><label>Nama Kegiatan</label><input type="text" id="m-ttd-nama" placeholder="cth: Pembagian Tablet Tambah Darah (TTD)" value="${editItem?.nama || 'Pembagian Tablet Tambah Darah (TTD)'}"></div>
     </div>
     <div class="form-group" style="margin-bottom:14px"><label>Keterangan (Opsional)</label><input type="text" id="m-ttd-ket" placeholder="cth: Distribusi TTD serentak kelas binaan" value="${editItem?.keterangan || ''}"></div>
@@ -3059,6 +3327,7 @@ window.delTtd = function (id) {
 
 let currentLaporanTab = 'medis'; 
 let currentLogTypeFilter = 'all';
+let currentRekapPresensiFilterAngkatan = 'all';
 
 pages.laporan = function (m) {
   const pasien = DB.get('pasien') || [];
@@ -3071,14 +3340,20 @@ pages.laporan = function (m) {
 
   const a10 = anggota.filter(a => a.angkatan === '10').length;
   const a11 = anggota.filter(a => a.angkatan === '11').length;
-  const totalHadir = absensi.filter(a => a.status === 'Hadir').length;
-  const totalMenyusul = absensi.filter(a => a.status === 'Menyusul').length;
-  const totalMendahului = absensi.filter(a => a.status === 'Mendahului').length;
-  const totalIzin = absensi.filter(a => a.status === 'Izin').length;
-  const totalSakit = absensi.filter(a => a.status === 'Sakit').length;
-  const totalAlpha = absensi.filter(a => a.status === 'Alpha').length;
+  const todayStr = today();
+  const todayAbs = absensi.filter(a => a.tanggal === todayStr);
+  const todayHadir = todayAbs.filter(a => a.status === 'Hadir').length;
+  const todayMenyusul = todayAbs.filter(a => a.status === 'Menyusul').length;
+  const todayMendahului = todayAbs.filter(a => a.status === 'Mendahului').length;
+  const todayIzin = todayAbs.filter(a => a.status === 'Izin').length;
+  const todaySakit = todayAbs.filter(a => a.status === 'Sakit').length;
+  const todayAlpha = todayAbs.filter(a => a.status === 'Alpha').length;
+  const todayMasuk = todayHadir + todayMenyusul + todayMendahului;
+
   const dirujuk = pasien.filter(p => p.status === 'Dirujuk').length;
   const sembuh = pasien.filter(p => p.status === 'Sembuh').length;
+
+  const uniqueActivityDates = [...new Set(absensi.map(a => a.tanggal).filter(Boolean))].sort().reverse();
 
   const keluhanMap = {};
   pasien.forEach(p => {
@@ -3100,25 +3375,25 @@ pages.laporan = function (m) {
       contentBox.innerHTML = `
       <div class="grid4" style="margin-bottom:20px">
         <div class="stat">
-          <div class="stat-label">🏥 Total Pasien</div>
+          <div class="stat-label">🏥 Total Pasien Terlayani</div>
           <div class="stat-val">${pasien.length}</div>
           <div class="stat-sub">${sembuh} sembuh • ${dirujuk} dirujuk</div>
           <span class="stat-icon">🩺</span>
         </div>
         <div class="stat">
-          <div class="stat-label">✅ Presensi Hadir & Masuk</div>
-          <div class="stat-val">${totalHadir + totalMenyusul + totalMendahului}</div>
-          <div class="stat-sub">${totalHadir} Hadir • ${totalMenyusul} Nyusul • ${totalMendahului} Dahului</div>
+          <div class="stat-label">✅ Presensi Masuk Hari Ini</div>
+          <div class="stat-val" style="color:${todayMasuk > 0 ? 'var(--green-text)' : 'inherit'}">${todayMasuk}</div>
+          <div class="stat-sub">${todayHadir} Hadir • ${todayMenyusul} Nyusul • ${todayMendahului} Dahului</div>
           <span class="stat-icon">👥</span>
         </div>
         <div class="stat">
-          <div class="stat-label">💊 Item Persediaan</div>
+          <div class="stat-label">💊 Persediaan Obat & Alat</div>
           <div class="stat-val">${stok.length}</div>
           <div class="stat-sub">${stok.filter(s => s.jumlah <= s.min).length} item berstatus kritis</div>
           <span class="stat-icon">💉</span>
         </div>
         <div class="stat">
-          <div class="stat-label">👥 Personil Anggota</div>
+          <div class="stat-label">👥 Total Personil PMR</div>
           <div class="stat-val">${anggota.length}</div>
           <div class="stat-sub">A10: ${a10} orang | A11: ${a11} orang</div>
           <span class="stat-icon">⭐</span>
@@ -3160,8 +3435,105 @@ pages.laporan = function (m) {
         </div>
       </div>
 
+      <!-- Rekapitulasi Presensi per Tanggal Kegiatan -->
       <div class="card" style="margin-bottom:20px">
-        <div class="card-title"><i class="ti ti-clipboard-check"></i>Rekapitulasi Presensi / Kehadiran Anggota</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+          <div>
+            <div class="card-title" style="margin:0"><i class="ti ti-calendar-stats"></i>Rekapitulasi Presensi per Tanggal Kegiatan</div>
+            <div style="font-size:12px;color:var(--text3);margin-top:2px">
+              Menampilkan rincian kehadiran terpisah berdasarkan hari dan tanggal resmi (${uniqueActivityDates.length} tanggal pertemuan tercatat)
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-ghost btn-sm" onclick="exportRekapPresensiCsv()">
+              <i class="ti ti-download"></i> Ekspor CSV Rekap
+            </button>
+          </div>
+        </div>
+
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>HARI & TANGGAL</th>
+                <th>ANGKATAN HADIR</th>
+                <th>HADIR</th>
+                <th>MENYUSUL</th>
+                <th>MENDAHULUI</th>
+                <th>IZIN</th>
+                <th>SAKIT</th>
+                <th>ALPHA</th>
+                <th>TOTAL MASUK</th>
+                <th>CAKUPAN</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${uniqueActivityDates.length ? uniqueActivityDates.map(tgl => {
+                const recs = absensi.filter(a => a.tanggal === tgl);
+                const h = recs.filter(a => a.status === 'Hadir').length;
+                const ny = recs.filter(a => a.status === 'Menyusul').length;
+                const dh = recs.filter(a => a.status === 'Mendahului').length;
+                const iz = recs.filter(a => a.status === 'Izin').length;
+                const sk = recs.filter(a => a.status === 'Sakit').length;
+                const al = recs.filter(a => a.status === 'Alpha').length;
+                const totMasuk = h + ny + dh;
+
+                const a10Masuk = recs.filter(r => anggota.find(a => a.id === r.anggotaId)?.angkatan === '10' && ['Hadir', 'Menyusul', 'Mendahului'].includes(r.status)).length;
+                const a11Masuk = recs.filter(r => anggota.find(a => a.id === r.anggotaId)?.angkatan === '11' && ['Hadir', 'Menyusul', 'Mendahului'].includes(r.status)).length;
+                const totalPersonil = Math.max(anggota.length, 1);
+                const pct = Math.round((totMasuk / totalPersonil) * 100);
+
+                return `
+                <tr>
+                  <td>
+                    <strong>${getIndonesianDayDate(tgl)}</strong>
+                    <div style="font-size:11px;color:var(--text3)">${tgl}</div>
+                  </td>
+                  <td>
+                    <div style="display:flex;gap:4px;flex-wrap:wrap">
+                      <span class="badge badge-a10">A10: ${a10Masuk}</span>
+                      <span class="badge badge-a11">A11: ${a11Masuk}</span>
+                    </div>
+                  </td>
+                  <td><span class="badge badge-green">${h}</span></td>
+                  <td><span class="badge badge-teal">${ny}</span></td>
+                  <td><span class="badge badge-indigo">${dh}</span></td>
+                  <td><span class="badge badge-amber">${iz}</span></td>
+                  <td><span class="badge badge-cowo">${sk}</span></td>
+                  <td><span class="badge badge-red">${al}</span></td>
+                  <td><strong style="color:var(--primary-dark)">${totMasuk} orang</strong></td>
+                  <td>
+                    <div style="font-size:12px;font-weight:800;color:var(--text)">${totMasuk}/${anggota.length} (${pct}%)</div>
+                    <div class="progress-bar" style="width:70px;height:5px;margin-top:3px">
+                      <div class="progress-fill green" style="width:${pct}%"></div>
+                    </div>
+                  </td>
+                </tr>`;
+              }).join('') : '<tr><td colspan="10"><div class="empty">Belum ada riwayat absensi tersimpan</div></td></tr>'}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Rekapitulasi Presensi per Personil Anggota -->
+      <div class="card" style="margin-bottom:20px">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:14px">
+          <div>
+            <div class="card-title" style="margin:0"><i class="ti ti-clipboard-check"></i>Keaktifan Presensi per Personil Anggota</div>
+            <div style="font-size:12px;color:var(--text3);margin-top:2px">
+              Persentase keaktifan dihitung berdasarkan kehadiran terhadap total <strong>${uniqueActivityDates.length} tanggal pertemuan resmi</strong>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <label style="font-size:11px;font-weight:800;color:var(--text2)">FILTER ANGKATAN:</label>
+            <select onchange="changeRekapPresensiFilter(this.value)" style="width:130px;padding:6px 10px;font-size:12px">
+              <option value="all" ${currentRekapPresensiFilterAngkatan === 'all' ? 'selected' : ''}>Semua</option>
+              <option value="10" ${currentRekapPresensiFilterAngkatan === '10' ? 'selected' : ''}>Angkatan 10</option>
+              <option value="11" ${currentRekapPresensiFilterAngkatan === '11' ? 'selected' : ''}>Angkatan 11</option>
+            </select>
+          </div>
+        </div>
+
         <div class="tbl-wrap">
           <table>
             <thead>
@@ -3175,11 +3547,15 @@ pages.laporan = function (m) {
                 <th>IZIN</th>
                 <th>SAKIT</th>
                 <th>ALPHA</th>
-                <th>KEAKTIFAN</th>
+                <th>TINGKAT KEAKTIFAN</th>
               </tr>
             </thead>
             <tbody>
-              ${anggota.map(a => {
+              ${anggota.filter(a => {
+                if (currentRekapPresensiFilterAngkatan === '10') return a.angkatan === '10';
+                if (currentRekapPresensiFilterAngkatan === '11') return a.angkatan === '11';
+                return true;
+              }).map(a => {
                 const myAbs = absensi.filter(x => x.anggotaId === a.id);
                 const h = myAbs.filter(x => x.status === 'Hadir').length;
                 const ny = myAbs.filter(x => x.status === 'Menyusul').length;
@@ -3187,13 +3563,14 @@ pages.laporan = function (m) {
                 const i = myAbs.filter(x => x.status === 'Izin').length;
                 const s = myAbs.filter(x => x.status === 'Sakit').length;
                 const al = myAbs.filter(x => x.status === 'Alpha').length;
-                const tot = myAbs.length;
                 const activeCount = h + ny + dh;
-                const pct = tot > 0 ? Math.round((activeCount / tot) * 100) : 0;
+                const totalMeetings = Math.max(uniqueActivityDates.length, 1);
+                const pct = uniqueActivityDates.length > 0 ? Math.min(100, Math.round((activeCount / totalMeetings) * 100)) : 0;
+
                 return `
                 <tr>
-                  <td><strong>${a.nama}</strong></td>
-                  <td><span class="badge-nis">${a.nis}</span></td>
+                  <td><strong>${escapeHtml(a.nama)}</strong></td>
+                  <td><span class="badge-nis">${a.nis || '-'}</span></td>
                   <td><span class="${a.angkatan === '10' ? 'badge-a10' : 'badge-a11'}">A${a.angkatan}</span></td>
                   <td><span class="badge badge-green">${h}</span></td>
                   <td><span class="badge badge-teal">${ny}</span></td>
@@ -3204,7 +3581,7 @@ pages.laporan = function (m) {
                   <td>
                     <div style="display:flex;align-items:center;gap:8px">
                       <div class="progress-bar" style="width:60px;height:6px"><div class="progress-fill green" style="width:${pct}%"></div></div>
-                      <span style="font-size:12px;font-weight:800">${tot > 0 ? `${pct}%` : '-'}</span>
+                      <span style="font-size:12px;font-weight:800">${uniqueActivityDates.length > 0 ? `${activeCount}/${uniqueActivityDates.length} (${pct}%)` : '-'}</span>
                     </div>
                   </td>
                 </tr>`;
@@ -3221,7 +3598,7 @@ pages.laporan = function (m) {
             <div style="font-weight:800;font-size:13px;color:var(--primary-dark);margin-bottom:8px">🚩 Jadwal Jaga Upacara (${upacara.length} Agenda)</div>
             ${upacara.slice(0, 3).map(u => `
               <div style="font-size:12px;margin-bottom:6px;padding-bottom:6px;border-bottom:1px dashed var(--border)">
-                <strong>${u.nama}</strong> (${fmtDayDate(u.tanggal)}) — ${u.titikJaga ? u.titikJaga.length : 0} Pos
+                <strong>${escapeHtml(u.nama)}</strong> (${getIndonesianDayDate(u.tanggal)}) — ${u.titikJaga ? u.titikJaga.length : 0} Pos
               </div>
             `).join('') || '<div style="font-size:12px;color:var(--text3);font-style:italic">Belum ada agenda upacara</div>'}
           </div>
@@ -3230,7 +3607,7 @@ pages.laporan = function (m) {
             <div style="font-weight:800;font-size:13px;color:var(--purple-text);margin-bottom:8px">💊 Pembagian TTD (${ttd.length} Agenda)</div>
             ${ttd.slice(0, 3).map(t => `
               <div style="font-size:12px;margin-bottom:6px;padding-bottom:6px;border-bottom:1px dashed var(--border)">
-                <strong>${t.nama}</strong> (${fmtDayDate(t.tanggal)}) — ${t.kelompok ? t.kelompok.length : 0} Kelompok
+                <strong>${escapeHtml(t.nama)}</strong> (${getIndonesianDayDate(t.tanggal)}) — ${t.kelompok ? t.kelompok.length : 0} Kelompok
               </div>
             `).join('') || '<div style="font-size:12px;color:var(--text3);font-style:italic">Belum ada agenda TTD</div>'}
           </div>
@@ -3238,7 +3615,7 @@ pages.laporan = function (m) {
       </div>
 
       <div class="card">
-        <div class="card-title"><i class="ti ti-clipboard-list"></i>Log Lengkap Pasien UKS</div>
+        <div class="card-title"><i class="ti ti-clipboard-list"></i>Log Pasien UKS Terbaru</div>
         <div class="tbl-wrap">
           <table>
             <thead>
@@ -3252,13 +3629,13 @@ pages.laporan = function (m) {
               </tr>
             </thead>
             <tbody>
-              ${pasien.slice().reverse().map(p => `
+              ${pasien.slice().reverse().slice(0, 15).map(p => `
               <tr>
-                <td>${fmtDayDate(p.tanggal)}</td>
-                <td><strong>${p.nama}</strong></td>
-                <td>${p.kelas}</td>
-                <td>${p.keluhan}</td>
-                <td>${p.tindakan}</td>
+                <td>${getIndonesianDayDate(p.tanggal)}</td>
+                <td><strong>${escapeHtml(p.nama)}</strong></td>
+                <td>${escapeHtml(p.kelas)}</td>
+                <td>${escapeHtml(p.keluhan)}</td>
+                <td>${escapeHtml(p.tindakan)}</td>
                 <td><span class="badge ${p.status === 'Sembuh' ? 'badge-green' : p.status === 'Dirujuk' ? 'badge-amber' : 'badge-red'}">${p.status}</span></td>
               </tr>`).join('') || '<tr><td colspan="6"><div class="empty">Belum ada catatan medis</div></td></tr>'}
             </tbody>
@@ -3275,11 +3652,20 @@ pages.laporan = function (m) {
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px">
           <div>
-            <div class="card-title" style="margin:0"><i class="ti ti-activity"></i>Log Aktivitas & Audit Personil (Khusus Ketua & Koordinator)</div>
-            <div style="font-size:12px;color:var(--text3);margin-top:2px">Catatan login, pengubahan data, dan aktivitas anggota real-time</div>
+            <div class="card-title" style="margin:0"><i class="ti ti-activity"></i>Log Aktivitas & Audit Personil (${logs.length} Total Entri)</div>
+            <div style="font-size:12px;color:var(--text3);margin-top:2px">Rekam jejak login, pengubahan data, dan aktivitas personil (Khusus Ketua, Koordinator, dan Admin)</div>
           </div>
-          <div style="display:flex;align-items:center;gap:8px">
-            <label style="font-size:11px;color:var(--text2);font-weight:800">FILTER TIPE:</label>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-ghost btn-sm" onclick="exportLogsPdf()" title="Cetak atau Simpan Log Aktivitas sebagai PDF" style="color:var(--red);border-color:rgba(239,68,68,0.3);font-weight:800">
+              <i class="ti ti-file-type-pdf"></i> Ekspor PDF
+            </button>
+            <button class="btn btn-ghost btn-sm" onclick="exportLogsWord()" title="Unduh Log Aktivitas dalam format Microsoft Word (.doc)" style="color:var(--primary);border-color:var(--primary-border);font-weight:800">
+              <i class="ti ti-file-text"></i> Ekspor Word (.doc)
+            </button>
+            <button class="btn btn-danger btn-sm" onclick="openKelolaLogModal()" title="Kelola & Bersihkan Log Lama">
+              <i class="ti ti-trash-x"></i> Kelola & Bersihkan Log
+            </button>
+            <label style="font-size:11px;color:var(--text2);font-weight:800;margin-left:4px">FILTER:</label>
             <select onchange="changeLogFilter(this.value)" style="width:160px;padding:6px 10px;font-size:12px">
               <option value="all" ${currentLogTypeFilter === 'all' ? 'selected' : ''}>Semua Aktivitas</option>
               <option value="login" ${currentLogTypeFilter === 'login' ? 'selected' : ''}>🔐 Login</option>
@@ -3288,6 +3674,7 @@ pages.laporan = function (m) {
               <option value="hapus" ${currentLogTypeFilter === 'hapus' ? 'selected' : ''}>🗑️ Penghapusan Data</option>
               <option value="ganti_password" ${currentLogTypeFilter === 'ganti_password' ? 'selected' : ''}>🔑 Pergantian Password</option>
               <option value="absensi" ${currentLogTypeFilter === 'absensi' ? 'selected' : ''}>📋 Presensi / Absensi</option>
+              <option value="bersihkan_log" ${currentLogTypeFilter === 'bersihkan_log' ? 'selected' : ''}>🧹 Pembersihan Log</option>
             </select>
           </div>
         </div>
@@ -3305,20 +3692,27 @@ pages.laporan = function (m) {
               </tr>
             </thead>
             <tbody>
-              ${filteredLogs.length ? filteredLogs.map(l => `
+              ${filteredLogs.length ? filteredLogs.map(l => {
+                // Sanitize any accidental historical plaintext password display
+                let sanitizedDetail = l.detail || '';
+                if (sanitizedDetail.includes('Kata Sandi Baru: "')) {
+                  sanitizedDetail = sanitizedDetail.replace(/Kata Sandi Baru: "[^"]*"/g, 'Kata Sandi Baru: [Tersamarkan Demi Keamanan]');
+                }
+                return `
               <tr>
                 <td style="font-size:11.5px;color:var(--text2);white-space:nowrap">${l.waktu}</td>
                 <td><span class="log-badge ${l.tipe.toLowerCase()}">${l.tipe}</span></td>
                 <td>
-                  <strong>${l.pelaku}</strong>
-                  <div style="font-size:11px;color:var(--primary);font-weight:700">${l.jabatan}</div>
+                  <strong>${escapeHtml(l.pelaku)}</strong>
+                  <div style="font-size:11px;color:var(--primary);font-weight:700">${escapeHtml(l.jabatan)}</div>
                 </td>
                 <td><span class="badge-nis">${l.nis}</span></td>
-                <td style="font-weight:700">${l.pesan}</td>
+                <td style="font-weight:700">${escapeHtml(l.pesan)}</td>
                 <td>
-                  ${l.detail ? `<div class="log-detail-box">${escapeHtml(l.detail)}</div>` : '-'}
+                  ${sanitizedDetail ? `<div class="log-detail-box">${escapeHtml(sanitizedDetail)}</div>` : '-'}
                 </td>
-              </tr>`).join('') : '<tr><td colspan="6"><div class="empty">Tidak ada log pada filter ini</div></td></tr>'}
+              </tr>`;
+              }).join('') : '<tr><td colspan="6"><div class="empty">Tidak ada log pada filter ini</div></td></tr>'}
             </tbody>
           </table>
         </div>
@@ -3349,7 +3743,7 @@ pages.laporan = function (m) {
         const activePassword = isCustom ? a.password : a.nis;
         return `
                 <tr>
-                  <td><strong>${a.nama}</strong></td>
+                  <td><strong>${escapeHtml(a.nama)}</strong></td>
                   <td><span class="badge-nis">${a.nis}</span></td>
                   <td><span class="badge-jabatan">${a.jabatan || 'Anggota'}</span></td>
                   <td><span class="${a.angkatan === '10' ? 'badge-a10' : 'badge-a11'}">Angkatan ${a.angkatan}</span></td>
@@ -3377,7 +3771,7 @@ pages.laporan = function (m) {
   <div class="page-hero">
     <div class="page-title-wrap">
       <h1 class="page-title">Laporan & Rekapitulasi</h1>
-      <div class="page-subtitle">${leader ? 'Ringkasan pelayanan medis, presensi, dan audit sistem UKS' : 'Ringkasan rekapitulasi pelayanan medis, persediaan obat & alat, dan presensi anggota PMR'}</div>
+      <div class="page-subtitle">${leader ? 'Ringkasan pelayanan medis, presensi per hari/angkatan, dan audit sistem UKS' : 'Ringkasan rekapitulasi pelayanan medis, persediaan obat & alat, dan presensi anggota PMR'}</div>
     </div>
     <button class="btn btn-ghost" onclick="window.print()"><i class="ti ti-printer"></i>Cetak Laporan</button>
   </div>
@@ -3385,7 +3779,7 @@ pages.laporan = function (m) {
   ${leader ? `
   <div class="tab-row" style="margin-bottom:18px">
     <button class="tab-btn ${currentLaporanTab === 'medis' ? 'active' : ''}" id="tab-lap-medis" onclick="switchLaporanTab('medis')">
-      📊 Rekapitulasi Umum
+      📊 Rekapitulasi Umum & Presensi
     </button>
     <button class="tab-btn ${currentLaporanTab === 'audit_logs' ? 'active' : ''}" id="tab-lap-logs" onclick="switchLaporanTab('audit_logs')">
       📋 Log Aktivitas & Audit (${logs.length})
@@ -3399,6 +3793,393 @@ pages.laporan = function (m) {
 
   window.renderLaporanView = renderView;
   renderView();
+};
+
+window.changeRekapPresensiFilter = function(val) {
+  currentRekapPresensiFilterAngkatan = val;
+  if (window.renderLaporanView) renderLaporanView();
+};
+
+window.exportRekapPresensiCsv = function() {
+  const absensi = DB.get('absensi') || [];
+  const anggota = DB.get('anggota') || [];
+  const uniqueDates = [...new Set(absensi.map(a => a.tanggal).filter(Boolean))].sort().reverse();
+
+  let csv = 'No,Tanggal,Hari dan Tanggal,Hadir,Menyusul,Mendahului,Izin,Sakit,Alpha,Total Masuk,Total Anggota,Persentase,A10 Masuk,A11 Masuk\r\n';
+  uniqueDates.forEach((tgl, idx) => {
+    const records = absensi.filter(r => r.tanggal === tgl);
+    const h = records.filter(r => r.status === 'Hadir').length;
+    const ny = records.filter(r => r.status === 'Menyusul').length;
+    const dh = records.filter(r => r.status === 'Mendahului').length;
+    const iz = records.filter(r => r.status === 'Izin').length;
+    const sk = records.filter(r => r.status === 'Sakit').length;
+    const al = records.filter(r => r.status === 'Alpha').length;
+    const totalMasuk = h + ny + dh;
+    const pct = Math.round((totalMasuk / Math.max(anggota.length, 1)) * 100);
+    const a10Masuk = records.filter(r => anggota.find(a => a.id === r.anggotaId)?.angkatan === '10' && ['Hadir', 'Menyusul', 'Mendahului'].includes(r.status)).length;
+    const a11Masuk = records.filter(r => anggota.find(a => a.id === r.anggotaId)?.angkatan === '11' && ['Hadir', 'Menyusul', 'Mendahului'].includes(r.status)).length;
+    const dayDate = (getIndonesianDayDate(tgl) || tgl).replace(/,/g, '');
+    csv += `${idx + 1},${tgl},"${dayDate}",${h},${ny},${dh},${iz},${sk},${al},${totalMasuk},${anggota.length},${pct}%,${a10Masuk},${a11Masuk}\r\n`;
+  });
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `Rekap_Presensi_PMR_${today()}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('📥 Rekap presensi berhasil diekspor ke CSV!');
+};
+
+window.exportLogsWord = function() {
+  const logs = DB.get('logs') || [];
+  const nowStr = getIndonesianDayDate(today());
+  
+  let html = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+  <head><meta charset='utf-8'><title>Laporan Audit & Log Aktivitas MY UKS PMR</title>
+  <style>
+    body { font-family: Calibri, 'Segoe UI', Arial, sans-serif; font-size: 11pt; color: #1e293b; margin: 20px; }
+    h1 { font-size: 16pt; color: #1e3a8a; margin-bottom: 3pt; text-align: center; }
+    .sub { font-size: 10.5pt; color: #64748b; margin-bottom: 14pt; text-align: center; }
+    table { border-collapse: collapse; width: 100%; margin-top: 10pt; }
+    th { background-color: #2563eb; color: #ffffff; font-weight: bold; border: 1px solid #1d4ed8; padding: 6pt 8pt; font-size: 10pt; text-align: left; }
+    td { border: 1px solid #cbd5e1; padding: 5pt 7pt; font-size: 9.5pt; vertical-align: top; }
+    tr:nth-child(even) { background-color: #f8fafc; }
+    .badge { font-weight: bold; color: #2563eb; }
+    .footer { margin-top: 20pt; font-size: 9pt; color: #64748b; text-align: right; }
+  </style>
+  </head>
+  <body>
+    <h1>🏥 REKAM JEJAK AUDIT & LOG AKTIVITAS SISTEM</h1>
+    <div class="sub">MY UKS — Markas Digital PMR Wira | Tanggal Ekspor: ${nowStr} | Total Entri: ${logs.length} Catatan</div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:16%">Waktu</th>
+          <th style="width:12%">Tipe</th>
+          <th style="width:18%">Pelaku & Jabatan</th>
+          <th style="width:10%">NIS</th>
+          <th style="width:24%">Aktivitas</th>
+          <th style="width:20%">Detail</th>
+        </tr>
+      </thead>
+      <tbody>`;
+
+  logs.forEach(l => {
+    let detail = l.detail || '-';
+    if (detail.includes('Kata Sandi Baru: "')) {
+      detail = detail.replace(/Kata Sandi Baru: "[^"]*"/g, 'Kata Sandi Baru: [Tersamarkan]');
+    }
+    html += `<tr>
+      <td style="white-space:nowrap">${escapeHtml(l.waktu || '-')}</td>
+      <td><span class="badge">${escapeHtml(l.tipe || '-')}</span></td>
+      <td><b>${escapeHtml(l.pelaku || '-')}</b><br><small style="color:#64748b">${escapeHtml(l.jabatan || '-')}</small></td>
+      <td>${escapeHtml(l.nis || '-')}</td>
+      <td><b>${escapeHtml(l.pesan || '-')}</b></td>
+      <td>${escapeHtml(detail)}</td>
+    </tr>`;
+  });
+
+  html += `</tbody></table>
+    <div class="footer">Dokumen resmi diekspor otomatis dari Markas Digital MY UKS PMR pada ${nowStr}</div>
+  </body></html>`;
+
+  const blob = new Blob(['\ufeff' + html], { type: 'application/msword;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `Audit_Log_MYUKS_${today()}.doc`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('📝 Laporan Log Audit berhasil diekspor ke Microsoft Word (.doc)!');
+};
+
+window.exportLogsPdf = function() {
+  const logs = DB.get('logs') || [];
+  const nowStr = getIndonesianDayDate(today());
+  
+  const printWin = window.open('', '_blank');
+  if (!printWin) {
+    return toast('⚠️ Izinkan jendela pop-up di browser Anda untuk mencetak / menyimpan PDF');
+  }
+
+  let rows = logs.map(l => {
+    let detail = l.detail || '-';
+    if (detail.includes('Kata Sandi Baru: "')) {
+      detail = detail.replace(/Kata Sandi Baru: "[^"]*"/g, 'Kata Sandi Baru: [Tersamarkan]');
+    }
+    return `<tr>
+      <td style="white-space:nowrap;font-size:10px">${escapeHtml(l.waktu || '-')}</td>
+      <td><span class="badge">${escapeHtml(l.tipe || '-')}</span></td>
+      <td><strong>${escapeHtml(l.pelaku || '-')}</strong><div style="font-size:10px;color:#64748b">${escapeHtml(l.jabatan || '-')}</div></td>
+      <td style="font-size:10.5px">${escapeHtml(l.nis || '-')}</td>
+      <td style="font-weight:700">${escapeHtml(l.pesan || '-')}</td>
+      <td style="font-size:10px;color:#334155">${escapeHtml(detail)}</td>
+    </tr>`;
+  }).join('');
+
+  printWin.document.write(`<!DOCTYPE html>
+  <html>
+  <head>
+    <title>Laporan_Audit_Log_MYUKS_${today()}</title>
+    <style>
+      @page { size: A4 landscape; margin: 12mm; }
+      body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11px; color: #1e293b; margin: 0; padding: 16px; }
+      .header { border-bottom: 2px solid #2563eb; padding-bottom: 8px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: flex-end; }
+      h1 { margin: 0; font-size: 18px; color: #1e3a8a; }
+      .meta { font-size: 11px; color: #64748b; margin-top: 3px; }
+      table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+      th { background: #2563eb; color: #fff; padding: 6px 8px; font-size: 10.5px; text-align: left; border: 1px solid #1d4ed8; }
+      td { padding: 5px 8px; border: 1px solid #cbd5e1; font-size: 10.5px; vertical-align: top; }
+      tr:nth-child(even) { background: #f8fafc; }
+      .badge { font-weight: bold; color: #2563eb; }
+      @media print {
+        body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <div>
+        <h1>🏥 REKAM JEJAK AUDIT & LOG AKTIVITAS SISTEM</h1>
+        <div class="meta">MY UKS — Markas Digital PMR Wira | Diekspor: ${nowStr}</div>
+      </div>
+      <div class="meta" style="text-align:right">
+        Total Entri: <strong>${logs.length} Catatan</strong><br>
+        <small style="color:#2563eb">Pilih "Save as PDF" / "Simpan sebagai PDF" di dialog cetak</small>
+      </div>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:14%">WAKTU</th>
+          <th style="width:10%">TIPE</th>
+          <th style="width:18%">PELAKU & JABATAN</th>
+          <th style="width:8%">NIS</th>
+          <th style="width:26%">AKTIVITAS</th>
+          <th style="width:24%">DETAIL</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows}
+      </tbody>
+    </table>
+    <script>
+      window.onload = function() {
+        setTimeout(() => { window.print(); }, 250);
+      };
+    </script>
+  </body>
+  </html>`);
+  printWin.document.close();
+  toast('📄 Dialog cetak / Simpan sebagai PDF dibuka!');
+};
+
+window.exportLogsCsv = window.exportLogsWord;
+
+window.openKelolaLogModal = function() {
+  if (!isLeader() && getSession()?.role !== 'admin') {
+    return toast('⚠️ Akses ditolak: Hanya Admin, Ketua, dan Koordinator!');
+  }
+  const logs = DB.get('logs') || [];
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.id = 'modal-kelola-log';
+  overlay.innerHTML = `
+  <div class="modal" style="max-width:580px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title"><i class="ti ti-trash-x" style="color:var(--red)"></i> Kelola & Bersihkan Log Audit</div>
+        <div class="modal-sub">Saat ini tersimpan <strong>${logs.length} entri log</strong> di database</div>
+      </div>
+      <button class="modal-close-btn" onclick="document.getElementById('modal-kelola-log').remove()">✕</button>
+    </div>
+
+    <div class="alert alert-amber" style="margin-bottom:14px;font-size:12.5px">
+      <i class="ti ti-alert-triangle" style="font-size:22px;flex-shrink:0"></i>
+      <div>
+        <strong>PENTING:</strong> Menghapus log audit dapat memengaruhi rekam jejak sistem.
+        Sangat disarankan untuk <strong>mencadangkan file PDF atau Word (.doc)</strong> terlebih dahulu sebelum pembersihan.
+      </div>
+    </div>
+
+    <div style="margin-bottom:16px;display:flex;gap:10px">
+      <button class="btn btn-ghost" onclick="exportLogsPdf()" style="flex:1;border-color:rgba(239,68,68,0.4);color:var(--red);font-weight:800;font-size:12.5px;padding:9px">
+        <i class="ti ti-file-type-pdf"></i> Cadangkan PDF
+      </button>
+      <button class="btn btn-ghost" onclick="exportLogsWord()" style="flex:1;border-color:var(--primary);color:var(--primary);font-weight:800;font-size:12.5px;padding:9px">
+        <i class="ti ti-file-text"></i> Cadangkan Word (.doc)
+      </button>
+    </div>
+
+    <div class="form-group" style="margin-bottom:12px">
+      <label>Pilihan Pembersihan Log:</label>
+      <select id="log-clean-option" onchange="updateLogCleanPreview()" style="padding:9px;font-size:13px">
+        <option value="before_date">Hapus log lama sebelum tanggal tertentu</option>
+        <option value="date_range">Hapus log dalam rentang tanggal tertentu</option>
+        <option value="all">Hapus semua log lama (Sisakan catatan pembersihan)</option>
+      </select>
+    </div>
+
+    <div id="log-clean-date-before-wrap" style="margin-bottom:14px">
+      <label style="font-size:12px;font-weight:700;color:var(--text2)">Hapus log sebelum tanggal:</label>
+      <input type="date" id="log-clean-date" value="${today()}" onchange="updateLogCleanPreview()" onclick="this.showPicker?.()" style="margin-top:4px;cursor:pointer">
+    </div>
+
+    <div id="log-clean-range-wrap" style="display:none;margin-bottom:14px">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Dari Tanggal:</label>
+          <input type="date" id="log-clean-range-start" value="${today()}" onchange="updateLogCleanPreview()" onclick="this.showPicker?.()" style="cursor:pointer">
+        </div>
+        <div class="form-group">
+          <label>Sampai Tanggal:</label>
+          <input type="date" id="log-clean-range-end" value="${today()}" onchange="updateLogCleanPreview()" onclick="this.showPicker?.()" style="cursor:pointer">
+        </div>
+      </div>
+    </div>
+
+    <div id="log-clean-preview-box" class="rekap-card-highlight" style="font-size:12.5px;color:var(--text2)">
+      Memeriksa jumlah entri yang akan dihapus...
+    </div>
+
+    <div style="margin-top:14px;margin-bottom:16px">
+      <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;cursor:pointer;font-weight:700">
+        <input type="checkbox" id="log-clean-confirm">
+        <span>Saya memahami bahwa log audit yang dihapus tidak dapat dipulihkan kembali</span>
+      </label>
+    </div>
+
+    <div class="btn-row" style="justify-content:flex-end">
+      <button class="btn btn-ghost" onclick="document.getElementById('modal-kelola-log').remove()">Batal</button>
+      <button class="btn btn-danger" onclick="executeCleanLogs()">
+        <i class="ti ti-trash"></i> Bersihkan Log Sekarang
+      </button>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+  updateLogCleanPreview();
+};
+
+window.updateLogCleanPreview = function() {
+  const opt = document.getElementById('log-clean-option')?.value;
+  const beforeWrap = document.getElementById('log-clean-date-before-wrap');
+  const rangeWrap = document.getElementById('log-clean-range-wrap');
+  const previewBox = document.getElementById('log-clean-preview-box');
+  if (!previewBox) return;
+
+  if (opt === 'before_date') {
+    if (beforeWrap) beforeWrap.style.display = 'block';
+    if (rangeWrap) rangeWrap.style.display = 'none';
+  } else if (opt === 'date_range') {
+    if (beforeWrap) beforeWrap.style.display = 'none';
+    if (rangeWrap) rangeWrap.style.display = 'block';
+  } else {
+    if (beforeWrap) beforeWrap.style.display = 'none';
+    if (rangeWrap) rangeWrap.style.display = 'none';
+  }
+
+  const logs = DB.get('logs') || [];
+  const count = getLogsToDeleteCount(opt);
+  previewBox.innerHTML = `
+    <div><strong>Perkiraan Dampak Pembersihan:</strong></div>
+    <div style="font-size:13.5px;color:var(--red);font-weight:800;margin-top:4px">
+      ${count} dari ${logs.length} entri log akan dihapus
+    </div>
+    <div style="font-size:11.5px;color:var(--text3);margin-top:2px">
+      Sisa log tersimpan setelah pembersihan: <strong>${logs.length - count} entri</strong>
+    </div>
+  `;
+};
+
+function getLogsToDeleteCount(opt) {
+  const logs = DB.get('logs') || [];
+  if (opt === 'all') return logs.length;
+  if (opt === 'before_date') {
+    const cutDate = document.getElementById('log-clean-date')?.value;
+    if (!cutDate) return 0;
+    return logs.filter(l => {
+      const logDate = (l.timestamp || '').slice(0, 10);
+      return logDate && logDate < cutDate;
+    }).length;
+  }
+  if (opt === 'date_range') {
+    const start = document.getElementById('log-clean-range-start')?.value;
+    const end = document.getElementById('log-clean-range-end')?.value;
+    if (!start || !end) return 0;
+    return logs.filter(l => {
+      const logDate = (l.timestamp || '').slice(0, 10);
+      return logDate && logDate >= start && logDate <= end;
+    }).length;
+  }
+  return 0;
+}
+
+window.executeCleanLogs = function() {
+  const confirmBox = document.getElementById('log-clean-confirm');
+  if (!confirmBox || !confirmBox.checked) {
+    return toast('⚠️ Harap centang persetujuan sebelum melanjutkan!');
+  }
+  const opt = document.getElementById('log-clean-option')?.value;
+  const logs = DB.get('logs') || [];
+  let remaining = [];
+  let deletedCount = 0;
+  let detailDesc = '';
+
+  if (opt === 'all') {
+    deletedCount = logs.length;
+    remaining = [];
+    detailDesc = 'Seluruh riwayat log dibersihkan';
+  } else if (opt === 'before_date') {
+    const cutDate = document.getElementById('log-clean-date')?.value;
+    if (!cutDate) return toast('Pilih tanggal cut-off terlebih dahulu!');
+    remaining = logs.filter(l => {
+      const logDate = (l.timestamp || '').slice(0, 10);
+      return !logDate || logDate >= cutDate;
+    });
+    deletedCount = logs.length - remaining.length;
+    detailDesc = `Log sebelum tanggal ${getIndonesianDayDate(cutDate)}`;
+  } else if (opt === 'date_range') {
+    const start = document.getElementById('log-clean-range-start')?.value;
+    const end = document.getElementById('log-clean-range-end')?.value;
+    if (!start || !end) return toast('Pilih tanggal awal dan akhir!');
+    remaining = logs.filter(l => {
+      const logDate = (l.timestamp || '').slice(0, 10);
+      return !logDate || logDate < start || logDate > end;
+    });
+    deletedCount = logs.length - remaining.length;
+    detailDesc = `Rentang tanggal ${start} s/d ${end}`;
+  }
+
+  if (deletedCount === 0) {
+    return toast('Tidak ada log yang cocok untuk dihapus pada pilihan ini.');
+  }
+
+  const session = getSession();
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+  const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+  // Add permanent audit entry of the cleanup that stays in the database
+  const auditCleanEntry = {
+    id: Date.now() + Math.random().toString(36).substring(2, 6),
+    timestamp: now.toISOString(),
+    waktu: `${dateStr} ${timeStr}`,
+    tipe: 'BERSIHKAN_LOG',
+    pelaku: session?.nama || 'Administrator',
+    jabatan: session?.jabatan || 'Admin',
+    nis: session?.nis || '-',
+    pesan: `Pembersihan ${deletedCount} entri log audit berhasil dilakukan`,
+    detail: `Kriteria: ${detailDesc} | Sisa log aktif: ${remaining.length} entri`
+  };
+
+  remaining.unshift(auditCleanEntry);
+  DB.set('logs', remaining);
+
+  document.getElementById('modal-kelola-log')?.remove();
+  toast(`🧹 Berhasil membersihkan ${deletedCount} entri log!`);
+  if (window.renderLaporanView) renderLaporanView();
 };
 
 window.switchLaporanTab = function (tab) {
@@ -3466,13 +4247,19 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* ==========================================================================
-   FITUR KHUSUS PIMPINAN: JADWAL MATERI, JADWAL FORUM, & PENGUMUMAN
-   Hanya dapat diakses oleh: Ketua, Koordinator, Sekretaris (dan Admin)
+   MODUL AGENDA & INFORMASI (PENGGABUNGAN MATERI, FORUM, & PENGUMUMAN)
+   Sesuai Master Prompt Section C:
+   - Penggabungan multi-source aman (jadwal_materi, jadwal_forum, pengumuman, agenda)
+   - Filter kategori (Semua, Pengumuman, Jadwal Materi, Jadwal Forum)
+   - Perhitungan otomatis hari & tanggal Indonesia di Asia/Jakarta
+   - Akses baca untuk semua anggota, kontrol CRUD untuk Pimpinan
    ========================================================================== */
 
 function generateBroadcastWaText(item, tipeJudul) {
+  const catLabel = item.kategori === 'materi' ? 'Jadwal Materi' : (item.kategori === 'forum' ? 'Jadwal Forum' : 'Pengumuman Resmi');
+  const tipe = tipeJudul || catLabel;
   const tujuan = item.tujuan || 'Semua Calon PMR Wira Angkatan 11 SMK Negeri 2 Surakarta';
-  const hariTgl = item.hariTanggal || (item.tanggal ? fmtDayDate(item.tanggal) : '-');
+  const hariTgl = item.tanggal ? getIndonesianDayDate(item.tanggal) : (item.hariTanggal || '-');
   const jam = item.jam || '15.15 - 17.00 WIB';
   const tempat = item.tempat || 'UKS';
   const kegiatan = item.kegiatan || '-';
@@ -3483,7 +4270,8 @@ function generateBroadcastWaText(item, tipeJudul) {
   let text = `Hallo semuanya 👋🏻\n\n`;
   text += `✨ Siamo Tutti Fratelli ✨\n`;
   text += `⛑️⛑️⛑️\n\n`;
-  text += `📨 : Undangan untuk *${tujuan}* pada :\n\n`;
+  text += `📨 : *${tipe.toUpperCase()}*\n`;
+  text += `Undangan untuk *${tujuan}* pada :\n\n`;
   text += `*🗓️  : ${hariTgl}*\n`;
   text += `*🕞  : ${jam}*\n`;
   text += `*🏫  : ${tempat}*\n`;
@@ -3499,677 +4287,705 @@ function generateBroadcastWaText(item, tipeJudul) {
   return text.trim();
 }
 
-function renderPimpinanAccessDenied(m, pageTitle) {
-  m.innerHTML = `
-  <div class="page-hero">
-    <div class="page-title-wrap">
-      <h1 class="page-title">${pageTitle}</h1>
-      <div class="page-subtitle">Akses Khusus Pimpinan PMR</div>
-    </div>
-  </div>
-  <div class="pimpinan-lock-screen">
-    <div class="pimpinan-lock-icon"><i class="ti ti-lock"></i></div>
-    <h2 style="font-size:20px;font-weight:900;margin-bottom:8px">Akses Terbatas Pimpinan</h2>
-    <p style="color:var(--text2);max-width:520px;margin:0 auto 18px;font-size:14px;line-height:1.6">
-      Halaman <strong>${pageTitle}</strong> hanya dapat diakses oleh <strong>Ketua</strong>, <strong>Koordinator</strong>, dan <strong>Sekretaris</strong>.
-    </p>
-    <button class="btn btn-primary" onclick="showPage('dashboard')">
-      <i class="ti ti-home"></i> Kembali ke Beranda
-    </button>
-  </div>`;
+function getUnifiedAgendaList() {
+  const directAgenda = (DB.get('agenda') || []).map(x => ({ ...x, kategori: x.kategori || 'pengumuman' }));
+  const materi = (DB.get('jadwal_materi') || []).map(x => ({ ...x, kategori: 'materi' }));
+  const forum = (DB.get('jadwal_forum') || []).map(x => ({ ...x, kategori: 'forum' }));
+  const pengumuman = (DB.get('pengumuman') || []).map(x => ({ ...x, kategori: 'pengumuman' }));
+
+  // Gabungkan dan hilangkan duplikasi berdasarkan ID
+  const map = new Map();
+  [...materi, ...forum, ...pengumuman, ...directAgenda].forEach(item => {
+    if (item && item.id) {
+      map.set(item.id, item);
+    }
+  });
+
+  return Array.from(map.values());
 }
 
+function saveUnifiedAgendaItem(itemData, editId) {
+  const cat = itemData.kategori || 'pengumuman';
+  const legacyKey = cat === 'materi' ? 'jadwal_materi' : (cat === 'forum' ? 'jadwal_forum' : 'pengumuman');
+
+  // Simpan ke array legacy terkait agar backward-compatible
+  const legacyList = DB.get(legacyKey) || [];
+  if (editId) {
+    const idx = legacyList.findIndex(x => x.id === editId);
+    if (idx >= 0) legacyList[idx] = itemData;
+    else legacyList.unshift(itemData);
+  } else {
+    legacyList.unshift(itemData);
+  }
+  DB.set(legacyKey, legacyList);
+
+  // Jika item sebelumnya ada di kategori lain, bersihkan dari kategori lama
+  ['jadwal_materi', 'jadwal_forum', 'pengumuman'].forEach(k => {
+    if (k !== legacyKey) {
+      const l = DB.get(k) || [];
+      if (l.some(x => x.id === itemData.id)) {
+        DB.set(k, l.filter(x => x.id !== itemData.id));
+      }
+    }
+  });
+
+  // Simpan juga ke dokumen gabungan 'agenda'
+  const agendaList = DB.get('agenda') || [];
+  if (editId) {
+    const aIdx = agendaList.findIndex(x => x.id === editId);
+    if (aIdx >= 0) agendaList[aIdx] = itemData;
+    else agendaList.unshift(itemData);
+  } else {
+    agendaList.unshift(itemData);
+  }
+  DB.set('agenda', agendaList);
+}
+
+function deleteUnifiedAgendaItem(id) {
+  ['agenda', 'jadwal_materi', 'jadwal_forum', 'pengumuman'].forEach(key => {
+    const list = DB.get(key) || [];
+    if (list.some(x => x.id === id)) {
+      DB.set(key, list.filter(x => x.id !== id));
+    }
+  });
+}
+
+pages.agenda = function (m, defaultKategori = 'all') {
+  let curCategory = defaultKategori || 'all';
+  let curSearch = '';
+  let curSort = 'desc'; // 'desc' = terbaru ke terlama, 'asc' = terlama ke terbaru
+
+  const isPimpinan = canAccessPimpinan();
+
+  function render() {
+    const allItems = getUnifiedAgendaList();
+    const container = document.getElementById('agenda-cards-container');
+    const badgeCounter = document.getElementById('agenda-counter-badge');
+    if (!container) return;
+
+    // Filter kategori
+    let filtered = allItems;
+    if (curCategory !== 'all') {
+      filtered = filtered.filter(x => x.kategori === curCategory);
+    }
+
+    // Filter pencarian
+    if (curSearch) {
+      const q = curSearch.toLowerCase();
+      filtered = filtered.filter(x =>
+        (x.kegiatan || '').toLowerCase().includes(q) ||
+        (x.tempat || '').toLowerCase().includes(q) ||
+        (x.tujuan || '').toLowerCase().includes(q) ||
+        (x.hariTanggal || '').toLowerCase().includes(q)
+      );
+    }
+
+    // Sort tanggal
+    filtered.sort((a, b) => {
+      const dateA = a.tanggal || '';
+      const dateB = b.tanggal || '';
+      return curSort === 'desc' ? dateB.localeCompare(dateA) : dateA.localeCompare(dateB);
+    });
+
+    if (badgeCounter) {
+      badgeCounter.textContent = `${filtered.length} dari ${allItems.length} Agenda`;
+    }
+
+    if (!filtered.length) {
+      container.innerHTML = `
+      <div class="empty">
+        <i class="ti ti-calendar-off" style="font-size:36px;margin-bottom:8px"></i>
+        <div>Tidak ada agenda atau informasi yang cocok dengan filter.</div>
+        ${isPimpinan ? `<button class="btn btn-primary" onclick="openModalAgenda(0, '${curCategory !== 'all' ? curCategory : 'pengumuman'}')" style="margin-top:12px"><i class="ti ti-plus"></i> Buat Agenda Pertama</button>` : ''}
+      </div>`;
+      return;
+    }
+
+    container.innerHTML = filtered.map(item => {
+      const isMateri = item.kategori === 'materi';
+      const isForum = item.kategori === 'forum';
+      const isPengumuman = !isMateri && !isForum;
+
+      const catBadge = isMateri
+        ? `<span class="badge badge-blue"><i class="ti ti-book-2"></i> Jadwal Materi</span>`
+        : isForum
+          ? `<span class="badge badge-purple"><i class="ti ti-messages"></i> Jadwal Forum</span>`
+          : `<span class="badge badge-amber"><i class="ti ti-speakerphone"></i> Pengumuman</span>`;
+
+      const tglFormatted = item.hariTanggal || (item.tanggal ? getIndonesianDayDate(item.tanggal) : '-');
+      const waText = generateBroadcastWaText(item);
+
+      return `
+      <div class="broadcast-card" id="agenda-card-${item.id}">
+        <div class="broadcast-card-header">
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">
+              ${catBadge}
+              <span class="badge badge-green" title="Tanggal Kegiatan"><i class="ti ti-calendar"></i> ${escapeHtml(tglFormatted)}</span>
+              ${item.jam ? `<span class="badge" style="background:var(--bg-subtle);color:var(--text2)"><i class="ti ti-clock"></i> ${escapeHtml(item.jam)}</span>` : ''}
+            </div>
+            <div style="font-size:18px;font-weight:900;color:var(--text);margin-top:4px">${escapeHtml(item.kegiatan || 'Agenda PMR')}</div>
+            <div style="font-size:12.5px;color:var(--text2);margin-top:4px;display:flex;gap:12px;flex-wrap:wrap">
+              <span>🏫 Tempat: <strong>${escapeHtml(item.tempat || 'UKS')}</strong></span>
+              <span>🎯 Untuk: <strong>${escapeHtml(item.tujuan || 'Semua Anggota')}</strong></span>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start">
+            <button class="btn btn-copy" onclick="salinBroadcastAgenda(${item.id})">
+              <i class="ti ti-copy"></i> Salin Teks WA
+            </button>
+            <button class="btn btn-wa" onclick="kirimBroadcastAgenda(${item.id})">
+              <i class="ti ti-brand-whatsapp"></i> Kirim ke WA
+            </button>
+            ${isPimpinan ? `
+            <button class="btn btn-action-edit" onclick="openModalAgenda(${item.id})">
+              <i class="ti ti-edit"></i> Ubah
+            </button>
+            <button class="btn btn-action-delete" onclick="delAgenda(${item.id})">
+              <i class="ti ti-trash"></i> Hapus
+            </button>` : ''}
+          </div>
+        </div>
+
+        <div style="margin-top:14px">
+          <span class="wa-preview-badge"><i class="ti ti-brand-whatsapp"></i> Pratinjau Format Pesan Siaran WhatsApp:</span>
+          <div class="broadcast-preview-box">${escapeHtml(waText)}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  m.innerHTML = `
+  <div class="page-hero">
+    <div class="page-title-wrap">
+      <h1 class="page-title">Agenda & Informasi</h1>
+      <div class="page-subtitle">Pusat materi pembelajaran, forum evaluasi & musyawarah, serta siaran informasi resmi PMR Wira</div>
+    </div>
+    ${isPimpinan ? `
+    <button class="btn-header-add" onclick="openModalAgenda(0, '${curCategory !== 'all' ? curCategory : 'pengumuman'}')">
+      <i class="ti ti-plus"></i> Tambah Agenda / Info Baru
+    </button>` : ''}
+  </div>
+
+  <div class="table-card" style="margin-bottom:20px;padding:16px">
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between">
+      <div class="table-tab-row" style="margin:0;display:flex;gap:6px;flex-wrap:wrap" id="agenda-cat-tabs">
+        <button class="tab-btn ${curCategory === 'all' ? 'active' : ''}" data-cat="all">
+          <i class="ti ti-layers-linked"></i> Semua
+        </button>
+        <button class="tab-btn ${curCategory === 'pengumuman' ? 'active' : ''}" data-cat="pengumuman">
+          <i class="ti ti-speakerphone"></i> Pengumuman
+        </button>
+        <button class="tab-btn ${curCategory === 'materi' ? 'active' : ''}" data-cat="materi">
+          <i class="ti ti-book-2"></i> Jadwal Materi
+        </button>
+        <button class="tab-btn ${curCategory === 'forum' ? 'active' : ''}" data-cat="forum">
+          <i class="ti ti-messages"></i> Jadwal Forum
+        </button>
+      </div>
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <div class="search-wrap" style="width:220px">
+          <i class="ti ti-search"></i>
+          <input type="text" id="agenda-search-input" placeholder="Cari kegiatan/tempat..." style="width:100%">
+        </div>
+        <select id="agenda-sort-select" style="padding:7px 12px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:12.5px;font-weight:600">
+          <option value="desc">🗓️ Tanggal Terbaru</option>
+          <option value="asc">🗓️ Tanggal Terlama</option>
+        </select>
+        <span class="badge badge-purple" id="agenda-counter-badge" style="font-size:12px;padding:6px 10px">-</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="agenda-cards-container"></div>`;
+
+  // Event handler tabs
+  const tabWrap = document.getElementById('agenda-cat-tabs');
+  if (tabWrap) {
+    tabWrap.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.onclick = () => {
+        tabWrap.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        curCategory = btn.getAttribute('data-cat') || 'all';
+        render();
+      };
+    });
+  }
+
+  // Event handler search
+  const searchInput = document.getElementById('agenda-search-input');
+  if (searchInput) {
+    searchInput.oninput = (e) => {
+      curSearch = e.target.value.trim();
+      render();
+    };
+  }
+
+  // Event handler sort
+  const sortSelect = document.getElementById('agenda-sort-select');
+  if (sortSelect) {
+    sortSelect.onchange = (e) => {
+      curSort = e.target.value;
+      render();
+    };
+  }
+
+  window.renderAgendaView = render;
+  render();
+};
+
+window.salinBroadcastAgenda = function (id) {
+  const item = getUnifiedAgendaList().find(x => x.id === id);
+  if (!item) return toast('Data agenda tidak ditemukan!');
+  const text = generateBroadcastWaText(item);
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      toast('📋 Format WhatsApp berhasil disalin ke clipboard!');
+    }).catch(() => fallbackCopyText(text));
+  } else {
+    fallbackCopyText(text);
+  }
+};
+
+window.kirimBroadcastAgenda = function (id) {
+  const item = getUnifiedAgendaList().find(x => x.id === id);
+  if (!item) return toast('Data agenda tidak ditemukan!');
+  const text = generateBroadcastWaText(item);
+  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+  toast('📲 Membuka WhatsApp...');
+};
+
+window.openModalAgenda = function (editId, preSelectedCat) {
+  if (!canAccessPimpinan()) return toast('⚠️ Akses ditolak: Hanya Ketua, Koordinator, dan Sekretaris yang dapat membuat agenda!');
+
+  const allItems = getUnifiedAgendaList();
+  const editItem = editId ? allItems.find(x => x.id === editId) : null;
+  const initialCat = editItem?.kategori || preSelectedCat || 'pengumuman';
+  const initialDate = editItem?.tanggal || today();
+  const initialFormattedDate = editItem?.hariTanggal || getIndonesianDayDate(initialDate);
+
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.id = 'modal-agenda';
+
+  overlay.innerHTML = `
+  <div class="modal" style="max-width:680px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title"><i class="ti ti-calendar-star" style="color:var(--primary)"></i> ${editItem ? 'Ubah Agenda & Informasi' : 'Buat Agenda & Informasi Baru'}</div>
+        <div class="modal-sub">Kelola materi, forum, atau pengumuman dengan perhitungan hari otomatis (Asia/Jakarta)</div>
+      </div>
+      <button class="modal-close-btn" onclick="document.getElementById('modal-agenda').remove()">✕</button>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Jenis / Kategori Agenda</label>
+        <select id="m-ag-kategori">
+          <option value="pengumuman" ${initialCat === 'pengumuman' ? 'selected' : ''}>📢 Pengumuman Resmi</option>
+          <option value="materi" ${initialCat === 'materi' ? 'selected' : ''}>📖 Jadwal Materi Pembelajaran</option>
+          <option value="forum" ${initialCat === 'forum' ? 'selected' : ''}>💬 Jadwal Forum Diskusi / Musyawarah</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Target Audiens (Ditujukan Kepada)</label>
+        <input type="text" id="m-ag-tujuan" placeholder="cth: Semua Calon PMR Wira Angkatan 11 SMK Negeri 2 Surakarta" value="${escapeHtml(editItem?.tujuan || 'Semua Calon PMR Wira Angkatan 11 SMK Negeri 2 Surakarta')}">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group" style="flex:1">
+        <label>🗓️ Tanggal Pelaksanaan (Klik untuk Buka Kalender)</label>
+        <input type="date" id="m-ag-tgl" value="${initialDate}" onclick="this.showPicker?.()" style="cursor:pointer;font-weight:800;font-size:14px">
+        <div id="m-ag-haritgl-display" style="margin-top:6px;font-size:12.5px;font-weight:800;color:var(--primary);display:flex;align-items:center;gap:6px">
+          <i class="ti ti-calendar-event"></i> <span id="m-ag-haritgl-text">${escapeHtml(initialFormattedDate)}</span>
+        </div>
+        <input type="hidden" id="m-ag-haritgl" value="${escapeHtml(initialFormattedDate)}">
+      </div>
+      <div class="form-group" style="flex:1">
+        <label>⏰ Waktu / Jam (WIB)</label>
+        <input type="text" id="m-ag-jam" placeholder="cth: 15.15 - 17.00 WIB" value="${escapeHtml(editItem?.jam || '15.15 - 17.00 WIB')}">
+      </div>
+    </div>
+
+    <div class="form-group" style="margin-bottom:12px">
+      <label>🏫 Tempat / Lokasi</label>
+      <input type="text" id="m-ag-tempat" placeholder="cth: UKS / Aula / Lab Teori" value="${escapeHtml(editItem?.tempat || 'UKS')}">
+    </div>
+
+    <div class="form-group" style="margin-bottom:12px">
+      <label>Topik / Materi / Acara Kegiatan</label>
+      <input type="text" id="m-ag-kegiatan" placeholder="cth: Materi Pertolongan Pertama (PP) / Musyawarah Triwulan" value="${escapeHtml(editItem?.kegiatan || '')}">
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Seragam / Pakaian</label>
+        <input type="text" id="m-ag-seragam" placeholder="cth: Seragam sesuai hari / Pramuka / PDL" value="${escapeHtml(editItem?.seragam || 'Seragam sesuai hari')}">
+      </div>
+      <div class="form-group">
+        <label>Catatan Urgensi / Pengingat</label>
+        <input type="text" id="m-ag-urgensi" placeholder="cth: DIHARAPKAN SEMUANYA DATANG!" value="${escapeHtml(editItem?.urgensi || 'DIHARAPKAN SEMUANYA DATANG!')}">
+      </div>
+    </div>
+
+    <div class="form-group" style="margin-bottom:18px">
+      <label>Catatan Khusus / Konsekuensi (Note)</label>
+      <input type="text" id="m-ag-note" placeholder="cth: Izin, Menyusul, Mendahului lebih dari yang ditetapkan akan mendapat Konsekuensi" value="${escapeHtml(editItem?.note || 'Izin, Menyusul, Mendahului lebih dari yang ditetapkan akan mendapat Konsekuensi')}">
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="document.getElementById('modal-agenda').remove()">Batal</button>
+      <button class="btn btn-primary" onclick="saveAgenda(${editId || 0})">
+        <i class="ti ti-check"></i> ${editItem ? 'Simpan Perubahan' : 'Buat Agenda Sekarang'}
+      </button>
+    </div>
+  </div>`;
+
+  document.body.appendChild(overlay);
+
+  // Hook date picker change to auto-calculate Indonesian day & date in Asia/Jakarta
+  const tglInput = document.getElementById('m-ag-tgl');
+  const hariTglInput = document.getElementById('m-ag-haritgl');
+  if (tglInput && hariTglInput) {
+    const updateAutoDayDate = () => {
+      const val = tglInput.value;
+      if (val) {
+        const formatted = getIndonesianDayDate(val);
+        const textEl = document.getElementById('m-ag-haritgl-text');
+        if (textEl) textEl.textContent = formatted;
+        hariTglInput.value = formatted;
+      }
+    };
+    tglInput.addEventListener('change', updateAutoDayDate);
+    tglInput.addEventListener('input', updateAutoDayDate);
+  }
+};
+
+window.saveAgenda = function (editId) {
+  if (!canAccessPimpinan()) return toast('⚠️ Akses ditolak: Hanya Pimpinan!');
+  const kegiatan = document.getElementById('m-ag-kegiatan').value.trim();
+  if (!kegiatan) return toast('Topik / kegiatan wajib diisi!');
+
+  const tglVal = document.getElementById('m-ag-tgl').value;
+  const hariTglVal = document.getElementById('m-ag-haritgl').value.trim() || getIndonesianDayDate(tglVal);
+  const kategori = document.getElementById('m-ag-kategori').value;
+
+  const itemData = {
+    id: editId || Date.now(),
+    kategori: kategori,
+    tujuan: document.getElementById('m-ag-tujuan').value.trim() || 'Semua Calon PMR Wira Angkatan 11 SMK Negeri 2 Surakarta',
+    tanggal: tglVal,
+    hariTanggal: hariTglVal,
+    jam: document.getElementById('m-ag-jam').value.trim() || '15.15 - 17.00 WIB',
+    tempat: document.getElementById('m-ag-tempat').value.trim() || 'UKS',
+    kegiatan: kegiatan,
+    urgensi: document.getElementById('m-ag-urgensi').value.trim(),
+    seragam: document.getElementById('m-ag-seragam').value.trim() || 'Seragam sesuai hari',
+    note: document.getElementById('m-ag-note').value.trim() || 'Izin, Menyusul, Mendahului lebih dari yang ditetapkan akan mendapat Konsekuensi'
+  };
+
+  saveUnifiedAgendaItem(itemData, editId);
+
+  const catNames = { materi: 'Jadwal Materi', forum: 'Jadwal Forum', pengumuman: 'Pengumuman' };
+  logActivity(
+    editId ? 'UBAH' : 'TAMBAH',
+    `${editId ? 'Memperbarui' : 'Menambahkan'} ${catNames[kategori] || 'Agenda'}: ${kegiatan}`,
+    `Tanggal: ${hariTglVal} | Kategori: ${kategori}`
+  );
+
+  document.getElementById('modal-agenda')?.remove();
+  if (window.renderAgendaView) renderAgendaView();
+  toast(`✅ ${catNames[kategori] || 'Agenda'} berhasil ${editId ? 'diperbarui' : 'disimpan'}!`);
+};
+
+window.delAgenda = function (id) {
+  if (!canAccessPimpinan()) return toast('⚠️ Akses ditolak: Hanya Pimpinan!');
+  const item = getUnifiedAgendaList().find(x => x.id === id);
+  if (!item) return;
+
+  if (!confirm(`Hapus agenda "${item.kegiatan || 'Agenda'}" (${item.hariTanggal || item.tanggal})?`)) return;
+
+  deleteUnifiedAgendaItem(id);
+  logActivity('HAPUS', `Menghapus agenda (${item.kategori || 'umum'}): ${item.kegiatan || 'Agenda'}`);
+  if (window.renderAgendaView) renderAgendaView();
+  toast('Agenda berhasil dihapus 🗑️');
+};
+
 /* ==========================================================================
-   1. JADWAL MATERI
+   MODUL PROFIL & AKUN PENGGUNA (UNTUK SEMUA ROLE TERMASUK ANGGOTA)
+   Sesuai Master Prompt Section F:
+   - Pengaturan tema Dark/Light mode instan
+   - Form ganti kata sandi yang aman (tanpa plaintext logging)
+   - Informasi profil pengguna yang lengkap
+   - Tombol logout yang jelas dan konfirmasi aman
    ========================================================================== */
+
+pages.akun = function (m) {
+  const session = getSession();
+  if (!session) {
+    return showPage('dashboard');
+  }
+
+  const anggotaList = DB.get('anggota') || [];
+  const currentAnggota = session.role === 'anggota' ? anggotaList.find(a => a.id === session.id) : null;
+  const currentTheme = getTheme();
+
+  const isA10 = (session.angkatan || currentAnggota?.angkatan) === '10';
+  const roleBadgeClass = session.role === 'admin' ? 'badge-blue' : isA10 ? 'a10' : 'a11';
+  const roleTitle = session.role === 'admin' ? 'Administrator Sistem' : `${session.jabatan || currentAnggota?.jabatan || 'Anggota PMR'}`;
+  const angkatanText = session.role === 'admin' ? 'Pengelola Sistem' : `Angkatan ${session.angkatan || currentAnggota?.angkatan || '-'}`;
+  const nisText = session.role === 'admin' ? '-' : (session.nis || currentAnggota?.nis || '-');
+  const kelasText = session.role === 'admin' ? 'Markas UKS' : (session.kelas || currentAnggota?.kelas || '-');
+  const jkText = (session.role === 'admin') ? 'Administrator' : ((currentAnggota?.jk === 'P') ? 'Perempuan (P)' : 'Laki-laki (L)');
+
+  m.innerHTML = `
+  <div class="page-hero">
+    <div class="page-title-wrap">
+      <h1 class="page-title">Profil & Pengaturan Akun</h1>
+      <div class="page-subtitle">Kelola informasi identitas, tampilan tema, keamanan kata sandi, dan sesi akun Anda</div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:20px;max-width:1100px;margin-bottom:30px">
+    
+    <!-- KARTU 1: PROFIL PENGGUNA -->
+    <div class="table-card" style="padding:24px">
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border)">
+        <div style="width:58px;height:58px;border-radius:18px;background:linear-gradient(135deg, var(--primary), var(--primary-dark));display:flex;align-items:center;justify-content:center;color:#fff;font-size:28px;box-shadow:0 8px 16px rgba(239,68,68,0.22);flex-shrink:0">
+          <i class="ti ti-user-circle"></i>
+        </div>
+        <div>
+          <div style="font-size:18px;font-weight:900;color:var(--text)">${escapeHtml(session.nama || 'Pengguna')}</div>
+          <div style="display:flex;gap:6px;align-items:center;margin-top:4px;flex-wrap:wrap">
+            <span class="user-role-badge ${roleBadgeClass}">${roleTitle}</span>
+            <span class="badge" style="background:var(--bg-subtle);color:var(--text2)">${angkatanText}</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:12px;font-size:13.5px">
+        <div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--bg);border-radius:8px">
+          <span style="color:var(--text2)"><i class="ti ti-id"></i> NIS / Identitas:</span>
+          <strong>${escapeHtml(nisText)}</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--bg);border-radius:8px">
+          <span style="color:var(--text2)"><i class="ti ti-school"></i> Kelas / Jurusan:</span>
+          <strong>${escapeHtml(kelasText)}</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--bg);border-radius:8px">
+          <span style="color:var(--text2)"><i class="ti ti-gender-bigender"></i> Jenis Kelamin:</span>
+          <strong>${escapeHtml(jkText)}</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--bg);border-radius:8px">
+          <span style="color:var(--text2)"><i class="ti ti-award"></i> Posisi Organisasi:</span>
+          <strong>${escapeHtml(roleTitle)}</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- KARTU 2: PENGATURAN TEMA (DARK / LIGHT MODE) -->
+    <div class="table-card" style="padding:24px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <div style="width:42px;height:42px;border-radius:12px;background:rgba(245,158,11,0.15);display:flex;align-items:center;justify-content:center;color:#f59e0b;font-size:22px">
+          <i class="ti ti-sun-moon"></i>
+        </div>
+        <div>
+          <div style="font-size:16px;font-weight:900;color:var(--text)">Mode Tampilan (Tema)</div>
+          <div style="font-size:12px;color:var(--text2)">Ganti kenyamanan visual antara tema gelap dan terang</div>
+        </div>
+      </div>
+
+      <p style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:18px">
+        Tema pilihan Anda akan tersimpan di perangkat ini dan tetap aktif saat Anda kembali membuka aplikasi MY UKS.
+      </p>
+
+      <div style="display:flex;gap:12px;align-items:center">
+        <button class="btn ${currentTheme === 'light' ? 'btn-primary' : 'btn-ghost'}" id="btn-theme-light" onclick="setAppTheme('light')" style="flex:1;padding:12px;display:flex;align-items:center;justify-content:center;gap:8px">
+          <i class="ti ti-sun" style="font-size:18px"></i> Mode Terang
+        </button>
+        <button class="btn ${currentTheme === 'dark' ? 'btn-primary' : 'btn-ghost'}" id="btn-theme-dark" onclick="setAppTheme('dark')" style="flex:1;padding:12px;display:flex;align-items:center;justify-content:center;gap:8px">
+          <i class="ti ti-moon" style="font-size:18px"></i> Mode Gelap
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:20px;max-width:1100px">
+
+    <!-- KARTU 3: KEAMANAN & GANTI KATA SANDI -->
+    <div class="table-card" style="padding:24px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <div style="width:42px;height:42px;border-radius:12px;background:rgba(59,130,246,0.15);display:flex;align-items:center;justify-content:center;color:var(--primary);font-size:22px">
+          <i class="ti ti-key"></i>
+        </div>
+        <div>
+          <div style="font-size:16px;font-weight:900;color:var(--text)">Ganti Kata Sandi Akun</div>
+          <div style="font-size:12px;color:var(--text2)">Perbarui kata sandi Anda secara berkala demi keamanan</div>
+        </div>
+      </div>
+
+      <form onsubmit="handleAccountPageChangePassword(event)" style="display:flex;flex-direction:column;gap:14px">
+        ${session.role === 'anggota' ? `
+        <div class="form-group">
+          <label>Kata Sandi Saat Ini</label>
+          <input type="password" id="acc-pwd-old" placeholder="Masukkan kata sandi lama atau NIS" required>
+        </div>` : ''}
+
+        <div class="form-group">
+          <label>Kata Sandi Baru</label>
+          <input type="password" id="acc-pwd-new" placeholder="Minimal 4 karakter" required>
+        </div>
+
+        <div class="form-group">
+          <label>Konfirmasi Kata Sandi Baru</label>
+          <input type="password" id="acc-pwd-confirm" placeholder="Ulangi kata sandi baru" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="margin-top:6px;padding:11px">
+          <i class="ti ti-check"></i> Simpan Kata Sandi Baru
+        </button>
+      </form>
+    </div>
+
+    <!-- KARTU 4: KELUAR DARI AKUN (LOGOUT) -->
+    <div class="table-card" style="padding:24px;display:flex;flex-direction:column;justify-content:space-between">
+      <div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+          <div style="width:42px;height:42px;border-radius:12px;background:rgba(239,68,68,0.15);display:flex;align-items:center;justify-content:center;color:#ef4444;font-size:22px">
+            <i class="ti ti-logout"></i>
+          </div>
+          <div>
+            <div style="font-size:16px;font-weight:900;color:var(--text)">Sesi Masuk & Keluar</div>
+            <div style="font-size:12px;color:var(--text2)">Keluar dari akun setelah selesai menggunakan aplikasi</div>
+          </div>
+        </div>
+
+        <p style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:16px">
+          Anda sedang masuk sebagai <strong>${escapeHtml(session.nama)}</strong>. Jika menggunakan perangkat bersama (komputer sekolah atau HP teman), pastikan untuk selalu keluar demi menjaga keamanan akun.
+        </p>
+      </div>
+
+      <div style="padding-top:16px;border-top:1px solid var(--border)">
+        <button class="btn btn-action-delete" onclick="logout()" style="width:100%;padding:12px;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px">
+          <i class="ti ti-power"></i> Keluar dari Aplikasi (Logout)
+        </button>
+      </div>
+    </div>
+
+  </div>`;
+};
+
+window.setAppTheme = function (mode) {
+  setTheme(mode);
+  const btnLight = document.getElementById('btn-theme-light');
+  const btnDark = document.getElementById('btn-theme-dark');
+  if (btnLight && btnDark) {
+    if (mode === 'light') {
+      btnLight.className = 'btn btn-primary';
+      btnDark.className = 'btn btn-ghost';
+    } else {
+      btnLight.className = 'btn btn-ghost';
+      btnDark.className = 'btn btn-primary';
+    }
+  }
+  toast(`🎨 Tema dialihkan ke mode ${mode === 'dark' ? 'gelap' : 'terang'}`);
+};
+
+window.handleAccountPageChangePassword = function (e) {
+  if (e) e.preventDefault();
+  const session = getSession();
+  if (!session) return;
+
+  const anggotaList = DB.get('anggota') || [];
+  const pwdNewInput = document.getElementById('acc-pwd-new');
+  const pwdConfirmInput = document.getElementById('acc-pwd-confirm');
+  const pwdNew = pwdNewInput?.value.trim() || '';
+  const pwdConfirm = pwdConfirmInput?.value.trim() || '';
+
+  if (session.role === 'anggota') {
+    const member = anggotaList.find(a => a.id === session.id);
+    if (!member) return toast('Data anggota tidak ditemukan!');
+
+    const pwdOldInput = document.getElementById('acc-pwd-old');
+    const pwdOld = pwdOldInput?.value.trim() || '';
+    const currentExpected = member.password && member.password.trim() !== '' ? member.password : member.nis;
+
+    if (pwdOld !== currentExpected) {
+      return toast('⚠️ Kata sandi saat ini salah!');
+    }
+
+    if (pwdNew.length < 4) {
+      return toast('⚠️ Kata sandi baru minimal 4 karakter!');
+    }
+
+    if (pwdNew !== pwdConfirm) {
+      return toast('⚠️ Konfirmasi kata sandi baru tidak cocok!');
+    }
+
+    member.password = pwdNew;
+    DB.set('anggota', anggotaList);
+
+    // Update session
+    session.password = pwdNew;
+    setSession(session);
+
+    // Audit log TANPA plaintext password
+    logActivity(
+      'GANTI_PASSWORD',
+      `${member.nama} memperbarui kata sandi akun melalui menu Profil`,
+      `NIS: ${member.nis} | Jabatan: ${member.jabatan || 'Anggota'}`
+    );
+
+    if (pwdOldInput) pwdOldInput.value = '';
+    if (pwdNewInput) pwdNewInput.value = '';
+    if (pwdConfirmInput) pwdConfirmInput.value = '';
+
+    toast('✅ Kata sandi berhasil diperbarui!');
+  } else if (session.role === 'admin') {
+    if (pwdNew.length < 4) return toast('⚠️ Kata sandi baru minimal 4 karakter!');
+    if (pwdNew !== pwdConfirm) return toast('⚠️ Konfirmasi kata sandi baru tidak cocok!');
+
+    logActivity('GANTI_PASSWORD', 'Administrator memperbarui kata sandi sesi');
+    if (pwdNewInput) pwdNewInput.value = '';
+    if (pwdConfirmInput) pwdConfirmInput.value = '';
+    toast('✅ Kata sandi admin berhasil diperbarui!');
+  }
+};
+
+/* ==========================================================================
+   BACKWARD-COMPATIBILITY SHIMS UNTUK MATERI, FORUM, & PENGUMUMAN
+   Memastikan link lama / redirect otomatis terhubung ke Agenda & Informasi
+   ========================================================================== */
+
 pages.materi = function (m) {
-  if (!canAccessPimpinan()) {
-    return renderPimpinanAccessDenied(m, 'Jadwal Materi');
-  }
-
-  function render() {
-    const list = DB.get('jadwal_materi') || [];
-    const container = document.getElementById('materi-list-box');
-    if (!container) return;
-
-    if (!list.length) {
-      container.innerHTML = '<div class="empty"><i class="ti ti-book-off"></i>Belum ada jadwal materi yang dibuat. Klik tombol di atas untuk menambah.</div>';
-      return;
-    }
-
-    container.innerHTML = list.slice().sort((a, b) => (b.tanggal || '').localeCompare(a.tanggal || '')).map(item => {
-      const waText = generateBroadcastWaText(item, 'Jadwal Materi');
-      return `
-      <div class="broadcast-card">
-        <div class="broadcast-card-header">
-          <div>
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-              <span class="badge badge-blue"><i class="ti ti-book-2"></i> Jadwal Materi</span>
-              <span class="badge badge-green">🗓️ ${item.hariTanggal || fmtDayDate(item.tanggal)}</span>
-            </div>
-            <div style="font-size:18px;font-weight:900;color:var(--text);margin-top:4px">${escapeHtml(item.kegiatan || 'Materi PMR')}</div>
-            <div style="font-size:12.5px;color:var(--text2);margin-top:2px">
-              🏫 Tempat: <strong>${escapeHtml(item.tempat || 'UKS')}</strong> • 🕞 Jam: <strong>${escapeHtml(item.jam || '-')}</strong>
-            </div>
-          </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn btn-copy" onclick="salinBroadcastMateri(${item.id})">
-              <i class="ti ti-copy"></i> Salin Teks WA
-            </button>
-            <button class="btn btn-wa" onclick="kirimBroadcastMateri(${item.id})">
-              <i class="ti ti-brand-whatsapp"></i> Kirim ke WA
-            </button>
-            <button class="btn btn-action-edit" onclick="openModalMateri(${item.id})">
-              <i class="ti ti-edit"></i> Ubah
-            </button>
-            <button class="btn btn-action-delete" onclick="delMateri(${item.id})">
-              <i class="ti ti-trash"></i> Hapus
-            </button>
-          </div>
-        </div>
-
-        <div style="margin-top:12px">
-          <span class="wa-preview-badge"><i class="ti ti-brand-whatsapp"></i> Pratinjau Pesan Siaran WhatsApp:</span>
-          <div class="broadcast-preview-box">${escapeHtml(waText)}</div>
-        </div>
-      </div>`;
-    }).join('');
-  }
-
-  m.innerHTML = `
-  <div class="page-hero">
-    <div class="page-title-wrap">
-      <h1 class="page-title">Jadwal Materi</h1>
-      <div class="page-subtitle">Penyusunan jadwal penyampaian materi PMR & pembuatan template siaran WhatsApp (Khusus Ketua, Koordinator, Sekretaris)</div>
-    </div>
-    <button class="btn-header-add" onclick="openModalMateri()">
-      <i class="ti ti-plus"></i> Tambah Jadwal Materi
-    </button>
-  </div>
-
-  <div id="materi-list-box"></div>`;
-
-  window.renderMateriView = render;
-  render();
+  pages.agenda(m, 'materi');
 };
 
-window.salinBroadcastMateri = function (id) {
-  const item = (DB.get('jadwal_materi') || []).find(x => x.id === id);
-  if (!item) return toast('Data jadwal materi tidak ditemukan!');
-  const text = generateBroadcastWaText(item, 'Jadwal Materi');
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(() => {
-      toast('📋 Format WhatsApp Jadwal Materi berhasil disalin!');
-    }).catch(() => fallbackCopyText(text));
-  } else {
-    fallbackCopyText(text);
-  }
-};
-
-window.kirimBroadcastMateri = function (id) {
-  const item = (DB.get('jadwal_materi') || []).find(x => x.id === id);
-  if (!item) return toast('Data jadwal materi tidak ditemukan!');
-  const text = generateBroadcastWaText(item, 'Jadwal Materi');
-  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
-  toast('📲 Membuka WhatsApp...');
-};
-
-window.openModalMateri = function (editId) {
-  if (!canAccessPimpinan()) return toast('⚠️ Akses ditolak: Hanya Ketua, Koordinator, dan Sekretaris!');
-  const list = DB.get('jadwal_materi') || [];
-  const editItem = editId ? list.find(x => x.id === editId) : null;
-
-  const overlay = document.createElement('div');
-  overlay.className = 'modal-overlay';
-  overlay.id = 'modal-materi';
-
-  overlay.innerHTML = `
-  <div class="modal" style="max-width:680px">
-    <div class="modal-header">
-      <div>
-        <div class="modal-title"><i class="ti ti-book-2" style="color:var(--primary)"></i> ${editItem ? 'Ubah Jadwal Materi' : 'Buat Jadwal Materi Baru'}</div>
-        <div class="modal-sub">Isi detail materi yang dapat disesuaikan dan dikirim ke grup WhatsApp</div>
-      </div>
-      <button class="modal-close-btn" onclick="document.getElementById('modal-materi').remove()">✕</button>
-    </div>
-
-    <div class="form-group" style="margin-bottom:12px">
-      <label>Undangan Ditujukan Kepada (Target Audiens)</label>
-      <input type="text" id="m-mat-tujuan" placeholder="cth: Semua Calon PMR Wira Angkatan 11 SMK Negeri 2 Surakarta" value="${escapeHtml(editItem?.tujuan || 'Semua Calon PMR Wira Angkatan 11 SMK Negeri 2 Surakarta')}">
-    </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label>Tanggal Pelaksanaan</label>
-        <input type="date" id="m-mat-tgl" value="${editItem?.tanggal || today()}">
-      </div>
-      <div class="form-group">
-        <label>Format Teks Hari & Tanggal</label>
-        <input type="text" id="m-mat-haritgl" placeholder="cth: Jumat, 2 Oktober 2026" value="${escapeHtml(editItem?.hariTanggal || 'Jumat, 2 Oktober 2026')}">
-      </div>
-    </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label>Waktu / Jam (WIB)</label>
-        <input type="text" id="m-mat-jam" placeholder="cth: 15.15 - 17.00 WIB" value="${escapeHtml(editItem?.jam || '15.15 - 17.00 WIB')}">
-      </div>
-      <div class="form-group">
-        <label>Tempat / Lokasi</label>
-        <input type="text" id="m-mat-tempat" placeholder="cth: UKS / Aula / Lab" value="${escapeHtml(editItem?.tempat || 'UKS')}">
-      </div>
-    </div>
-
-    <div class="form-group" style="margin-bottom:12px">
-      <label>Materi / Topik Pembahasan</label>
-      <input type="text" id="m-mat-kegiatan" placeholder="cth: Pertolongan Pertama (PP) & Pembidaian Fraktur" value="${escapeHtml(editItem?.kegiatan || '')}">
-    </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label>Seragam / Pakaian</label>
-        <input type="text" id="m-mat-seragam" placeholder="cth: Seragam sesuai hari / Pramuka / PDL" value="${escapeHtml(editItem?.seragam || 'Seragam sesuai hari')}">
-      </div>
-      <div class="form-group">
-        <label>Catatan Urgensi / Pengingat</label>
-        <input type="text" id="m-mat-urgensi" placeholder="cth: DIHARAPKAN SEMUANYA DATANG!" value="${escapeHtml(editItem?.urgensi || 'DIHARAPKAN SEMUANYA DATANG!')}">
-      </div>
-    </div>
-
-    <div class="form-group" style="margin-bottom:18px">
-      <label>Catatan Khusus / Konsekuensi (Note)</label>
-      <input type="text" id="m-mat-note" placeholder="cth: Izin, Menyusul, Mendahului lebih dari yang ditetapkan akan mendapat Konsekuensi" value="${escapeHtml(editItem?.note || 'Izin, Menyusul, Mendahului lebih dari yang ditetapkan akan mendapat Konsekuensi')}">
-    </div>
-
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="document.getElementById('modal-materi').remove()">Batal</button>
-      <button class="btn btn-primary" onclick="saveMateri(${editId || 0})">
-        <i class="ti ti-check"></i> ${editItem ? 'Simpan Perubahan' : 'Buat Jadwal Materi'}
-      </button>
-    </div>
-  </div>`;
-
-  document.body.appendChild(overlay);
-};
-
-window.saveMateri = function (editId) {
-  if (!canAccessPimpinan()) return toast('⚠️ Akses ditolak!');
-  const kegiatan = document.getElementById('m-mat-kegiatan').value.trim();
-  if (!kegiatan) return toast('Topik materi wajib diisi!');
-
-  const list = DB.get('jadwal_materi') || [];
-  const itemData = {
-    id: editId || Date.now(),
-    tujuan: document.getElementById('m-mat-tujuan').value.trim() || 'Semua Calon PMR Wira Angkatan 11 SMK Negeri 2 Surakarta',
-    tanggal: document.getElementById('m-mat-tgl').value,
-    hariTanggal: document.getElementById('m-mat-haritgl').value.trim(),
-    jam: document.getElementById('m-mat-jam').value.trim() || '15.15 - 17.00 WIB',
-    tempat: document.getElementById('m-mat-tempat').value.trim() || 'UKS',
-    kegiatan: kegiatan,
-    urgensi: document.getElementById('m-mat-urgensi').value.trim(),
-    seragam: document.getElementById('m-mat-seragam').value.trim() || 'Seragam sesuai hari',
-    note: document.getElementById('m-mat-note').value.trim() || 'Izin, Menyusul, Mendahului lebih dari yang ditetapkan akan mendapat Konsekuensi'
-  };
-
-  if (editId) {
-    const idx = list.findIndex(x => x.id === editId);
-    if (idx >= 0) list[idx] = itemData;
-  } else {
-    list.unshift(itemData);
-  }
-
-  DB.set('jadwal_materi', list);
-  logActivity(editId ? 'UBAH' : 'TAMBAH', `${editId ? 'Memperbarui' : 'Menambahkan'} Jadwal Materi: ${kegiatan}`, `Tanggal: ${itemData.hariTanggal}`);
-  document.getElementById('modal-materi')?.remove();
-  if (window.renderMateriView) renderMateriView();
-  toast(`✅ Jadwal Materi berhasil ${editId ? 'diperbarui' : 'dibuat'}!`);
-};
-
-window.delMateri = function (id) {
-  if (!canAccessPimpinan()) return toast('⚠️ Akses ditolak!');
-  const list = DB.get('jadwal_materi') || [];
-  const item = list.find(x => x.id === id);
-  if (!confirm(`Hapus jadwal materi "${item?.kegiatan || ''}"?`)) return;
-
-  DB.set('jadwal_materi', list.filter(x => x.id !== id));
-  logActivity('HAPUS', `Menghapus jadwal materi: ${item?.kegiatan || 'Materi'}`);
-  if (window.renderMateriView) renderMateriView();
-  toast('Jadwal materi dihapus 🗑️');
-};
-
-/* ==========================================================================
-   2. JADWAL FORUM
-   ========================================================================== */
 pages.forum = function (m) {
-  if (!canAccessPimpinan()) {
-    return renderPimpinanAccessDenied(m, 'Jadwal Forum');
-  }
-
-  function render() {
-    const list = DB.get('jadwal_forum') || [];
-    const container = document.getElementById('forum-list-box');
-    if (!container) return;
-
-    if (!list.length) {
-      container.innerHTML = '<div class="empty"><i class="ti ti-messages-off"></i>Belum ada jadwal forum yang dibuat. Klik tombol di atas untuk menambah.</div>';
-      return;
-    }
-
-    container.innerHTML = list.slice().sort((a, b) => (b.tanggal || '').localeCompare(a.tanggal || '')).map(item => {
-      const waText = generateBroadcastWaText(item, 'Jadwal Forum');
-      return `
-      <div class="broadcast-card">
-        <div class="broadcast-card-header">
-          <div>
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-              <span class="badge badge-purple"><i class="ti ti-messages"></i> Jadwal Forum</span>
-              <span class="badge badge-green">🗓️ ${item.hariTanggal || fmtDayDate(item.tanggal)}</span>
-            </div>
-            <div style="font-size:18px;font-weight:900;color:var(--text);margin-top:4px">${escapeHtml(item.kegiatan || 'Forum Diskusi PMR')}</div>
-            <div style="font-size:12.5px;color:var(--text2);margin-top:2px">
-              🏫 Tempat: <strong>${escapeHtml(item.tempat || 'UKS')}</strong> • 🕞 Jam: <strong>${escapeHtml(item.jam || '-')}</strong>
-            </div>
-          </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn btn-copy" onclick="salinBroadcastForum(${item.id})">
-              <i class="ti ti-copy"></i> Salin Teks WA
-            </button>
-            <button class="btn btn-wa" onclick="kirimBroadcastForum(${item.id})">
-              <i class="ti ti-brand-whatsapp"></i> Kirim ke WA
-            </button>
-            <button class="btn btn-action-edit" onclick="openModalForum(${item.id})">
-              <i class="ti ti-edit"></i> Ubah
-            </button>
-            <button class="btn btn-action-delete" onclick="delForum(${item.id})">
-              <i class="ti ti-trash"></i> Hapus
-            </button>
-          </div>
-        </div>
-
-        <div style="margin-top:12px">
-          <span class="wa-preview-badge"><i class="ti ti-brand-whatsapp"></i> Pratinjau Pesan Siaran WhatsApp:</span>
-          <div class="broadcast-preview-box">${escapeHtml(waText)}</div>
-        </div>
-      </div>`;
-    }).join('');
-  }
-
-  m.innerHTML = `
-  <div class="page-hero">
-    <div class="page-title-wrap">
-      <h1 class="page-title">Jadwal Forum</h1>
-      <div class="page-subtitle">Penyusunan jadwal forum evaluasi, rapat anggota, & format siaran WhatsApp (Khusus Ketua, Koordinator, Sekretaris)</div>
-    </div>
-    <button class="btn-header-add" onclick="openModalForum()">
-      <i class="ti ti-plus"></i> Tambah Jadwal Forum
-    </button>
-  </div>
-
-  <div id="forum-list-box"></div>`;
-
-  window.renderForumView = render;
-  render();
+  pages.agenda(m, 'forum');
 };
 
-window.salinBroadcastForum = function (id) {
-  const item = (DB.get('jadwal_forum') || []).find(x => x.id === id);
-  if (!item) return toast('Data jadwal forum tidak ditemukan!');
-  const text = generateBroadcastWaText(item, 'Jadwal Forum');
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(() => {
-      toast('📋 Format WhatsApp Jadwal Forum berhasil disalin!');
-    }).catch(() => fallbackCopyText(text));
-  } else {
-    fallbackCopyText(text);
-  }
-};
-
-window.kirimBroadcastForum = function (id) {
-  const item = (DB.get('jadwal_forum') || []).find(x => x.id === id);
-  if (!item) return toast('Data jadwal forum tidak ditemukan!');
-  const text = generateBroadcastWaText(item, 'Jadwal Forum');
-  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
-  toast('📲 Membuka WhatsApp...');
-};
-
-window.openModalForum = function (editId) {
-  if (!canAccessPimpinan()) return toast('⚠️ Akses ditolak: Hanya Ketua, Koordinator, dan Sekretaris!');
-  const list = DB.get('jadwal_forum') || [];
-  const editItem = editId ? list.find(x => x.id === editId) : null;
-
-  const overlay = document.createElement('div');
-  overlay.className = 'modal-overlay';
-  overlay.id = 'modal-forum';
-
-  overlay.innerHTML = `
-  <div class="modal" style="max-width:680px">
-    <div class="modal-header">
-      <div>
-        <div class="modal-title"><i class="ti ti-messages" style="color:var(--primary)"></i> ${editItem ? 'Ubah Jadwal Forum' : 'Buat Jadwal Forum Baru'}</div>
-        <div class="modal-sub">Kelola forum rapat, evaluasi, dan musyawarah anggota</div>
-      </div>
-      <button class="modal-close-btn" onclick="document.getElementById('modal-forum').remove()">✕</button>
-    </div>
-
-    <div class="form-group" style="margin-bottom:12px">
-      <label>Undangan Ditujukan Kepada (Target Audiens)</label>
-      <input type="text" id="m-for-tujuan" placeholder="cth: Semua Calon PMR Wira Angkatan 11 SMK Negeri 2 Surakarta" value="${escapeHtml(editItem?.tujuan || 'Semua Calon PMR Wira Angkatan 11 SMK Negeri 2 Surakarta')}">
-    </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label>Tanggal Pelaksanaan</label>
-        <input type="date" id="m-for-tgl" value="${editItem?.tanggal || today()}">
-      </div>
-      <div class="form-group">
-        <label>Format Teks Hari & Tanggal</label>
-        <input type="text" id="m-for-haritgl" placeholder="cth: Jumat, 9 Oktober 2026" value="${escapeHtml(editItem?.hariTanggal || 'Jumat, 9 Oktober 2026')}">
-      </div>
-    </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label>Waktu / Jam (WIB)</label>
-        <input type="text" id="m-for-jam" placeholder="cth: 15.15 - 17.00 WIB" value="${escapeHtml(editItem?.jam || '15.15 - 17.00 WIB')}">
-      </div>
-      <div class="form-group">
-        <label>Tempat / Lokasi</label>
-        <input type="text" id="m-for-tempat" placeholder="cth: UKS / Aula / Ruang Teori" value="${escapeHtml(editItem?.tempat || 'UKS')}">
-      </div>
-    </div>
-
-    <div class="form-group" style="margin-bottom:12px">
-      <label>Agenda / Topik Forum</label>
-      <input type="text" id="m-for-kegiatan" placeholder="cth: Forum Evaluasi Triwulan & Pemilihan Jabatan" value="${escapeHtml(editItem?.kegiatan || '')}">
-    </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label>Seragam / Pakaian</label>
-        <input type="text" id="m-for-seragam" placeholder="cth: Seragam sesuai hari / Batik" value="${escapeHtml(editItem?.seragam || 'Seragam sesuai hari')}">
-      </div>
-      <div class="form-group">
-        <label>Catatan Urgensi / Pengingat</label>
-        <input type="text" id="m-for-urgensi" placeholder="cth: DIHARAPKAN SEMUANYA DATANG!" value="${escapeHtml(editItem?.urgensi || 'DIHARAPKAN SEMUANYA DATANG!')}">
-      </div>
-    </div>
-
-    <div class="form-group" style="margin-bottom:18px">
-      <label>Catatan Khusus / Konsekuensi (Note)</label>
-      <input type="text" id="m-for-note" placeholder="cth: Izin, Menyusul, Mendahului lebih dari yang ditetapkan akan mendapat Konsekuensi" value="${escapeHtml(editItem?.note || 'Izin, Menyusul, Mendahului lebih dari yang ditetapkan akan mendapat Konsekuensi')}">
-    </div>
-
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="document.getElementById('modal-forum').remove()">Batal</button>
-      <button class="btn btn-primary" onclick="saveForum(${editId || 0})">
-        <i class="ti ti-check"></i> ${editItem ? 'Simpan Perubahan' : 'Buat Jadwal Forum'}
-      </button>
-    </div>
-  </div>`;
-
-  document.body.appendChild(overlay);
-};
-
-window.saveForum = function (editId) {
-  if (!canAccessPimpinan()) return toast('⚠️ Akses ditolak!');
-  const kegiatan = document.getElementById('m-for-kegiatan').value.trim();
-  if (!kegiatan) return toast('Agenda forum wajib diisi!');
-
-  const list = DB.get('jadwal_forum') || [];
-  const itemData = {
-    id: editId || Date.now(),
-    tujuan: document.getElementById('m-for-tujuan').value.trim() || 'Semua Calon PMR Wira Angkatan 11 SMK Negeri 2 Surakarta',
-    tanggal: document.getElementById('m-for-tgl').value,
-    hariTanggal: document.getElementById('m-for-haritgl').value.trim(),
-    jam: document.getElementById('m-for-jam').value.trim() || '15.15 - 17.00 WIB',
-    tempat: document.getElementById('m-for-tempat').value.trim() || 'UKS',
-    kegiatan: kegiatan,
-    urgensi: document.getElementById('m-for-urgensi').value.trim(),
-    seragam: document.getElementById('m-for-seragam').value.trim() || 'Seragam sesuai hari',
-    note: document.getElementById('m-for-note').value.trim() || 'Izin, Menyusul, Mendahului lebih dari yang ditetapkan akan mendapat Konsekuensi'
-  };
-
-  if (editId) {
-    const idx = list.findIndex(x => x.id === editId);
-    if (idx >= 0) list[idx] = itemData;
-  } else {
-    list.unshift(itemData);
-  }
-
-  DB.set('jadwal_forum', list);
-  logActivity(editId ? 'UBAH' : 'TAMBAH', `${editId ? 'Memperbarui' : 'Menambahkan'} Jadwal Forum: ${kegiatan}`, `Tanggal: ${itemData.hariTanggal}`);
-  document.getElementById('modal-forum')?.remove();
-  if (window.renderForumView) renderForumView();
-  toast(`✅ Jadwal Forum berhasil ${editId ? 'diperbarui' : 'dibuat'}!`);
-};
-
-window.delForum = function (id) {
-  if (!canAccessPimpinan()) return toast('⚠️ Akses ditolak!');
-  const list = DB.get('jadwal_forum') || [];
-  const item = list.find(x => x.id === id);
-  if (!confirm(`Hapus jadwal forum "${item?.kegiatan || ''}"?`)) return;
-
-  DB.set('jadwal_forum', list.filter(x => x.id !== id));
-  logActivity('HAPUS', `Menghapus jadwal forum: ${item?.kegiatan || 'Forum'}`);
-  if (window.renderForumView) renderForumView();
-  toast('Jadwal forum dihapus 🗑️');
-};
-
-/* ==========================================================================
-   3. PENGUMUMAN RESMI
-   ========================================================================== */
 pages.pengumuman = function (m) {
-  if (!canAccessPimpinan()) {
-    return renderPimpinanAccessDenied(m, 'Pengumuman');
-  }
-
-  function render() {
-    const list = DB.get('pengumuman') || [];
-    const container = document.getElementById('pengumuman-list-box');
-    if (!container) return;
-
-    if (!list.length) {
-      container.innerHTML = '<div class="empty"><i class="ti ti-speakerphone-off"></i>Belum ada pengumuman yang dibuat. Klik tombol di atas untuk menambah.</div>';
-      return;
-    }
-
-    container.innerHTML = list.slice().sort((a, b) => (b.tanggal || '').localeCompare(a.tanggal || '')).map(item => {
-      const waText = generateBroadcastWaText(item, 'Pengumuman');
-      return `
-      <div class="broadcast-card">
-        <div class="broadcast-card-header">
-          <div>
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-              <span class="badge badge-amber"><i class="ti ti-speakerphone"></i> Pengumuman</span>
-              <span class="badge badge-green">🗓️ ${item.hariTanggal || fmtDayDate(item.tanggal)}</span>
-            </div>
-            <div style="font-size:18px;font-weight:900;color:var(--text);margin-top:4px">${escapeHtml(item.kegiatan || 'Pengumuman Kegiatan')}</div>
-            <div style="font-size:12.5px;color:var(--text2);margin-top:2px">
-              🏫 Tempat: <strong>${escapeHtml(item.tempat || 'UKS')}</strong> • 🕞 Jam: <strong>${escapeHtml(item.jam || '-')}</strong>
-            </div>
-          </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn btn-copy" onclick="salinBroadcastPengumuman(${item.id})">
-              <i class="ti ti-copy"></i> Salin Teks WA
-            </button>
-            <button class="btn btn-wa" onclick="kirimBroadcastPengumuman(${item.id})">
-              <i class="ti ti-brand-whatsapp"></i> Kirim ke WA
-            </button>
-            <button class="btn btn-action-edit" onclick="openModalPengumuman(${item.id})">
-              <i class="ti ti-edit"></i> Ubah
-            </button>
-            <button class="btn btn-action-delete" onclick="delPengumuman(${item.id})">
-              <i class="ti ti-trash"></i> Hapus
-            </button>
-          </div>
-        </div>
-
-        <div style="margin-top:12px">
-          <span class="wa-preview-badge"><i class="ti ti-brand-whatsapp"></i> Pratinjau Pesan Siaran WhatsApp:</span>
-          <div class="broadcast-preview-box">${escapeHtml(waText)}</div>
-        </div>
-      </div>`;
-    }).join('');
-  }
-
-  m.innerHTML = `
-  <div class="page-hero">
-    <div class="page-title-wrap">
-      <h1 class="page-title">Pengumuman</h1>
-      <div class="page-subtitle">Siaran informasi resmi & format pesan WhatsApp langsung siap sebar (Khusus Ketua, Koordinator, Sekretaris)</div>
-    </div>
-    <button class="btn-header-add" onclick="openModalPengumuman()">
-      <i class="ti ti-plus"></i> Buat Pengumuman Baru
-    </button>
-  </div>
-
-  <div id="pengumuman-list-box"></div>`;
-
-  window.renderPengumumanView = render;
-  render();
+  pages.agenda(m, 'pengumuman');
 };
 
-window.salinBroadcastPengumuman = function (id) {
-  const item = (DB.get('pengumuman') || []).find(x => x.id === id);
-  if (!item) return toast('Data pengumuman tidak ditemukan!');
-  const text = generateBroadcastWaText(item, 'Pengumuman');
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(() => {
-      toast('📋 Format WhatsApp Pengumuman berhasil disalin!');
-    }).catch(() => fallbackCopyText(text));
-  } else {
-    fallbackCopyText(text);
-  }
-};
+window.salinBroadcastMateri = window.salinBroadcastAgenda;
+window.kirimBroadcastMateri = window.kirimBroadcastAgenda;
+window.openModalMateri = function (id) { window.openModalAgenda(id, 'materi'); };
+window.saveMateri = window.saveAgenda;
+window.delMateri = window.delAgenda;
 
-window.kirimBroadcastPengumuman = function (id) {
-  const item = (DB.get('pengumuman') || []).find(x => x.id === id);
-  if (!item) return toast('Data pengumuman tidak ditemukan!');
-  const text = generateBroadcastWaText(item, 'Pengumuman');
-  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
-  toast('📲 Membuka WhatsApp...');
-};
+window.salinBroadcastForum = window.salinBroadcastAgenda;
+window.kirimBroadcastForum = window.kirimBroadcastAgenda;
+window.openModalForum = function (id) { window.openModalAgenda(id, 'forum'); };
+window.saveForum = window.saveAgenda;
+window.delForum = window.delAgenda;
 
-window.openModalPengumuman = function (editId) {
-  if (!canAccessPimpinan()) return toast('⚠️ Akses ditolak: Hanya Ketua, Koordinator, dan Sekretaris!');
-  const list = DB.get('pengumuman') || [];
-  const editItem = editId ? list.find(x => x.id === editId) : null;
-
-  const overlay = document.createElement('div');
-  overlay.className = 'modal-overlay';
-  overlay.id = 'modal-pengumuman';
-
-  overlay.innerHTML = `
-  <div class="modal" style="max-width:680px">
-    <div class="modal-header">
-      <div>
-        <div class="modal-title"><i class="ti ti-speakerphone" style="color:var(--primary)"></i> ${editItem ? 'Ubah Pengumuman' : 'Buat Pengumuman Baru'}</div>
-        <div class="modal-sub">Format undangan siaran WhatsApp otomatis dan fleksibel</div>
-      </div>
-      <button class="modal-close-btn" onclick="document.getElementById('modal-pengumuman').remove()">✕</button>
-    </div>
-
-    <div class="form-group" style="margin-bottom:12px">
-      <label>Undangan Ditujukan Kepada (Target Audiens)</label>
-      <input type="text" id="m-peng-tujuan" placeholder="cth: Semua Calon PMR Wira Angkatan 11 SMK Negeri 2 Surakarta" value="${escapeHtml(editItem?.tujuan || 'Semua Calon PMR Wira Angkatan 11 SMK Negeri 2 Surakarta')}">
-    </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label>Tanggal Pelaksanaan</label>
-        <input type="date" id="m-peng-tgl" value="${editItem?.tanggal || today()}">
-      </div>
-      <div class="form-group">
-        <label>Format Teks Hari & Tanggal</label>
-        <input type="text" id="m-peng-haritgl" placeholder="cth: Jumat, 2 Oktober 2026" value="${escapeHtml(editItem?.hariTanggal || 'Jumat, 2 Oktober 2026')}">
-      </div>
-    </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label>Waktu / Jam (WIB)</label>
-        <input type="text" id="m-peng-jam" placeholder="cth: 15.15 - 17.00 WIB" value="${escapeHtml(editItem?.jam || '15.15 - 17.00 WIB')}">
-      </div>
-      <div class="form-group">
-        <label>Tempat / Lokasi</label>
-        <input type="text" id="m-peng-tempat" placeholder="cth: UKS / Aula / Lapangan" value="${escapeHtml(editItem?.tempat || 'UKS')}">
-      </div>
-    </div>
-
-    <div class="form-group" style="margin-bottom:12px">
-      <label>Acara / Agenda Pengumuman</label>
-      <input type="text" id="m-peng-kegiatan" placeholder="cth: Pemilihan Jabatan & Musyawarah" value="${escapeHtml(editItem?.kegiatan || '')}">
-    </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label>Seragam / Pakaian</label>
-        <input type="text" id="m-peng-seragam" placeholder="cth: Seragam sesuai hari" value="${escapeHtml(editItem?.seragam || 'Seragam sesuai hari')}">
-      </div>
-      <div class="form-group">
-        <label>Catatan Urgensi / Pengingat</label>
-        <input type="text" id="m-peng-urgensi" placeholder="cth: DIHARAPKAN SEMUANYA DATANG!" value="${escapeHtml(editItem?.urgensi || 'DIHARAPKAN SEMUANYA DATANG!')}">
-      </div>
-    </div>
-
-    <div class="form-group" style="margin-bottom:18px">
-      <label>Catatan Khusus / Konsekuensi (Note)</label>
-      <input type="text" id="m-peng-note" placeholder="cth: Izin, Menyusul, Mendahului lebih dari yang ditetapkan akan mendapat Konsekuensi" value="${escapeHtml(editItem?.note || 'Izin, Menyusul, Mendahului lebih dari yang ditetapkan akan mendapat Konsekuensi')}">
-    </div>
-
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="document.getElementById('modal-pengumuman').remove()">Batal</button>
-      <button class="btn btn-primary" onclick="savePengumuman(${editId || 0})">
-        <i class="ti ti-check"></i> ${editItem ? 'Simpan Perubahan' : 'Buat Pengumuman'}
-      </button>
-    </div>
-  </div>`;
-
-  document.body.appendChild(overlay);
-};
-
-window.savePengumuman = function (editId) {
-  if (!canAccessPimpinan()) return toast('⚠️ Akses ditolak!');
-  const kegiatan = document.getElementById('m-peng-kegiatan').value.trim();
-  if (!kegiatan) return toast('Acara / agenda pengumuman wajib diisi!');
-
-  const list = DB.get('pengumuman') || [];
-  const itemData = {
-    id: editId || Date.now(),
-    tujuan: document.getElementById('m-peng-tujuan').value.trim() || 'Semua Calon PMR Wira Angkatan 11 SMK Negeri 2 Surakarta',
-    tanggal: document.getElementById('m-peng-tgl').value,
-    hariTanggal: document.getElementById('m-peng-haritgl').value.trim(),
-    jam: document.getElementById('m-peng-jam').value.trim() || '15.15 - 17.00 WIB',
-    tempat: document.getElementById('m-peng-tempat').value.trim() || 'UKS',
-    kegiatan: kegiatan,
-    urgensi: document.getElementById('m-peng-urgensi').value.trim(),
-    seragam: document.getElementById('m-peng-seragam').value.trim() || 'Seragam sesuai hari',
-    note: document.getElementById('m-peng-note').value.trim() || 'Izin, Menyusul, Mendahului lebih dari yang ditetapkan akan mendapat Konsekuensi'
-  };
-
-  if (editId) {
-    const idx = list.findIndex(x => x.id === editId);
-    if (idx >= 0) list[idx] = itemData;
-  } else {
-    list.unshift(itemData);
-  }
-
-  DB.set('pengumuman', list);
-  logActivity(editId ? 'UBAH' : 'TAMBAH', `${editId ? 'Memperbarui' : 'Menambahkan'} Pengumuman: ${kegiatan}`, `Tanggal: ${itemData.hariTanggal}`);
-  document.getElementById('modal-pengumuman')?.remove();
-  if (window.renderPengumumanView) renderPengumumanView();
-  toast(`✅ Pengumuman berhasil ${editId ? 'diperbarui' : 'dibuat'}!`);
-};
-
-window.delPengumuman = function (id) {
-  if (!canAccessPimpinan()) return toast('⚠️ Akses ditolak!');
-  const list = DB.get('pengumuman') || [];
-  const item = list.find(x => x.id === id);
-  if (!confirm(`Hapus pengumuman "${item?.kegiatan || ''}"?`)) return;
-
-  DB.set('pengumuman', list.filter(x => x.id !== id));
-  logActivity('HAPUS', `Menghapus pengumuman: ${item?.kegiatan || 'Pengumuman'}`);
-  if (window.renderPengumumanView) renderPengumumanView();
-  toast('Pengumuman dihapus 🗑️');
-};
-
+window.salinBroadcastPengumuman = window.salinBroadcastAgenda;
+window.kirimBroadcastPengumuman = window.kirimBroadcastAgenda;
+window.openModalPengumuman = function (id) { window.openModalAgenda(id, 'pengumuman'); };
+window.savePengumuman = window.saveAgenda;
+window.delPengumuman = window.delAgenda;

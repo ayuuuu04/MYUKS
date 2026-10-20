@@ -125,23 +125,20 @@
         <button class="nav-btn" data-page="jadwal" onclick="showPage('jadwal')">
           <i class="ti ti-calendar-event"></i> Jadwal Jaga
         </button>
-        <button class="nav-btn nav-btn-pimpinan" data-page="materi" onclick="showPage('materi')">
-          <i class="ti ti-book-2"></i> Jadwal Materi
-        </button>
-        <button class="nav-btn nav-btn-pimpinan" data-page="forum" onclick="showPage('forum')">
-          <i class="ti ti-messages"></i> Jadwal Forum
-        </button>
-        <button class="nav-btn nav-btn-pimpinan" data-page="pengumuman" onclick="showPage('pengumuman')">
-          <i class="ti ti-speakerphone"></i> Pengumuman
+        <button class="nav-btn" data-page="agenda" onclick="showPage('agenda')">
+          <i class="ti ti-calendar-star"></i> Agenda & Info
         </button>
         <button class="nav-btn" data-page="laporan" onclick="showPage('laporan')">
           <i class="ti ti-report-analytics"></i> Laporan
+        </button>
+        <button class="nav-btn" data-page="akun" onclick="showPage('akun')">
+          <i class="ti ti-user-circle"></i> Profil & Akun
         </button>
       </div>
 
       <div class="sidebar-footer">
         <div class="sidebar-user-card">
-          <div class="sidebar-user-top">
+          <div class="sidebar-user-top" onclick="showPage('akun')" style="cursor:pointer" title="Buka Profil & Pengaturan Akun">
             <div class="sidebar-avatar"><i class="ti ti-user"></i></div>
             <div class="sidebar-user-details">
               <div class="sidebar-username" id="sb-user-name">Admin PMR</div>
@@ -150,7 +147,7 @@
           </div>
           <div class="sidebar-user-actions" id="sb-actions-wrap">
             <button class="sidebar-icon-btn theme-toggle-btn" onclick="toggleTheme()" title="Ganti Mode Gelap / Terang"><i class="ti ti-moon theme-icon"></i></button>
-            <button class="sidebar-icon-btn" onclick="openChangePasswordModal()" title="Ubah Password"><i class="ti ti-key"></i></button>
+            <button class="sidebar-icon-btn" onclick="showPage('akun')" title="Profil & Ganti Sandi"><i class="ti ti-user-cog"></i></button>
             <button class="sidebar-icon-btn logout" onclick="logout()" title="Keluar"><i class="ti ti-logout"></i></button>
           </div>
           <div style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border);padding-top:8px">
@@ -192,28 +189,25 @@
           <i class="ti ti-users"></i> Anggota
         </button>
         <button class="nav-btn" data-page="pasien" onclick="showPage('pasien')">
-          <i class="ti ti-heart-pulse"></i> Data Pasien
+          <i class="ti ti-heart-pulse"></i> Pasien
         </button>
         <button class="nav-btn" data-page="stok" onclick="showPage('stok')">
-          <i class="ti ti-medicine-syrup"></i> Stok UKS
+          <i class="ti ti-medicine-syrup"></i> Stok
         </button>
         <button class="nav-btn" data-page="absensi" onclick="showPage('absensi')">
           <i class="ti ti-clipboard-check"></i> Absensi
         </button>
         <button class="nav-btn" data-page="jadwal" onclick="showPage('jadwal')">
-          <i class="ti ti-calendar-event"></i> Jadwal Jaga
+          <i class="ti ti-calendar-event"></i> Jadwal
         </button>
-        <button class="nav-btn nav-btn-pimpinan" data-page="materi" onclick="showPage('materi')">
-          <i class="ti ti-book-2"></i> Jadwal Materi
-        </button>
-        <button class="nav-btn nav-btn-pimpinan" data-page="forum" onclick="showPage('forum')">
-          <i class="ti ti-messages"></i> Jadwal Forum
-        </button>
-        <button class="nav-btn nav-btn-pimpinan" data-page="pengumuman" onclick="showPage('pengumuman')">
-          <i class="ti ti-speakerphone"></i> Pengumuman
+        <button class="nav-btn" data-page="agenda" onclick="showPage('agenda')">
+          <i class="ti ti-calendar-star"></i> Agenda
         </button>
         <button class="nav-btn" data-page="laporan" onclick="showPage('laporan')">
           <i class="ti ti-report-analytics"></i> Laporan
+        </button>
+        <button class="nav-btn" data-page="akun" onclick="showPage('akun')">
+          <i class="ti ti-user-circle"></i> Akun
         </button>
       </nav>
 

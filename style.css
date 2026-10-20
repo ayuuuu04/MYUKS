@@ -2751,3 +2751,201 @@ textarea {
   font-size: 36px;
   margin-bottom: 16px;
 }
+
+/* ==========================================================================
+   STYLING: AGENDA & INFORMASI, PROFIL AKUN, FILTER UPACARA, KELOLA LOG
+   ========================================================================== */
+
+.agenda-filter-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.agenda-kategori-pill {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.agenda-kategori-pengumuman {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+.agenda-kategori-materi {
+  background: #dbeafe;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+}
+
+.agenda-kategori-forum {
+  background: #ede9fe;
+  color: #5b21b6;
+  border: 1px solid #ddd6fe;
+}
+
+[data-theme="dark"] .agenda-kategori-pengumuman {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fcd34d;
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+[data-theme="dark"] .agenda-kategori-materi {
+  background: rgba(37, 99, 235, 0.15);
+  color: #93c5fd;
+  border-color: rgba(37, 99, 235, 0.3);
+}
+
+[data-theme="dark"] .agenda-kategori-forum {
+  background: rgba(139, 92, 246, 0.15);
+  color: #c4b5fd;
+  border-color: rgba(139, 92, 246, 0.3);
+}
+
+.date-auto-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--primary-dark);
+}
+
+/* Dual Filter Upacara */
+.picker-dual-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.picker-filter-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.picker-filter-title {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text3);
+  min-width: 65px;
+}
+
+/* Halaman Akun */
+.profile-hero-card {
+  background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 60%, #38bdf8 100%);
+  color: #fff;
+  border-radius: 18px;
+  padding: 24px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.22);
+}
+
+.profile-avatar-large {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  border: 3px solid rgba(255, 255, 255, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  flex-shrink: 0;
+  backdrop-filter: blur(6px);
+}
+
+.profile-name-lg {
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.profile-sub-lg {
+  font-size: 13.5px;
+  opacity: 0.92;
+  margin-top: 4px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.profile-badge-pill {
+  background: rgba(255, 255, 255, 0.25);
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.theme-switch-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 14px 18px;
+  border-radius: 14px;
+  border: 1.5px solid var(--border);
+  background: var(--bg2);
+  color: var(--text);
+  cursor: pointer;
+  font-weight: 800;
+  font-size: 14px;
+  transition: all 0.2s;
+  font-family: 'Nunito', sans-serif;
+}
+
+.theme-switch-btn:hover {
+  border-color: var(--primary);
+  background: var(--primary-dim);
+}
+
+.rekap-card-highlight {
+  border-left: 4px solid var(--primary);
+  padding: 14px 18px;
+  border-radius: 12px;
+  background: var(--bg2);
+  margin-bottom: 14px;
+}
+/* Date inputs: Click anywhere to open calendar */
+input[type="date"] {
+  cursor: pointer !important;
+  position: relative;
+  font-family: inherit;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer !important;
+  padding: 4px;
+  opacity: 0.8;
+  transition: opacity 0.15s, transform 0.15s;
+}
+
+input[type="date"]:hover::-webkit-calendar-picker-indicator {
+  opacity: 1;
+  transform: scale(1.15);
+}
+
+[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 0.85;
+}
